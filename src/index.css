@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-navy-950: #060d22;
+  --color-navy-900: #0a1633;
+  --color-navy-800: #10204d;
+  --color-navy-700: #1a2f68;
+  --color-indigo-denim-600: #2547b8;
+  --color-indigo-denim-500: #2f5bd7;
+  --color-denim-400: #5b86e5;
+  --color-denim-300: #93b2f0;
+  --color-denim-100: #dbe6fb;
+  --color-denim-50: #eef3fd;
+  --color-stitch-500: #d9a441;
+  --color-stitch-400: #e8b64c;
+  --color-stitch-300: #f3cd7f;
+  --color-paper: #f5f7fb;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #f5f7fb;
+  color: #0a1633;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono2 {
+  font-family: var(--font-mono);
+}
+
+/* Denim twill texture */
+.denim-texture {
+  background-color: #0a1633;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 5px),
+    radial-gradient(1200px 600px at 80% -10%, rgba(47,91,215,0.35), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(217,164,65,0.12), transparent 60%);
+}
+.denim-texture-light {
+  background-color: #f5f7fb;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(10,22,51,0.035) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(45deg, rgba(10,22,51,0.02) 0 1px, transparent 1px 5px);
+}
+.stitch-line {
+  background-image: linear-gradient(90deg, #e8b64c 55%, transparent 45%);
+  background-size: 14px 2px;
+  background-repeat: repeat-x;
+  height: 2px;
+}
+.stitch-border {
+  position: relative;
+}
+.stitch-border::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1.5px dashed rgba(232,182,76,0.55);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes floaty {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-floaty { animation: floaty 5s ease-in-out infinite; }
+
+@keyframes ticker-up {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-6px); opacity: 0.9; }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 22s linear infinite; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #eef2f9; }
+::-webkit-scrollbar-thumb { background: #0a1633; border-radius: 8px; border: 2px solid #eef2f9; }
+::-webkit-scrollbar-thumb:hover { background: #2547b8; }
+
+/* Gallery masonry via columns */
+.masonry {
+  columns: 1;
+  column-gap: 1.25rem;
+}
+@media (min-width: 640px) { .masonry { columns: 2; } }
+@media (min-width: 1024px) { .masonry { columns: 3; } }
+.masonry > * {
+  break-inside: avoid;
+  margin-bottom: 1.25rem;
+}
+
+/* Diagonal stitch divider */
+.zigzag {
+  height: 14px;
+  background-image: linear-gradient(135deg, #0a1633 25%, transparent 25%), linear-gradient(225deg, #0a1633 25%, transparent 25%);
+  background-size: 14px 14px;
+  background-position: 0 0;
+}
+
+/* Article prose */
+.prose-denim p { margin-bottom: 0.9rem; line-height: 1.75; color: #33415e; font-size: 0.95rem; }
+.prose-denim h4 { font-family: var(--font-display); font-weight: 700; color: #0a1633; margin: 1.25rem 0 0.5rem; font-size: 1.02rem; }
+.prose-denim ul { list-style: none; padding: 0; margin: 0 0 1rem; }
+.prose-denim li { position: relative; padding-left: 1.4rem; margin-bottom: 0.5rem; line-height: 1.65; color: #33415e; font-size: 0.93rem; }
+.prose-denim li::before { content: "◆"; position: absolute; left: 0; top: 0; color: #d9a441; font-size: 0.7rem; }
+
+/* Range / focus */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* Hero outline text */
+.text-stroke {
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.35);
+  color: transparent;
+}
