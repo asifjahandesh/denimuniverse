@@ -1,7 +1,7 @@
 export const SITE_CONFIG = {
   brand: "Denim Universe",
   tagline: "Explore the World of Denim",
-  facebookUrl: "https://www.facebook.com/denimuniverse",
+  facebookUrl: "https://www.facebook.com/share/1EGKnnQXrP/?mibextid=wwXIfr",
   email: "hello@denimuniverse.com",
   whatsapp: "https://wa.me/8801000000000",
   location: "Dhaka · Bangladesh — serving the global denim community",

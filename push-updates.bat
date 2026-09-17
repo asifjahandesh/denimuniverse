@@ -1,27 +1,18 @@
 @echo off
 cd /d "%~dp0"
 echo ========================================================
-echo   Denim Universe - GitHub Sync
+echo   Denim Universe - Push Updates to GitHub
 echo   Target: https://github.com/asifjahandesh/denimuniverse
 echo ========================================================
 echo.
-
-if not exist ".git" (
-    echo Initializing Git repository...
-    git init
-    git branch -M main
-    git remote add origin https://github.com/asifjahandesh/denimuniverse.git
-)
-
-echo Checking modified files:
+echo Checking changed files:
 git status -s
 echo.
-
-set /p MSG="Enter commit message (press Enter for 'update site'): "
-if "%MSG%"=="" set MSG=update: site updates and official links
+set /p MSG="Enter commit message (press Enter for 'update site changes'): "
+if "%MSG%"=="" set MSG=update: update site changes and Facebook link
 
 echo.
-echo 1. Staging files...
+echo 1. Staging changes...
 git add .
 
 echo.
@@ -30,17 +21,18 @@ git commit -m "%MSG%"
 
 echo.
 echo 3. Pushing to GitHub...
-git push -u origin main
+git push origin main
 
 echo.
 if %ERRORLEVEL% equ 0 (
     echo ========================================================
-    echo   SUCCESS: Synced to GitHub successfully!
+    echo   SUCCESS: Changes are now live on GitHub!
     echo   https://github.com/asifjahandesh/denimuniverse
     echo ========================================================
 ) else (
     echo ========================================================
-    echo   If rejected due to remote changes, try:
+    echo   Push encountered an error. If remote has new commits,
+    echo   run:
     echo     git pull origin main --rebase
     echo     git push origin main
     echo ========================================================

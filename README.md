@@ -60,6 +60,12 @@ npm run preview
 
 ---
 
+## 🌐 Community & Socials
+
+- **Official Facebook Page**: [Denim Universe on Facebook](https://www.facebook.com/share/1EGKnnQXrP/?mibextid=wwXIfr)
+
+---
+
 ## 📄 License & Credits
 
 © 2026 Denim Universe. All rights reserved.
