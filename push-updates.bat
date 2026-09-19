@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: add fashion article detail pages and admin editorial preview'): "
-if "%MSG%"=="" set MSG=feat: add fashion article detail pages and admin editorial preview
+set /p MSG="Enter commit message (press Enter for 'feat: add fashion detail pages and embed Google Analytics 4 G-XEYN7P0ZQM'): "
+if "%MSG%"=="" set MSG=feat: add fashion detail pages and embed Google Analytics 4 G-XEYN7P0ZQM
 
 echo.
 echo 1. Staging changes...

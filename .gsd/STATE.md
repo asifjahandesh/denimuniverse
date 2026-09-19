@@ -5,6 +5,7 @@
 - **Status**: LIVE & DEPLOYED
 - **Phase**: Production Active
 - **PIN Password**: `0707` (Admin Portal)
+- **GA4 Measurement ID**: `G-XEYN7P0ZQM` (Embedded in HTML & Config)
 
 ## What Has Been Completed & Configured
 

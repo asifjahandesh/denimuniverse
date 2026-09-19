@@ -23,15 +23,18 @@ export default function Analytics() {
   useEffect(() => {
     if (!activeGaId || !activeGaId.startsWith("G-")) return;
 
-    // Check if script already loaded
+    // Check if script already loaded in index.html or dynamically
     const scriptId = `ga-script-${activeGaId}`;
-    if (!document.getElementById(scriptId)) {
+    const existingScript = document.getElementById(scriptId) || document.querySelector(`script[src*="${activeGaId}"]`);
+    if (!existingScript) {
       const script = document.createElement("script");
       script.id = scriptId;
       script.async = true;
       script.src = `https://www.googletagmanager.com/gtag/js?id=${activeGaId}`;
       document.head.appendChild(script);
+    }
 
+    if (!window.gtag) {
       window.dataLayer = window.dataLayer || [];
       window.gtag = function () {
         window.dataLayer?.push(arguments);
