@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Save, Check, RefreshCw, Mail, MessageCircle, MapPin, Facebook, Globe } from "lucide-react";
+import { Save, Check, RefreshCw, Mail, MessageCircle, MapPin, Facebook, Globe, BarChart3 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 
 export default function ContactManager() {
@@ -11,6 +11,7 @@ export default function ContactManager() {
   const [whatsapp, setWhatsapp] = useState(siteConfig.whatsapp);
   const [location, setLocation] = useState(siteConfig.location);
   const [facebookUrl, setFacebookUrl] = useState(siteConfig.facebookUrl);
+  const [gaId, setGaId] = useState(siteConfig.gaId || "");
 
   const [saved, setSaved] = useState(false);
 
@@ -23,6 +24,7 @@ export default function ContactManager() {
       whatsapp,
       location,
       facebookUrl,
+      gaId,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -43,6 +45,7 @@ export default function ContactManager() {
       setWhatsapp("https://wa.me/8801000000000");
       setLocation("Dhaka · Bangladesh — serving the global denim community");
       setFacebookUrl("https://www.facebook.com/share/1EGKnnQXrP/?mibextid=wwXIfr");
+      setGaId("");
     }
   };
 
@@ -143,6 +146,44 @@ export default function ContactManager() {
                 onChange={(e) => setLocation(e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Analytics & Tracking */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur sm:p-7">
+          <div className="flex items-center gap-2 pb-2">
+            <BarChart3 size={18} className="text-amber-400" />
+            <h3 className="font-display text-lg font-bold text-white">Analytics & Visitor Tracking</h3>
+          </div>
+          <p className="text-xs text-indigo-200/70">
+            Track visitors, pageviews, and reader engagement across Denim Universe.
+          </p>
+
+          <div className="mt-5 space-y-4">
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <p className="text-xs font-bold text-emerald-300">Vercel Web Analytics Active</p>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-emerald-200/80">
+                Visitor counts, devices, geographical regions, and top pages are automatically recorded on your Vercel Project Dashboard with zero cookie banners.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
+                Google Analytics 4 Measurement ID (Optional)
+              </label>
+              <input
+                value={gaId}
+                onChange={(e) => setGaId(e.target.value)}
+                placeholder="G-XXXXXXXXXX"
+                className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none"
+              />
+              <p className="mt-1.5 text-[11px] text-indigo-200/50">
+                Paste your GA4 Measurement ID (starting with "G-") to collect detailed Google Analytics data.
+              </p>
             </div>
           </div>
         </div>

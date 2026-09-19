@@ -25,7 +25,7 @@ import ContactManager from "./ContactManager";
 type TabId = "overview" | "troubles" | "fashion" | "dictionary" | "gallery" | "contact";
 
 export default function AdminPanel() {
-  const { isAdminOpen, setIsAdminOpen, logout, siteConfig, troubles, fashionCards, dictionary, gallery } = useData();
+  const { isAdminOpen, setIsAdminOpen, logout, closeAdmin, siteConfig, troubles, fashionCards, dictionary, gallery } = useData();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -76,7 +76,7 @@ export default function AdminPanel() {
         {/* Right side actions */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
-            onClick={() => setIsAdminOpen(false)}
+            onClick={closeAdmin}
             className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-indigo-100 transition hover:bg-white/15 hover:text-white"
           >
             <ExternalLink size={14} />
@@ -136,7 +136,7 @@ export default function AdminPanel() {
             <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-400">
               <Shield size={13} /> Session Authenticated
             </div>
-            <p className="mt-1 text-[10px] text-indigo-300/50">PIN 0707 Verified</p>
+            <p className="mt-1 text-[10px] text-indigo-300/50">Protected Admin Session</p>
           </div>
         </aside>
 

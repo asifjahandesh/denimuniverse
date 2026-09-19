@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: integrate Supabase cloud and deployment setup'): "
-if "%MSG%"=="" set MSG=feat: integrate Supabase cloud database, storage bucket and Vercel deployment setup
+set /p MSG="Enter commit message (press Enter for 'sec: enforce PIN on every admin entry'): "
+if "%MSG%"=="" set MSG=sec: strictly enforce PIN on every admin entry without auto-login or session persistence
 
 echo.
 echo 1. Staging changes...

@@ -7,6 +7,7 @@ export const SITE_CONFIG = {
   location: "Dhaka · Bangladesh — serving the global denim community",
   logo: "/logo.png",
   svgIcon: "/favicon.svg",
+  gaId: "",
 };
 
 export const NAV_LINKS = [

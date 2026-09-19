@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Lock, X, KeyRound, AlertCircle, ArrowRight } from "lucide-react";
 import { useData } from "../../context/DataContext";
 
@@ -6,6 +6,13 @@ export default function AdminLoginModal() {
   const { isLoginModalOpen, setIsLoginModalOpen, login } = useData();
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (isLoginModalOpen) {
+      setPin("");
+      setError(false);
+    }
+  }, [isLoginModalOpen]);
 
   if (!isLoginModalOpen) return null;
 

@@ -47,6 +47,7 @@ interface DataContextType {
   isAuthenticated: boolean;
   login: (pin: string) => boolean;
   logout: () => void;
+  closeAdmin: () => void;
 
   // Trouble CRUD
   addTrouble: (item: Omit<TroubleItem, "id">) => void;
@@ -84,7 +85,6 @@ const STORAGE_KEYS = {
   DICTIONARY: "du_dictionary_v1",
   GALLERY: "du_gallery_v1",
   CONFIG: "du_config_v1",
-  AUTH: "du_admin_auth_v1",
 };
 
 // Initializer helper with ID injection if missing
@@ -162,13 +162,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Clear any leftover tokens from storage on load
+  useEffect(() => {
     try {
-      return sessionStorage.getItem(STORAGE_KEYS.AUTH) === "true";
-    } catch {
-      return false;
-    }
-  });
+      sessionStorage.removeItem("du_admin_auth_v1");
+      localStorage.removeItem("du_admin_auth_v1");
+    } catch {}
+  }, []);
 
   // Initial remote fetch if Supabase is configured
   useEffect(() => {
@@ -230,12 +232,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [siteConfig]);
 
   // Auth Methods
+  // Auth Methods — Strictly in-memory, NEVER stored to disk or session
   const login = (pin: string): boolean => {
     if (pin.trim() === ADMIN_PIN) {
       setIsAuthenticated(true);
-      try {
-        sessionStorage.setItem(STORAGE_KEYS.AUTH, "true");
-      } catch {}
       setIsLoginModalOpen(false);
       setIsAdminOpen(true);
       return true;
@@ -246,9 +246,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setIsAuthenticated(false);
     setIsAdminOpen(false);
+    setIsLoginModalOpen(false);
     try {
-      sessionStorage.removeItem(STORAGE_KEYS.AUTH);
+      sessionStorage.removeItem("du_admin_auth_v1");
+      localStorage.removeItem("du_admin_auth_v1");
     } catch {}
+  };
+
+  const closeAdmin = () => {
+    setIsAuthenticated(false);
+    setIsAdminOpen(false);
+    setIsLoginModalOpen(false);
   };
 
   // Trouble CRUD
@@ -405,6 +413,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         login,
         logout,
+        closeAdmin,
         addTrouble,
         updateTrouble,
         deleteTrouble,

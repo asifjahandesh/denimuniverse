@@ -188,6 +188,7 @@ export async function fetchRemoteData(): Promise<{
         location: cRes.data.location || "",
         logo: cRes.data.logo || "/logo.png",
         svgIcon: cRes.data.svg_icon || "/favicon.svg",
+        gaId: cRes.data.ga_id || "",
       };
     }
   } catch (err) {
@@ -313,6 +314,7 @@ export async function syncRemoteSiteConfig(config: SiteConfig): Promise<void> {
       location: config.location,
       logo: config.logo,
       svg_icon: config.svgIcon,
+      ga_id: config.gaId || null,
       updated_at: new Date().toISOString(),
     });
   } catch (e) {

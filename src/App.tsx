@@ -10,6 +10,7 @@ import { CATEGORIES } from "./data/content";
 import { DataProvider, useData } from "./context/DataContext";
 import AdminLoginModal from "./components/admin/AdminLoginModal";
 import AdminPanel from "./components/admin/AdminPanel";
+import Analytics from "./components/Analytics";
 
 function MainApp() {
   const [showAllTroubles, setShowAllTroubles] = useState(false);
@@ -25,6 +26,7 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
+      <Analytics />
       <Navbar />
       <main>
         <Hero />

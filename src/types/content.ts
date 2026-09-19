@@ -42,6 +42,7 @@ export interface SiteConfig {
   location: string;
   logo: string;
   svgIcon: string;
+  gaId?: string;
 }
 
 export interface ProcessStep {

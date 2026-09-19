@@ -58,8 +58,11 @@ CREATE TABLE IF NOT EXISTS public.site_config (
   location TEXT NOT NULL,
   logo TEXT,
   svg_icon TEXT,
+  ga_id TEXT,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS ga_id TEXT;
 
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES

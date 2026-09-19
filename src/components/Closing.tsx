@@ -287,7 +287,10 @@ export function Footer() {
             <a href="#home" className="hover:text-amber-300">Privacy</a>
             <a href="#home" className="hover:text-amber-300">Terms</a>
             <button
-              onClick={() => (isAuthenticated ? setIsAdminOpen(true) : setIsLoginModalOpen(true))}
+              onClick={() => {
+                setIsAdminOpen(false);
+                setIsLoginModalOpen(true);
+              }}
               className="text-indigo-300/60 hover:text-amber-300 transition underline underline-offset-2"
             >
               Admin Portal

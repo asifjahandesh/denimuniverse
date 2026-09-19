@@ -19,11 +19,8 @@ export default function Navbar() {
   const { siteConfig, isAuthenticated, setIsAdminOpen, setIsLoginModalOpen } = useData();
 
   const handleAdminClick = () => {
-    if (isAuthenticated) {
-      setIsAdminOpen(true);
-    } else {
-      setIsLoginModalOpen(true);
-    }
+    setIsAdminOpen(false);
+    setIsLoginModalOpen(true);
   };
 
   useEffect(() => {
@@ -193,7 +190,7 @@ export default function Navbar() {
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
             >
               <Shield size={16} />
-              <span>Admin Portal (PIN: 0707)</span>
+              <span>Admin Portal</span>
             </button>
             <p className="mt-3 text-center text-xs text-indigo-200/60">Daily denim knowledge · fashion · sustainability</p>
           </div>
