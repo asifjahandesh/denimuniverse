@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   LayoutDashboard,
+  BarChart3,
   Wrench,
   Shirt,
   BookOpen,
@@ -16,13 +17,14 @@ import {
 import { useData } from "../../context/DataContext";
 import logoImg from "../../assets/logo.png";
 import AdminOverview from "./AdminOverview";
+import VisitorAnalytics from "./VisitorAnalytics";
 import TroubleManager from "./TroubleManager";
 import FashionManager from "./FashionManager";
 import DictionaryManager from "./DictionaryManager";
 import GalleryManager from "./GalleryManager";
 import ContactManager from "./ContactManager";
 
-type TabId = "overview" | "troubles" | "fashion" | "dictionary" | "gallery" | "contact";
+type TabId = "overview" | "analytics" | "troubles" | "fashion" | "dictionary" | "gallery" | "contact";
 
 export default function AdminPanel() {
   const { isAdminOpen, setIsAdminOpen, logout, closeAdmin, siteConfig, troubles, fashionCards, dictionary, gallery } = useData();
@@ -33,6 +35,7 @@ export default function AdminPanel() {
 
   const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; count?: number }[] = [
     { id: "overview", label: "Dashboard", icon: LayoutDashboard },
+    { id: "analytics", label: "Visitor Analytics", icon: BarChart3 },
     { id: "troubles", label: "Troubleshooting", icon: Wrench, count: troubles.length },
     { id: "fashion", label: "Fashion & Trends", icon: Shirt, count: fashionCards.length },
     { id: "dictionary", label: "Dictionary", icon: BookOpen, count: dictionary.length },
@@ -189,6 +192,7 @@ export default function AdminPanel() {
         <main className="touch-scroll flex-1 overflow-y-auto p-3.5 pb-safe sm:p-6 lg:p-8 bg-[#060d22]">
           <div className="mx-auto max-w-6xl">
             {activeTab === "overview" && <AdminOverview onSelectTab={(t) => setActiveTab(t as TabId)} />}
+            {activeTab === "analytics" && <VisitorAnalytics />}
             {activeTab === "troubles" && <TroubleManager />}
             {activeTab === "fashion" && <FashionManager />}
             {activeTab === "dictionary" && <DictionaryManager />}

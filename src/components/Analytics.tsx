@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { useData } from "../context/DataContext";
+import { trackVisit } from "../lib/analyticsTracker";
 
 declare global {
   interface Window {
@@ -13,11 +14,26 @@ declare global {
  * Global Analytics component supporting:
  * 1. Vercel Web Analytics (Automatic, zero-config, privacy-friendly)
  * 2. Google Analytics 4 (GA4) with dynamic ID from Admin Panel (siteConfig.gaId) or .env (VITE_GA_MEASUREMENT_ID)
+ * 3. In-App Visitor Tracker for Admin Panel Dashboard
  */
 export default function Analytics() {
   const { siteConfig } = useData();
   const envGaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  const activeGaId = siteConfig?.gaId?.trim() || (typeof envGaId === "string" ? envGaId.trim() : "");
+  const activeGaId = siteConfig?.gaId?.trim() || (typeof envGaId === "string" ? envGaId.trim() : "G-XEYN7P0ZQM");
+
+  // In-App Local & Real-time Visitor Tracking
+  useEffect(() => {
+    trackVisit(window.location.hash || "/");
+
+    const handleLocalTrack = () => {
+      trackVisit(window.location.hash || "/");
+    };
+
+    window.addEventListener("hashchange", handleLocalTrack);
+    return () => {
+      window.removeEventListener("hashchange", handleLocalTrack);
+    };
+  }, []);
 
   // GA4 Script Injection & Tracking
   useEffect(() => {

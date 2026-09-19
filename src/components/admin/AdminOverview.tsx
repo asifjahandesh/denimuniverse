@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Wrench,
   Shirt,
@@ -14,9 +14,14 @@ import {
   Server,
   Cloud,
   ExternalLink,
+  BarChart3,
+  Users,
+  TrendingUp,
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { testSupabaseConnection } from "../../lib/supabase";
+import { getVisitorStats } from "../../lib/analyticsTracker";
+import { VisitorStats } from "../../types/analytics";
 
 interface AdminOverviewProps {
   onSelectTab: (tab: string) => void;
@@ -26,6 +31,17 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
   const { troubles, fashionCards, dictionary, gallery, siteConfig, isCloudConnected, cloudHost } = useData();
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [stats, setStats] = useState<VisitorStats>(getVisitorStats());
+
+  useEffect(() => {
+    const handleUpdate = (e: Event) => {
+      const custom = e as CustomEvent<VisitorStats>;
+      if (custom.detail) setStats(custom.detail);
+      else setStats(getVisitorStats());
+    };
+    window.addEventListener("du_analytics_updated", handleUpdate);
+    return () => window.removeEventListener("du_analytics_updated", handleUpdate);
+  }, []);
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -108,6 +124,54 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
             <span className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 font-semibold text-white/90">
               <Sparkles size={13} className="text-amber-400" /> Real-Time Reactive Sync
             </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Visitor Traffic Snapshot */}
+      <div className="rounded-3xl border border-indigo-500/20 bg-gradient-to-r from-indigo-950/40 via-[#0a1633] to-indigo-950/30 p-5 sm:p-6 backdrop-blur">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400 text-[#0a1633] shadow-md shadow-amber-400/20">
+              <BarChart3 size={18} />
+            </span>
+            <div>
+              <h3 className="font-display text-base font-extrabold text-white flex items-center gap-2">
+                <span>Live Reader & Visitor Pulse</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+                </span>
+              </h3>
+              <p className="text-xs text-indigo-200/60">Real-time visitor interactions tracked directly on your site</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onSelectTab("analytics")}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition"
+          >
+            <span>Full Analytics Dashboard</span>
+            <ArrowRight size={13} />
+          </button>
+        </div>
+
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+            <span className="font-mono2 text-[10px] font-bold uppercase tracking-wider text-indigo-300/70">Total Pageviews</span>
+            <p className="font-display text-2xl font-black text-white mt-1">{stats.totalPageviews.toLocaleString()}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+            <span className="font-mono2 text-[10px] font-bold uppercase tracking-wider text-indigo-300/70">Unique Visitors</span>
+            <p className="font-display text-2xl font-black text-white mt-1">{stats.uniqueVisitors.toLocaleString()}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+            <span className="font-mono2 text-[10px] font-bold uppercase tracking-wider text-emerald-400/80">Today's Views</span>
+            <p className="font-display text-2xl font-black text-emerald-300 mt-1">+{stats.todayViews.toLocaleString()}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+            <span className="font-mono2 text-[10px] font-bold uppercase tracking-wider text-amber-400/80">Mobile Share</span>
+            <p className="font-display text-2xl font-black text-amber-300 mt-1">
+              {Math.round(((stats.devices.mobile || 0) / (((stats.devices.mobile || 0) + (stats.devices.desktop || 0) + (stats.devices.tablet || 0)) || 1)) * 100)}%
+            </p>
           </div>
         </div>
       </div>

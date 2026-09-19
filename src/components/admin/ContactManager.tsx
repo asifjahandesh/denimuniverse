@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Save, Check, RefreshCw, Mail, MessageCircle, MapPin, Facebook, Globe, BarChart3 } from "lucide-react";
+import { Save, Check, RefreshCw, Mail, MessageCircle, MapPin, Facebook, Globe, BarChart3, ExternalLink } from "lucide-react";
 import { useData } from "../../context/DataContext";
 
 export default function ContactManager() {
@@ -11,7 +11,7 @@ export default function ContactManager() {
   const [whatsapp, setWhatsapp] = useState(siteConfig.whatsapp);
   const [location, setLocation] = useState(siteConfig.location);
   const [facebookUrl, setFacebookUrl] = useState(siteConfig.facebookUrl);
-  const [gaId, setGaId] = useState(siteConfig.gaId || "");
+  const [gaId, setGaId] = useState(siteConfig.gaId || "G-XEYN7P0ZQM");
 
   const [saved, setSaved] = useState(false);
 
@@ -172,18 +172,34 @@ export default function ContactManager() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
-                Google Analytics 4 Measurement ID (Optional)
-              </label>
+              <div className="flex items-center justify-between pb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
+                  Google Analytics 4 Measurement ID
+                </label>
+                {gaId.startsWith("G-") && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-300">
+                    <Check size={12} /> Connected & Active
+                  </span>
+                )}
+              </div>
               <input
                 value={gaId}
                 onChange={(e) => setGaId(e.target.value)}
-                placeholder="G-XXXXXXXXXX"
-                className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none"
+                placeholder="G-XEYN7P0ZQM"
+                className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none font-mono2"
               />
-              <p className="mt-1.5 text-[11px] text-indigo-200/50">
-                Paste your GA4 Measurement ID (starting with "G-") to collect detailed Google Analytics data.
-              </p>
+              <div className="mt-1.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[11px] text-indigo-200/60">
+                <span>Embedded directly into website head; tracking pageviews and user devices live.</span>
+                <a
+                  href="https://analytics.google.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-amber-400 hover:underline inline-flex items-center gap-1 shrink-0"
+                >
+                  <span>Open GA4 Console</span>
+                  <ExternalLink size={11} />
+                </a>
+              </div>
             </div>
           </div>
         </div>

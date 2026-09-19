@@ -60,3 +60,12 @@
    - `src/App.tsx`: Implemented hash routing (`#fashion/:id` and `#fashion/:slug`) with browser `popstate`/`hashchange` support and smooth scroll restoration.
    - `src/components/admin/FashionManager.tsx`: Added "Preview Story" (Eye icon) button on each card to test the article preview instantly, plus Author, Read Time, and multi-paragraph Full Article Content fields.
    - `src/lib/supabase.ts` & `supabase-schema.sql`: Added columns `content`, `author`, `read_time`, `published_at` to schema and Supabase sync layer.
+
+8. **In-App Visitor Analytics & Real-Time Traffic Engine**:
+   - `src/types/analytics.ts`: Data types for `VisitorStats` and `ActivityEvent`.
+   - `src/lib/analyticsTracker.ts`: Lightweight privacy-respecting client analytics engine tracking unique visitors (anonymous device tokens), pageviews, today's views, device breakdowns (Mobile vs Desktop vs Tablet), and top visited content.
+   - `src/components/admin/VisitorAnalytics.tsx`: Comprehensive dashboard tab inside Admin Panel with 4 KPI cards, popular content progress bars, device & platform distribution, and a live timestamped activity stream.
+   - `src/components/admin/AdminOverview.tsx`: Added "Live Visitor Traffic Pulse" card block to the main Admin Dashboard overview.
+   - `src/components/admin/AdminPanel.tsx`: Added "Visitor Analytics" tab with `BarChart3` icon.
+   - `src/components/admin/ContactManager.tsx`: Pre-filled `G-XEYN7P0ZQM` with green "Connected & Active" status badge and direct link to GA4 Console.
+   - `src/components/Analytics.tsx`: Wrote hooks to automatically log pageviews and section hash changes to the analytics engine.
