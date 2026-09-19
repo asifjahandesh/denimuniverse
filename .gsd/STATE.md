@@ -77,4 +77,12 @@
    - `src/lib/supabase.ts` & `supabase-schema.sql`: Added `public.subscribers` (`email UNIQUE`) and `public.messages` tables with RLS; created `addRemoteSubscriber`, `addRemoteMessage`, `fetchRemoteSubscribers`, and `fetchRemoteMessages`.
    - `src/components/admin/ContactManager.tsx`: Added sub-tabs ("Site & Brand Settings", "Newsletter Subscribers", "Contact Inquiries") with real-time subscriber count, search filter, manual subscriber adder, "Copy All (BCC)" for batch emailing, "Export CSV", and inquiry reply links.
    - `src/components/admin/AdminPanel.tsx`: Added subscriber count badge to the Contact tab in navigation.
-   - `push-updates.bat`: Updated default commit message to `feat: wire up working newsletter subscription and admin subscriber management`.
+   - `push-updates.bat`: Updated default commit message to `feat: add automated welcome email serverless function via Resend`.
+
+10. **Automated Welcome Email Engine (Vercel Serverless + Resend)**:
+    - `api/subscribe.ts`: Implemented secure Vercel Serverless Function supporting `POST` (dispatches branded HTML welcome email via Resend API) and `GET` (diagnostics checking `RESEND_API_KEY` configuration).
+    - `vercel.json`: Added rewrite `{ "source": "/api/(.*)", "destination": "/api/$1" }` to ensure serverless API routes are preserved without falling back to `index.html`.
+    - `src/components/Closing.tsx`: Updated `handleSubscribe` to asynchronously call `/api/subscribe` immediately upon user subscription.
+    - `src/components/admin/ContactManager.tsx`: Added "Send Welcome" button next to every subscriber in the list to test or re-send welcome emails on demand; added status notifications; added Resend connection instructions card in Settings.
+    - `.env.example`: Documented `RESEND_API_KEY` and optional `RESEND_FROM_EMAIL`.
+

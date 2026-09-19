@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: wire up working newsletter subscription and admin subscriber management'): "
-if "%MSG%"=="" set MSG=feat: wire up working newsletter subscription and admin subscriber management
+set /p MSG="Enter commit message (press Enter for 'feat: add automated welcome email serverless function via Resend'): "
+if "%MSG%"=="" set MSG=feat: add automated welcome email serverless function via Resend
 
 echo.
 echo 1. Staging changes...

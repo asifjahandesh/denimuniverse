@@ -279,6 +279,17 @@ export function Footer() {
       // 3. Track event in visitor analytics
       trackVisit("#newsletter", `Subscribed: ${cleanEmail}`);
 
+      // 4. Trigger automated welcome email via Vercel Serverless Function & Resend
+      try {
+        await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail }),
+        });
+      } catch (apiErr) {
+        console.warn("Welcome email API trigger notice:", apiErr);
+      }
+
       setSubscribed(true);
       setNewsletterEmail("");
     } catch (err) {

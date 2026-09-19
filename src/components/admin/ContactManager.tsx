@@ -21,6 +21,8 @@ import {
   Clock,
   Send,
   MessageSquare,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { isSupabaseConfigured, fetchRemoteSubscribers, fetchRemoteMessages } from "../../lib/supabase";
@@ -58,6 +60,8 @@ export default function ContactManager() {
   const [copiedMode, setCopiedMode] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [syncingSubscribers, setSyncingSubscribers] = useState(false);
+  const [sendingEmailTo, setSendingEmailTo] = useState<string | null>(null);
+  const [emailSendStatus, setEmailSendStatus] = useState<{ text: string; type: "success" | "info" | "error" } | null>(null);
 
   // Contact messages state
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -191,6 +195,39 @@ export default function ContactManager() {
     if (window.confirm("Clear all received contact messages? This cannot be undone.")) {
       localStorage.setItem("du_messages_v1", JSON.stringify([]));
       setMessages([]);
+    }
+  };
+
+  // Dispatch Welcome Email via /api/subscribe (Resend)
+  const handleSendWelcomeEmail = async (targetEmail: string) => {
+    setSendingEmailTo(targetEmail);
+    setEmailSendStatus(null);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+      const data = await res.json();
+      if (data.emailSent) {
+        setEmailSendStatus({
+          type: "success",
+          text: `Welcome email sent successfully to ${targetEmail}! Check inbox or spam.`,
+        });
+      } else {
+        setEmailSendStatus({
+          type: "info",
+          text: data.message || data.warning || "Subscriber registered. Add RESEND_API_KEY in Vercel to dispatch live emails.",
+        });
+      }
+    } catch (e: any) {
+      setEmailSendStatus({
+        type: "error",
+        text: `Serverless API notice: ${e.message}`,
+      });
+    } finally {
+      setSendingEmailTo(null);
+      setTimeout(() => setEmailSendStatus(null), 8000);
     }
   };
 
@@ -360,6 +397,26 @@ export default function ContactManager() {
               </div>
             </div>
 
+            {/* Email send status notification */}
+            {emailSendStatus && (
+              <div
+                className={`mt-4 flex items-center gap-2.5 rounded-2xl p-3.5 text-xs ${
+                  emailSendStatus.type === "success"
+                    ? "border border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
+                    : emailSendStatus.type === "error"
+                    ? "border border-rose-400/40 bg-rose-500/20 text-rose-200"
+                    : "border border-amber-400/40 bg-amber-500/20 text-amber-200"
+                }`}
+              >
+                {emailSendStatus.type === "success" ? (
+                  <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
+                ) : (
+                  <Sparkles size={16} className="shrink-0 text-amber-400" />
+                )}
+                <span className="leading-relaxed">{emailSendStatus.text}</span>
+              </div>
+            )}
+
             {/* Quick add manual subscriber */}
             <form onSubmit={handleAddSubscriber} className="mt-6 flex flex-col sm:flex-row gap-2">
               <input
@@ -413,7 +470,22 @@ export default function ContactManager() {
                       <span className="font-mono2 text-xs sm:text-sm text-white truncate">{sub}</span>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleSendWelcomeEmail(sub)}
+                        disabled={sendingEmailTo === sub}
+                        className="inline-flex items-center gap-1 h-8 rounded-lg bg-indigo-600/30 px-2.5 text-[11px] font-bold text-indigo-200 transition hover:bg-indigo-600/60 hover:text-white disabled:opacity-50"
+                        title="Send welcome email now"
+                      >
+                        {sendingEmailTo === sub ? (
+                          <Loader2 size={12} className="animate-spin text-amber-300" />
+                        ) : (
+                          <Send size={12} className="text-amber-400" />
+                        )}
+                        <span className="hidden sm:inline">Send Welcome</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => copySingleEmail(sub)}
@@ -721,6 +793,47 @@ export default function ContactManager() {
                     <ExternalLink size={11} />
                   </a>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Automated Welcome Emails (Resend) */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur sm:p-7">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2">
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-amber-400" />
+                <h3 className="font-display text-lg font-bold text-white">Automated Welcome Email Engine</h3>
+              </div>
+              <span className="inline-flex items-center gap-1 self-start sm:self-auto rounded-full border border-indigo-400/40 bg-indigo-500/20 px-2.5 py-0.5 text-[10.5px] font-bold text-indigo-300">
+                <Sparkles size={11} className="text-amber-300" /> Powered by Resend (Free 3,000/mo)
+              </span>
+            </div>
+            <p className="text-xs text-indigo-200/70 leading-relaxed">
+              When someone enters their email into "Stay in the loop", Vercel Serverless automatically calls Resend to deliver a branded HTML welcome guide to their inbox.
+            </p>
+
+            <div className="mt-4 rounded-2xl border border-indigo-500/20 bg-indigo-950/30 p-4 text-xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white">How to connect Resend in 2 minutes:</span>
+                <a
+                  href="https://resend.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-amber-400 hover:underline inline-flex items-center gap-1 text-[11px]"
+                >
+                  <span>Open Resend.com</span>
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+              <ol className="list-decimal list-inside space-y-1.5 text-[11.5px] text-indigo-200/80 leading-relaxed">
+                <li>Sign up for a free account at <strong className="text-white">resend.com</strong>.</li>
+                <li>Go to <strong className="text-white">API Keys</strong> and click <strong className="text-white">Create API Key</strong> (it starts with <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-300 font-mono2">re_...</code>).</li>
+                <li>Open your <strong className="text-white">Vercel Dashboard</strong> &gt; Select <strong className="text-white">denimuniverse</strong> &gt; <strong className="text-white">Settings</strong> &gt; <strong className="text-white">Environment Variables</strong>.</li>
+                <li>Add variable: <code className="bg-black/50 px-2 py-0.5 rounded text-amber-300 font-mono2">RESEND_API_KEY</code> = <span className="text-slate-400 font-mono2">re_your_api_key_here</span></li>
+                <li>Click <strong className="text-white">Save</strong> and redeploy. All new subscribers will immediately receive automated welcome emails!</li>
+              </ol>
+              <div className="pt-1 text-[11px] text-indigo-300/60 border-t border-white/5 flex items-center justify-between">
+                <span>Default test sender: <code className="text-indigo-200">onboarding@resend.dev</code> (instant delivery without custom domain setup)</span>
               </div>
             </div>
           </div>
