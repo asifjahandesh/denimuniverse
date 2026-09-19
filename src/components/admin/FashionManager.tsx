@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Plus, Edit3, Trash2, X, Check, Upload, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Edit3, Trash2, X, Check, Upload, Image as ImageIcon, Sparkles, Loader2, Eye } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { FashionCard } from "../../types/content";
 import { uploadImageToSupabase, isSupabaseConfigured } from "../../lib/supabase";
 
 export default function FashionManager() {
-  const { fashionCards, addFashion, updateFashion, deleteFashion } = useData();
+  const { fashionCards, addFashion, updateFashion, deleteFashion, closeAdmin } = useData();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FashionCard | null>(null);
@@ -17,6 +17,9 @@ export default function FashionManager() {
   const [desc, setDesc] = useState("");
   const [stat, setStat] = useState("");
   const [image, setImage] = useState("");
+  const [content, setContent] = useState("");
+  const [author, setAuthor] = useState("Denim Universe Editorial");
+  const [readTime, setReadTime] = useState("4 min read");
   const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
 
   const openAddModal = () => {
@@ -26,6 +29,9 @@ export default function FashionManager() {
     setDesc("");
     setStat("");
     setImage("");
+    setContent("");
+    setAuthor("Denim Universe Editorial");
+    setReadTime("4 min read");
     setModalOpen(true);
   };
 
@@ -36,7 +42,16 @@ export default function FashionManager() {
     setDesc(item.desc);
     setStat(item.stat);
     setImage(item.image);
+    setContent(item.content || "");
+    setAuthor(item.author || "Denim Universe Editorial");
+    setReadTime(item.readTime || "4 min read");
     setModalOpen(true);
+  };
+
+  const previewArticle = (card: FashionCard) => {
+    closeAdmin();
+    const slug = card.id || card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    window.location.hash = `#fashion/${encodeURIComponent(slug)}`;
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +104,9 @@ export default function FashionManager() {
         desc,
         stat: stat || "Denim Universe Editorial",
         image: finalImage,
+        content: content.trim() || undefined,
+        author: author.trim() || "Denim Universe Editorial",
+        readTime: readTime.trim() || "4 min read",
       });
     } else {
       addFashion({
@@ -97,6 +115,9 @@ export default function FashionManager() {
         desc,
         stat: stat || "Denim Universe Editorial",
         image: finalImage,
+        content: content.trim() || undefined,
+        author: author.trim() || "Denim Universe Editorial",
+        readTime: readTime.trim() || "4 min read",
       });
     }
     setModalOpen(false);
@@ -160,6 +181,14 @@ export default function FashionManager() {
 
               {/* Actions */}
               <div className="mt-5 flex items-center justify-end gap-2 border-t border-white/10 pt-3">
+                <button
+                  type="button"
+                  onClick={() => previewArticle(card)}
+                  className="flex min-h-[36px] flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-indigo-400/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-semibold text-indigo-200 transition active:scale-95 hover:bg-indigo-500/20 hover:text-white"
+                  title="Preview live article"
+                >
+                  <Eye size={13} /> Preview
+                </button>
                 <button
                   onClick={() => openEditModal(card)}
                   className="flex min-h-[36px] flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition active:scale-95 hover:bg-white/15"
@@ -240,15 +269,60 @@ export default function FashionManager() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
-                  Fashion Writing & Description
+                  Fashion Writing & Lead Summary
                 </label>
                 <textarea
                   required
-                  rows={4}
+                  rows={3}
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
-                  placeholder="Write editorial analysis, styling tips, silhouettes, or wash techniques..."
+                  placeholder="Write editorial summary, hook, or quick overview shown on cards and lead paragraph..."
                   className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none"
+                />
+              </div>
+
+              {/* Author & Read Time */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
+                    Author / Desk Byline
+                  </label>
+                  <input
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                    placeholder="Denim Universe Editorial"
+                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
+                    Estimated Read Time
+                  </label>
+                  <input
+                    value={readTime}
+                    onChange={(e) => setReadTime(e.target.value)}
+                    placeholder="e.g., 5 min read"
+                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Full Long-Form Article Body */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
+                    Full Article Content / Detailed Story (Optional)
+                  </label>
+                  <span className="text-[11px] text-amber-300/80 font-medium">
+                    Multi-paragraph / In-depth
+                  </span>
+                </div>
+                <textarea
+                  rows={6}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Write extensive editorial story, fabric specifications, styling guides, and wash notes. Separate paragraphs with a blank line. If left blank, the article will automatically use the rich built-in editorial story."
+                  className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none font-sans"
                 />
               </div>
 

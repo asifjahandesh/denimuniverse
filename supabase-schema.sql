@@ -63,6 +63,10 @@ CREATE TABLE IF NOT EXISTS public.site_config (
 );
 
 ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS ga_id TEXT;
+ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS author TEXT;
+ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS read_time TEXT;
+ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS published_at TEXT;
 
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES

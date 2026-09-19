@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Search, Wrench, X } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -11,18 +11,86 @@ import { DataProvider, useData } from "./context/DataContext";
 import AdminLoginModal from "./components/admin/AdminLoginModal";
 import AdminPanel from "./components/admin/AdminPanel";
 import Analytics from "./components/Analytics";
+import FashionDetailPage from "./components/FashionDetailPage";
+import { FashionCard } from "./types/content";
 
 function MainApp() {
   const [showAllTroubles, setShowAllTroubles] = useState(false);
   const [catOpen, setCatOpen] = useState<string | null>(null);
   const [tSearch, setTSearch] = useState("");
-  const { troubles } = useData();
+  const [selectedFashion, setSelectedFashion] = useState<FashionCard | null>(null);
+  const { troubles, fashionCards } = useData();
+
+  // Hash-based deep linking for fashion detail stories (#fashion/fash-1 or #fashion/article-slug)
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#fashion/")) {
+        const idOrSlug = decodeURIComponent(hash.replace("#fashion/", "")).trim().toLowerCase();
+        const found = fashionCards.find((c) => {
+          const cId = (c.id || "").toLowerCase();
+          const cSlug = c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          return cId === idOrSlug || cSlug === idOrSlug || c.title.toLowerCase() === idOrSlug;
+        });
+        if (found) {
+          setSelectedFashion(found);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } else if (selectedFashion && !hash.startsWith("#fashion/")) {
+        setSelectedFashion(null);
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+    };
+  }, [fashionCards, selectedFashion]);
+
+  const handleSelectFashion = (card: FashionCard) => {
+    setSelectedFashion(card);
+    const slug = card.id || card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    window.location.hash = `#fashion/${encodeURIComponent(slug)}`;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBackFromFashion = () => {
+    setSelectedFashion(null);
+    window.location.hash = "#fashion";
+    setTimeout(() => {
+      const el = document.getElementById("fashion");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 60);
+  };
 
   const catData = useMemo(() => CATEGORIES.find((c) => c.name === catOpen), [catOpen]);
   const troublesFiltered = useMemo(
     () => troubles.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(tSearch.toLowerCase())),
     [troubles, tSearch]
   );
+
+  // If a fashion story is currently selected, render the dedicated Fashion Article Detail Page
+  if (selectedFashion) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fb]">
+        <Analytics />
+        <FashionDetailPage
+          card={selectedFashion}
+          allCards={fashionCards}
+          onBack={handleBackFromFashion}
+          onSelectFashion={handleSelectFashion}
+        />
+        <Footer />
+        <AdminLoginModal />
+        <AdminPanel />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
@@ -32,7 +100,7 @@ function MainApp() {
         <Hero />
         <ProcessSection />
         <TroubleshootingSection onOpenAll={() => setShowAllTroubles(true)} />
-        <FashionSection />
+        <FashionSection onSelectFashion={handleSelectFashion} />
         <SustainabilitySection />
         <CategoriesSection onOpen={setCatOpen} />
         <InsightsSection />

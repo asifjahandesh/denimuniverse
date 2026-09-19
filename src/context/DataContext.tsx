@@ -109,7 +109,7 @@ function initFashion(): FashionCard[] {
     console.error("Error reading fashion from storage", e);
   }
   return DEFAULT_FASHION.map((f, idx) => ({
-    id: `fash-${idx + 1}-${Date.now().toString(36)}`,
+    id: `fash-${idx + 1}`,
     ...f,
   }));
 }

@@ -15,6 +15,10 @@ export interface FashionCard {
   tag: string;
   image: string;
   stat: string;
+  content?: string;
+  author?: string;
+  readTime?: string;
+  publishedAt?: string;
 }
 
 export interface DictTerm {

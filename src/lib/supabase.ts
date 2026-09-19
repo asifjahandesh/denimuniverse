@@ -155,6 +155,10 @@ export async function fetchRemoteData(): Promise<{
         tag: item.tag,
         image: item.image,
         stat: item.stat,
+        content: item.content || undefined,
+        author: item.author || undefined,
+        readTime: item.read_time || item.readTime || undefined,
+        publishedAt: item.published_at || item.publishedAt || undefined,
       }));
     }
 
@@ -231,14 +235,20 @@ export async function deleteRemoteTrouble(id: string): Promise<void> {
 export async function syncRemoteFashion(item: FashionCard): Promise<void> {
   if (!supabase) return;
   try {
-    await supabase.from("fashion").upsert({
+    const payload: Record<string, unknown> = {
       id: item.id,
       title: item.title,
       desc: item.desc,
       tag: item.tag,
       image: item.image,
       stat: item.stat,
-    });
+    };
+    if (item.content !== undefined) payload.content = item.content;
+    if (item.author !== undefined) payload.author = item.author;
+    if (item.readTime !== undefined) payload.read_time = item.readTime;
+    if (item.publishedAt !== undefined) payload.published_at = item.publishedAt;
+
+    await supabase.from("fashion").upsert(payload);
   } catch (e) {
     console.error("Error upserting fashion to Supabase", e);
   }

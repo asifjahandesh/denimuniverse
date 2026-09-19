@@ -5,7 +5,7 @@ import {
   Cpu, TrendingUp,
 } from "lucide-react";
 import { PROCESS_STEPS, SUST_STATS, SUST_TOPICS, CATEGORIES } from "../data/content";
-import { TroubleItem } from "../types/content";
+import { TroubleItem, FashionCard } from "../types/content";
 import { useData } from "../context/DataContext";
 import { Reveal, SectionHeading, Modal, Counter } from "./common";
 
@@ -221,8 +221,17 @@ export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void })
 }
 
 /* ============ FASHION ============ */
-export function FashionSection() {
+export function FashionSection({ onSelectFashion }: { onSelectFashion?: (card: FashionCard) => void }) {
   const { fashionCards } = useData();
+
+  const handleCardClick = (c: FashionCard) => {
+    if (onSelectFashion) {
+      onSelectFashion(c);
+    } else {
+      window.location.hash = `#fashion/${c.id || encodeURIComponent(c.title)}`;
+    }
+  };
+
   return (
     <section id="fashion" className="denim-texture-light relative py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -230,24 +239,65 @@ export function FashionSection() {
           <SectionHeading
             eyebrow="Denim Fashion"
             title="From Mill Floor to Street Style"
-            desc="Trends, garments, washes and finishing effects — what designers are cutting and what the world is wearing."
+            desc="Trends, garments, washes and finishing effects — click any article to read the full story, technical specifications, and styling guides."
           />
         </Reveal>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {fashionCards.map((c, i) => (
             <Reveal key={c.id || c.title} delay={(i % 4) * 80}>
-              <article className="group relative h-[380px] overflow-hidden rounded-3xl shadow-lg">
-                <img src={c.image} alt={c.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#060d22] via-[#060d22]/25 to-transparent" />
-                <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.15em] text-[#0a1633] backdrop-blur">
-                  {c.tag}
-                </span>
+              <article
+                role="button"
+                tabIndex={0}
+                onClick={() => handleCardClick(c)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleCardClick(c);
+                  }
+                }}
+                className="group relative h-[390px] cursor-pointer overflow-hidden rounded-3xl shadow-lg ring-1 ring-slate-900/10 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label={`Read article: ${c.title}`}
+              >
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060d22] via-[#060d22]/35 to-transparent" />
+                
+                {/* Tag Badge */}
+                <div className="absolute left-4 top-4 flex items-center gap-2">
+                  <span className="rounded-full bg-white/95 px-3 py-1 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.15em] text-[#0a1633] backdrop-blur shadow-xs">
+                    {c.tag}
+                  </span>
+                </div>
+
+                {/* Hover / Touch "Read Story" Pill */}
+                <div className="absolute right-4 top-4 transition-all duration-300 sm:translate-y-1 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 opacity-100">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#0a1633]/90 px-3 py-1 text-[11px] font-bold text-amber-300 backdrop-blur-md shadow-sm border border-white/10">
+                    <span>Read</span>
+                    <ArrowUpRight size={13} />
+                  </span>
+                </div>
+
+                {/* Bottom Content */}
                 <div className="absolute inset-x-0 bottom-0 p-5">
                   <p className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/95 px-3 py-1 text-[11px] font-bold text-[#0a1633]">
                     <Sparkles size={12} /> {c.stat}
                   </p>
-                  <h3 className="font-display mt-2.5 text-xl font-extrabold leading-tight text-white">{c.title}</h3>
-                  <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-indigo-100/80">{c.desc}</p>
+                  <h3 className="font-display mt-2.5 text-xl font-extrabold leading-tight text-white group-hover:text-amber-300 transition-colors">
+                    {c.title}
+                  </h3>
+                  <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-indigo-100/80">
+                    {c.desc}
+                  </p>
+                  
+                  {/* Visual Callout */}
+                  <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-amber-400/90 transition sm:opacity-0 sm:group-hover:opacity-100 opacity-100">
+                    <span>Explore full story</span>
+                    <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                  </div>
                 </div>
               </article>
             </Reveal>

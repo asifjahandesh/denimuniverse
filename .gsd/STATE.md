@@ -49,4 +49,13 @@
    - `src/components/admin/AdminPanel.tsx`: Mobile header displays active tab name; mobile drawer supports touch-friendly section switching with auto-close; content container has adaptive padding and `.pb-safe`.
    - `src/components/admin/AdminLoginModal.tsx`: Keypad buttons upgraded to 50px min touch height with active haptic-like scaling.
    - Admin Managers (`TroubleManager`, `FashionManager`, `GalleryManager`, `DictionaryManager`, `ContactManager`): Edit/Delete action buttons visible and easily tappable on mobile without requiring mouse hover; modal forms support scrollable mobile sheet layout with stacked full-width touch action buttons.
-   - `push-updates.bat`: One-click git push updated with default commit message `feat: optimize UI and touch interfaces for mobile and PC users`.
+   - `push-updates.bat`: One-click git push updated with default commit message `feat: add fashion article detail pages and admin editorial preview`.
+
+7. **Interactive Fashion Article Detail Pages & Editorial Reader**:
+   - `src/types/content.ts`: Extended `FashionCard` with optional `content`, `author`, `readTime`, and `publishedAt`.
+   - `src/data/fashionStories.ts`: Authored comprehensive editorial stories, technical specifications, styling notes, and key takeaways for all 8 default fashion cards.
+   - `src/components/FashionDetailPage.tsx`: Dedicated responsive full-page article reader featuring sticky header, reading progress bar, breadcrumbs, executive lead summary, technical specs box, key takeaways checklist, next/previous story navigation, related stories carousel, and Web Share / clipboard sharing.
+   - `src/components/Knowledge.tsx`: Upgraded `FashionSection` cards with interactive click/touch handlers, hover elevation, and "Read Story" affordance.
+   - `src/App.tsx`: Implemented hash routing (`#fashion/:id` and `#fashion/:slug`) with browser `popstate`/`hashchange` support and smooth scroll restoration.
+   - `src/components/admin/FashionManager.tsx`: Added "Preview Story" (Eye icon) button on each card to test the article preview instantly, plus Author, Read Time, and multi-paragraph Full Article Content fields.
+   - `src/lib/supabase.ts` & `supabase-schema.sql`: Added columns `content`, `author`, `read_time`, `published_at` to schema and Supabase sync layer.
