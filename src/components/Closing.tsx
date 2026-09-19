@@ -2,12 +2,14 @@ import { useState, type FormEvent } from "react";
 import {
   ArrowRight, GraduationCap, Factory, Heart, Mail, MessageCircle, MapPin,
   Send, CheckCircle2, BookOpen, FlaskConical, Shirt, Leaf, Calculator,
-  Download, Briefcase, Newspaper, MessagesSquare, Award,
+  Download, Briefcase, Newspaper, MessagesSquare, Award, Loader2, Check,
 } from "lucide-react";
 import { Reveal, SectionHeading } from "./common";
 import { FacebookIcon } from "./Navbar";
 import { useData } from "../context/DataContext";
 import logoImg from "../assets/logo.png";
+import { isSupabaseConfigured, addRemoteSubscriber, addRemoteMessage } from "../lib/supabase";
+import { trackVisit } from "../lib/analyticsTracker";
 
 /* ============ ABOUT ============ */
 export function AboutSection() {
@@ -147,8 +149,22 @@ export function ContactSection() {
   const { siteConfig } = useData();
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", topic: "Technical question", message: "" });
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    try {
+      const raw = localStorage.getItem("du_messages_v1");
+      const list = raw ? JSON.parse(raw) : [];
+      list.unshift({ ...form, id: `msg-${Date.now()}`, createdAt: new Date().toISOString() });
+      localStorage.setItem("du_messages_v1", JSON.stringify(list.slice(0, 50)));
+
+      if (isSupabaseConfigured()) {
+        await addRemoteMessage(form);
+      }
+      trackVisit("#contact", `Contact Message: ${form.name} (${form.topic})`);
+    } catch (err) {
+      console.warn("Could not save message", err);
+    }
+
     setSent(true);
     setTimeout(() => { setSent(false); setForm({ name: "", email: "", topic: "Technical question", message: "" }); }, 4000);
   };
@@ -236,6 +252,42 @@ export function ContactSection() {
 /* ============ FOOTER ============ */
 export function Footer() {
   const { siteConfig, setIsLoginModalOpen, setIsAdminOpen, isAuthenticated } = useData();
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = newsletterEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) return;
+
+    setSubmitting(true);
+    try {
+      // 1. Save to local storage
+      const raw = localStorage.getItem("du_subscribers_v1");
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      if (!list.includes(cleanEmail)) {
+        list.push(cleanEmail);
+        localStorage.setItem("du_subscribers_v1", JSON.stringify(list));
+      }
+
+      // 2. Save to Supabase if configured
+      if (isSupabaseConfigured()) {
+        await addRemoteSubscriber(cleanEmail);
+      }
+
+      // 3. Track event in visitor analytics
+      trackVisit("#newsletter", `Subscribed: ${cleanEmail}`);
+
+      setSubscribed(true);
+      setNewsletterEmail("");
+    } catch (err) {
+      console.warn("Subscription error", err);
+      setSubscribed(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
   return (
     <footer className="bg-[#060d22] pb-8 pt-14 text-indigo-100/70">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -270,12 +322,33 @@ export function Footer() {
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Stay in the loop</p>
             <p className="mt-4 text-[13px]">One denim lesson per week. Join 12,000+ subscribers.</p>
-            <form onSubmit={(e) => e.preventDefault()} className="mt-4 flex overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-1.5">
-              <input required type="email" placeholder="you@mill.com" aria-label="Email for newsletter" className="w-full bg-transparent px-3 text-sm text-white placeholder:text-indigo-200/40 focus:outline-none" />
-              <button aria-label="Subscribe" className="flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-[#0a1633] transition active:scale-95 hover:bg-amber-300">
-                <Send size={16} />
-              </button>
-            </form>
+            {subscribed ? (
+              <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-emerald-400/40 bg-emerald-500/20 p-3.5 text-xs text-emerald-300">
+                <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+                <span className="font-medium leading-relaxed">You're subscribed! Welcome to Denim Universe.</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="mt-4 flex overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-1.5 focus-within:border-amber-400 transition">
+                <input
+                  required
+                  type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder="you@mill.com"
+                  aria-label="Email for newsletter"
+                  disabled={submitting}
+                  className="w-full bg-transparent px-3 text-sm text-white placeholder:text-indigo-200/40 focus:outline-none disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  aria-label="Subscribe"
+                  className="flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-[#0a1633] transition active:scale-95 hover:bg-amber-300 disabled:opacity-60"
+                >
+                  {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </button>
+              </form>
+            )}
             <a href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-[13px] font-bold text-white transition active:scale-95 hover:bg-[#0f66d6]">
               <FacebookIcon size={15} /> Follow 48K+
             </a>

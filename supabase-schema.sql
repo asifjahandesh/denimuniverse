@@ -68,10 +68,40 @@ ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS author TEXT;
 ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS read_time TEXT;
 ALTER TABLE public.fashion ADD COLUMN IF NOT EXISTS published_at TEXT;
 
+-- 6. NEWSLETTER SUBSCRIBERS TABLE
+CREATE TABLE IF NOT EXISTS public.subscribers (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 7. INBOUND CONTACT MESSAGES TABLE
+CREATE TABLE IF NOT EXISTS public.messages (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  topic TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- Anyone can read (SELECT), and app users/admin can modify (ALL)
 -- ==============================================================================
+
+ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public insert subscribers" ON public.subscribers;
+CREATE POLICY "Public insert subscribers" ON public.subscribers FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public read subscribers" ON public.subscribers;
+CREATE POLICY "Public read subscribers" ON public.subscribers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public insert messages" ON public.messages;
+CREATE POLICY "Public insert messages" ON public.messages FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public read messages" ON public.messages;
+CREATE POLICY "Public read messages" ON public.messages FOR SELECT USING (true);
 
 ALTER TABLE public.troubles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.fashion ENABLE ROW LEVEL SECURITY;

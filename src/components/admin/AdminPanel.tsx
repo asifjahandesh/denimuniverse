@@ -33,6 +33,15 @@ export default function AdminPanel() {
 
   if (!isAdminOpen) return null;
 
+  const subscriberCount = (() => {
+    try {
+      const raw = localStorage.getItem("du_subscribers_v1");
+      return raw ? JSON.parse(raw).length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
   const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; count?: number }[] = [
     { id: "overview", label: "Dashboard", icon: LayoutDashboard },
     { id: "analytics", label: "Visitor Analytics", icon: BarChart3 },
@@ -40,7 +49,7 @@ export default function AdminPanel() {
     { id: "fashion", label: "Fashion & Trends", icon: Shirt, count: fashionCards.length },
     { id: "dictionary", label: "Dictionary", icon: BookOpen, count: dictionary.length },
     { id: "gallery", label: "Media Gallery", icon: ImageIcon, count: gallery.length },
-    { id: "contact", label: "Contact & Settings", icon: Settings },
+    { id: "contact", label: "Contact & Subscribers", icon: Settings, count: subscriberCount > 0 ? subscriberCount : undefined },
   ];
 
   return (

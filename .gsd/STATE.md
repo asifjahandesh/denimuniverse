@@ -69,3 +69,12 @@
    - `src/components/admin/AdminPanel.tsx`: Added "Visitor Analytics" tab with `BarChart3` icon.
    - `src/components/admin/ContactManager.tsx`: Pre-filled `G-XEYN7P0ZQM` with green "Connected & Active" status badge and direct link to GA4 Console.
    - `src/components/Analytics.tsx`: Wrote hooks to automatically log pageviews and section hash changes to the analytics engine.
+
+9. **Newsletter Subscription & Subscriber Management**:
+   - `src/components/Closing.tsx`: Replaced non-functional placeholder `onSubmit={(e) => e.preventDefault()}` with reactive `handleSubscribe` workflow, validation, loading spinner (`Loader2`), and green checkmark confirmation banner (`You're subscribed! Welcome to Denim Universe.`).
+   - Dual-Layer Persistence: Subscribing immediately writes to `localStorage` (`du_subscribers_v1`), logs an event in visitor analytics (`trackVisit("#newsletter", ...)`), and asynchronously pushes to Supabase (`public.subscribers`).
+   - Contact Inquiries: Contact form in `#contact` similarly saves to `localStorage` (`du_messages_v1`) and Supabase (`public.messages`).
+   - `src/lib/supabase.ts` & `supabase-schema.sql`: Added `public.subscribers` (`email UNIQUE`) and `public.messages` tables with RLS; created `addRemoteSubscriber`, `addRemoteMessage`, `fetchRemoteSubscribers`, and `fetchRemoteMessages`.
+   - `src/components/admin/ContactManager.tsx`: Added sub-tabs ("Site & Brand Settings", "Newsletter Subscribers", "Contact Inquiries") with real-time subscriber count, search filter, manual subscriber adder, "Copy All (BCC)" for batch emailing, "Export CSV", and inquiry reply links.
+   - `src/components/admin/AdminPanel.tsx`: Added subscriber count badge to the Contact tab in navigation.
+   - `push-updates.bat`: Updated default commit message to `feat: wire up working newsletter subscription and admin subscriber management`.

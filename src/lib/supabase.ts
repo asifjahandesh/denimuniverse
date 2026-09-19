@@ -331,3 +331,62 @@ export async function syncRemoteSiteConfig(config: SiteConfig): Promise<void> {
     console.error("Error upserting site config to Supabase", e);
   }
 }
+
+export async function addRemoteSubscriber(email: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("subscribers").upsert({
+      email: email.trim().toLowerCase(),
+      created_at: new Date().toISOString(),
+    }, { onConflict: "email" });
+  } catch (e) {
+    console.warn("Could not save subscriber to Supabase", e);
+  }
+}
+
+export async function addRemoteMessage(msg: { name: string; email: string; topic: string; message: string }): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("messages").insert({
+      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: msg.name,
+      email: msg.email,
+      topic: msg.topic,
+      message: msg.message,
+      created_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn("Could not save message to Supabase", e);
+  }
+}
+
+export async function fetchRemoteSubscribers(): Promise<string[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("subscribers")
+      .select("email")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ? data.map((d: { email: string }) => d.email) : [];
+  } catch (e) {
+    console.warn("Could not fetch remote subscribers", e);
+    return [];
+  }
+}
+
+export async function fetchRemoteMessages(): Promise<Array<{ id: string; name: string; email: string; topic: string; message: string; created_at: string }>> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.warn("Could not fetch remote messages", e);
+    return [];
+  }
+}
+
