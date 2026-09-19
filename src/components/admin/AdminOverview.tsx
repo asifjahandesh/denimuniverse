@@ -133,7 +133,7 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
               <h3 className="font-display mt-1 text-sm font-bold text-indigo-100">{c.title}</h3>
               <p className="mt-1 text-xs text-indigo-200/60 line-clamp-1">{c.desc}</p>
             </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-bold text-amber-400 opacity-0 transition group-hover:opacity-100">
+            <div className="mt-4 flex items-center gap-1 text-xs font-bold text-amber-400 opacity-100 sm:opacity-0 transition sm:group-hover:opacity-100">
               Manage items <ArrowRight size={13} />
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
       {/* Quick Info & Cloud Status Grid */}
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Site Meta */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 sm:p-6 backdrop-blur">
           <h3 className="font-display flex items-center justify-between text-base font-bold text-white">
             <span>Site Meta & Contact Snapshot</span>
             <button
@@ -163,7 +163,7 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
         </div>
 
         {/* Supabase Cloud Connection Box */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 sm:p-6 backdrop-blur">
           <div className="flex items-center justify-between">
             <h3 className="font-display flex items-center gap-2 text-base font-bold text-white">
               <Server size={18} className="text-amber-400" />
@@ -187,11 +187,11 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
           </p>
 
           {/* Diagnostic Test Button */}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:gap-3">
             <button
               onClick={handleTestConnection}
               disabled={testing}
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-bold text-[#0a1633] transition hover:bg-amber-300 disabled:opacity-50"
+              className="inline-flex min-h-[38px] items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300 disabled:opacity-50"
             >
               <RefreshCw size={13} className={testing ? "animate-spin" : ""} />
               {testing ? "Testing Connection..." : "Test Supabase Connection"}
@@ -200,7 +200,7 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
               href="https://supabase.com/dashboard"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition active:scale-95 hover:bg-white/10"
             >
               <span>Supabase Dashboard</span>
               <ExternalLink size={12} />

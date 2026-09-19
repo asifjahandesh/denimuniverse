@@ -189,10 +189,10 @@ export default function ContactManager() {
         </div>
 
         {/* Save button */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-7 py-3 font-display text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-500/20 transition hover:bg-amber-300 active:scale-95"
+            className="inline-flex min-h-[48px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-amber-400 px-7 py-3 font-display text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-500/20 transition active:scale-95 hover:bg-amber-300"
           >
             {saved ? (
               <>
@@ -205,7 +205,7 @@ export default function ContactManager() {
             )}
           </button>
           {saved && (
-            <span className="text-xs font-semibold text-emerald-400 animate-pulse">
+            <span className="text-xs font-semibold text-emerald-400 animate-pulse text-center sm:text-left">
               Website updated immediately.
             </span>
           )}
@@ -221,7 +221,7 @@ export default function ContactManager() {
         <button
           type="button"
           onClick={handleReset}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-5 py-2.5 text-xs font-bold text-rose-200 hover:bg-rose-500/30"
+          className="mt-4 inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-5 py-2.5 text-xs font-bold text-rose-200 transition active:scale-95 hover:bg-rose-500/30"
         >
           <RefreshCw size={14} /> Reset All Content to Factory Defaults
         </button>

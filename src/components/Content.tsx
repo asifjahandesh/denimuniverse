@@ -49,12 +49,12 @@ export function InsightsSection() {
 
         {/* Filter */}
         <Reveal delay={80}>
-          <div className="mt-8 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="touch-scroll mt-8 flex gap-2 overflow-x-auto pb-2 pr-6 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {ARTICLE_CATS.map((c) => (
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-bold transition ${
+                className={`shrink-0 snap-start rounded-full border px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
                   cat === c ? "border-[#0a1633] bg-[#0a1633] text-white" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-indigo-300"
                 }`}
               >
@@ -174,8 +174,8 @@ export function DictionarySection() {
                 aria-label="Search dictionary"
               />
               {q ? (
-                <button onClick={() => setQ("")} aria-label="Clear search" className="mr-1 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200">
-                  <X size={16} />
+                <button onClick={() => setQ("")} aria-label="Clear search" className="mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition active:scale-95 hover:bg-slate-200">
+                  <X size={17} />
                 </button>
               ) : (
                 <span className="mr-1 hidden rounded-xl bg-[#0a1633] px-4 py-2.5 text-[13px] font-bold text-white sm:block">{dictionary.length} terms</span>
@@ -186,7 +186,7 @@ export function DictionarySection() {
                 <button
                   key={c}
                   onClick={() => setCat(c)}
-                  className={`rounded-full border px-3.5 py-1.5 text-[12.5px] font-bold transition ${
+                  className={`rounded-full border px-3.5 py-1.5 text-[12.5px] font-bold transition active:scale-95 ${
                     cat === c ? "border-[#0a1633] bg-[#0a1633] text-white" : "border-slate-200 bg-white text-slate-500 hover:border-indigo-300"
                   }`}
                 >
@@ -260,12 +260,12 @@ export function GallerySection() {
           />
         </Reveal>
         <Reveal delay={80}>
-          <div className="mt-8 flex justify-center gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="touch-scroll mt-8 flex justify-start sm:justify-center gap-2 overflow-x-auto pb-2 pr-6 snap-x snap-mandatory px-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {GALLERY_CATS.map((c) => (
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-bold transition ${
+                className={`shrink-0 snap-start rounded-full border px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
                   cat === c ? "border-[#0a1633] bg-[#0a1633] text-white" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-indigo-300"
                 }`}
               >
@@ -278,16 +278,16 @@ export function GallerySection() {
         <div className="masonry mt-8">
           {list.map((g, i) => (
             <Reveal key={g.src + i} delay={Math.min(i, 5) * 60}>
-              <button onClick={() => setLight(i)} className="group relative block w-full overflow-hidden rounded-3xl text-left shadow-md">
-                <img src={g.src} alt={g.title} loading="lazy" className={`w-full object-cover transition duration-700 group-hover:scale-105 ${g.tall ? "h-96" : "h-64"}`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#060d22]/85 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
-                <div className="absolute inset-x-0 bottom-0 flex translate-y-3 items-center justify-between p-4 opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100">
-                  <span>
+              <button onClick={() => setLight(i)} className="group relative block w-full overflow-hidden rounded-3xl text-left shadow-md transition active:scale-[0.98]">
+                <img src={g.src} alt={g.title} loading="lazy" className={`w-full object-cover transition duration-700 group-hover:scale-105 ${g.tall ? "h-80 sm:h-96" : "h-56 sm:h-64"}`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060d22]/85 via-[#060d22]/20 to-transparent opacity-80 sm:opacity-0 transition duration-300 sm:group-hover:opacity-100" />
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-3.5 sm:p-4 opacity-100 sm:opacity-0 sm:translate-y-3 transition duration-300 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
+                  <span className="min-w-0 pr-2">
                     <span className="block font-mono2 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">{g.cat}</span>
-                    <span className="font-display block text-[15px] font-bold text-white">{g.title}</span>
+                    <span className="font-display block text-[14px] sm:text-[15px] font-bold text-white truncate">{g.title}</span>
                   </span>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#0a1633]">
-                    <Expand size={16} />
+                  <span className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#0a1633] shadow-md">
+                    <Expand size={15} />
                   </span>
                 </div>
               </button>
@@ -298,24 +298,36 @@ export function GallerySection() {
 
       {/* Lightbox */}
       {light !== null && list[light] && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#060d22]/95 p-4 backdrop-blur" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLight(null)}>
-          <button aria-label="Close" onClick={() => setLight(null)} className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#060d22]/95 p-3 sm:p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLight(null)}>
+          <button
+            aria-label="Close image viewer"
+            onClick={() => setLight(null)}
+            className="absolute right-3.5 top-3.5 sm:right-5 sm:top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition active:scale-95 hover:bg-white/20 sm:bg-white/10"
+          >
             <X size={20} />
           </button>
-          <button aria-label="Previous" onClick={(e) => { e.stopPropagation(); step(-1); }} className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-amber-400 hover:text-[#0a1633] sm:left-6">
+          <button
+            aria-label="Previous photo"
+            onClick={(e) => { e.stopPropagation(); step(-1); }}
+            className="absolute left-2.5 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition active:scale-95 hover:bg-amber-400 hover:text-[#0a1633] sm:left-6 sm:bg-white/10"
+          >
             <ChevronLeft size={20} />
           </button>
-          <button aria-label="Next" onClick={(e) => { e.stopPropagation(); step(1); }} className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-amber-400 hover:text-[#0a1633] sm:right-6">
+          <button
+            aria-label="Next photo"
+            onClick={(e) => { e.stopPropagation(); step(1); }}
+            className="absolute right-2.5 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition active:scale-95 hover:bg-amber-400 hover:text-[#0a1633] sm:right-6 sm:bg-white/10"
+          >
             <ChevronRight size={20} />
           </button>
-          <figure className="max-h-[86vh] max-w-4xl" onClick={(e) => e.stopPropagation()}>
-            <img src={list[light].src} alt={list[light].title} className="max-h-[74vh] w-full rounded-2xl object-contain shadow-2xl" />
-            <figcaption className="mt-4 flex items-center justify-between text-white">
-              <span>
-                <span className="block font-mono2 text-[11px] uppercase tracking-[0.2em] text-amber-300">{list[light].cat}</span>
-                <span className="font-display text-lg font-bold">{list[light].title}</span>
+          <figure className="max-h-[86vh] max-w-4xl px-2 sm:px-0" onClick={(e) => e.stopPropagation()}>
+            <img src={list[light].src} alt={list[light].title} className="max-h-[72vh] sm:max-h-[74vh] w-full rounded-2xl object-contain shadow-2xl" />
+            <figcaption className="mt-3 sm:mt-4 flex items-center justify-between text-white px-2">
+              <span className="min-w-0 pr-3">
+                <span className="block font-mono2 text-[10.5px] sm:text-[11px] uppercase tracking-[0.2em] text-amber-300">{list[light].cat}</span>
+                <span className="font-display text-base sm:text-lg font-bold truncate block">{list[light].title}</span>
               </span>
-              <span className="font-mono2 text-sm text-white/50">{light + 1} / {list.length}</span>
+              <span className="font-mono2 text-xs sm:text-sm text-white/60 shrink-0">{light + 1} / {list.length}</span>
             </figcaption>
           </figure>
         </div>

@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'sec: enforce PIN on every admin entry'): "
-if "%MSG%"=="" set MSG=sec: strictly enforce PIN on every admin entry without auto-login or session persistence
+set /p MSG="Enter commit message (press Enter for 'feat: optimize UI and touch interfaces for mobile and PC'): "
+if "%MSG%"=="" set MSG=feat: optimize UI and touch interfaces for mobile and PC users
 
 echo.
 echo 1. Staging changes...

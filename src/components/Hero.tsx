@@ -49,20 +49,20 @@ export default function Hero() {
             </Reveal>
 
             <Reveal delay={100}>
-              <h1 className="font-display mt-6 text-[2.7rem] font-black leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-[4.6rem]">
+              <h1 className="font-display mt-6 text-[2.5rem] font-black leading-[0.96] tracking-tight text-white sm:text-6xl lg:text-[4.6rem]">
                 DENIM
                 <br />
                 <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent">
                   UNIVERSE
                 </span>
               </h1>
-              <p className="font-display mt-4 text-lg font-semibold uppercase tracking-[0.3em] text-indigo-200 sm:text-xl">
+              <p className="font-display mt-4 text-base font-semibold uppercase tracking-[0.2em] text-indigo-200 sm:text-xl sm:tracking-[0.3em]">
                 Explore the World of Denim
               </p>
             </Reveal>
 
             <Reveal delay={200}>
-              <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-indigo-100/85 sm:text-base">
+              <p className="mt-5 max-w-xl text-[14.5px] leading-relaxed text-indigo-100/85 sm:text-base">
                 Discover denim fabric processes, solve production problems, explore fashion and learn about
                 the future of sustainable denim — practical knowledge for students, professionals & manufacturers.
               </p>
@@ -72,7 +72,7 @@ export default function Hero() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="#process"
-                  className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 px-7 py-4 font-display text-[15px] font-bold text-[#0a1633] shadow-[0_12px_40px_rgba(232,182,76,0.35)] transition hover:-translate-y-0.5 hover:bg-amber-300"
+                  className="group inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 px-7 py-3.5 font-display text-[15px] font-bold text-[#0a1633] shadow-[0_12px_40px_rgba(232,182,76,0.35)] transition active:scale-95 hover:-translate-y-0.5 hover:bg-amber-300 sm:w-auto"
                 >
                   <BookOpen size={18} />
                   Explore Knowledge
@@ -82,7 +82,7 @@ export default function Hero() {
                   href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-7 py-4 font-display text-[15px] font-bold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-[#1877F2] hover:border-[#1877F2]"
+                  className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-7 py-3.5 font-display text-[15px] font-bold text-white backdrop-blur transition active:scale-95 hover:-translate-y-0.5 hover:bg-[#1877F2] hover:border-[#1877F2] sm:w-auto"
                 >
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] transition group-hover:bg-white">
                     <FacebookIcon size={14} />
@@ -93,21 +93,21 @@ export default function Hero() {
             </Reveal>
 
             <Reveal delay={400}>
-              <div className="mt-8 flex items-center gap-4">
-                <div className="flex -space-x-3">
+              <div className="mt-8 flex flex-wrap items-center gap-3.5 sm:flex-nowrap sm:gap-4">
+                <div className="flex -space-x-3 shrink-0">
                   {[
                     "https://images.pexels.com/photos/32641556/pexels-photo-32641556.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
                     "https://images.pexels.com/photos/31212936/pexels-photo-31212936.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
                     "https://images.pexels.com/photos/24287028/pexels-photo-24287028.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
                     "https://images.pexels.com/photos/19224972/pexels-photo-19224972.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
                   ].map((s, i) => (
-                    <img key={i} src={s} alt="Denim community member" className="h-10 w-10 rounded-full border-2 border-[#0a1633] object-cover" loading="lazy" />
+                    <img key={i} src={s} alt="Denim community member" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border-2 border-[#0a1633] object-cover" loading="lazy" />
                   ))}
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#0a1633] bg-amber-400 font-display text-[11px] font-black text-[#0a1633]">
+                  <span className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 border-[#0a1633] bg-amber-400 font-display text-[10.5px] sm:text-[11px] font-black text-[#0a1633]">
                     48K
                   </span>
                 </div>
-                <p className="text-[13px] leading-snug text-indigo-100/75">
+                <p className="text-[12.5px] leading-snug text-indigo-100/75 sm:text-[13px]">
                   <span className="font-bold text-white">Loved by denim students & mill professionals</span>
                   <br />across 40+ countries
                 </p>
@@ -172,15 +172,15 @@ export default function Hero() {
 
         {/* Stats */}
         <Reveal delay={150}>
-          <div className="mt-12 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mt-12 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             {STATS.map((s) => (
-              <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-white/12 bg-white/[0.06] px-5 py-4 backdrop-blur transition hover:bg-white/[0.1]">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300">
-                  <s.icon size={20} />
+              <div key={s.label} className="flex items-center gap-2.5 sm:gap-3 rounded-2xl border border-white/12 bg-white/[0.06] p-3.5 sm:px-5 sm:py-4 backdrop-blur transition hover:bg-white/[0.1]">
+                <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300">
+                  <s.icon size={19} />
                 </span>
-                <span>
-                  <span className="font-display block text-xl font-extrabold text-white">{s.value}</span>
-                  <span className="text-xs font-medium text-indigo-200/70">{s.label}</span>
+                <span className="min-w-0">
+                  <span className="font-display block text-lg sm:text-xl font-extrabold text-white truncate">{s.value}</span>
+                  <span className="text-[11px] sm:text-xs font-medium text-indigo-200/70 truncate block">{s.label}</span>
                 </span>
               </div>
             ))}

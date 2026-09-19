@@ -180,21 +180,21 @@ export default function GalleryManager() {
               )}
             </div>
 
-            {/* Quick Action Overlay */}
-            <div className="absolute right-2 top-2 flex gap-1.5 opacity-0 transition group-hover:opacity-100">
+            {/* Quick Action Overlay: visible on mobile, hover on desktop */}
+            <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
               <button
                 onClick={() => openEditModal(item)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/70 text-white hover:bg-amber-400 hover:text-[#0a1633]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/80 text-white shadow-md backdrop-blur transition active:scale-95 hover:bg-amber-400 hover:text-[#0a1633]"
                 title="Edit details"
               >
-                <Edit3 size={13} />
+                <Edit3 size={14} />
               </button>
               <button
                 onClick={() => handleDelete(item.id, item.title)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/70 text-rose-300 hover:bg-rose-600 hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/80 text-rose-300 shadow-md backdrop-blur transition active:scale-95 hover:bg-rose-600 hover:text-white"
                 title="Delete image"
               >
-                <Trash2 size={13} />
+                <Trash2 size={14} />
               </button>
             </div>
           </div>
@@ -209,21 +209,22 @@ export default function GalleryManager() {
 
       {/* Add / Edit Gallery Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
-            className="absolute inset-0 bg-[#060d22]/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#060d22]/80 backdrop-blur-sm transition-opacity"
             onClick={() => setModalOpen(false)}
           />
-          <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/20 bg-[#0a1633] p-6 text-white shadow-2xl sm:p-8">
+          <div className="touch-scroll relative max-h-[90dvh] sm:max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-[2rem] sm:rounded-3xl border border-white/20 bg-[#0a1633] p-5 pb-safe sm:p-8 text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <h3 className="font-display text-xl font-bold">
+              <h3 className="font-display text-lg sm:text-xl font-bold">
                 {editingItem ? "Edit Gallery Item" : "Upload Gallery Media"}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20"
+                aria-label="Close"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition active:scale-95 hover:bg-white/20 hover:text-white"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
@@ -373,17 +374,17 @@ export default function GalleryManager() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+                  className="min-h-[44px] rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition active:scale-95 hover:bg-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-6 py-2.5 font-display text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-500/20 hover:bg-amber-300"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-2.5 font-display text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-500/20 transition active:scale-95 hover:bg-amber-300"
                 >
                   <Check size={16} /> Save Image
                 </button>

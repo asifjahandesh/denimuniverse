@@ -198,30 +198,30 @@ export function ContactSection() {
           </div>
 
           <Reveal delay={120}>
-            <form onSubmit={submit} className="rounded-[1.6rem] bg-white p-6 shadow-2xl sm:p-8">
+            <form onSubmit={submit} className="rounded-[1.6rem] bg-white p-5 sm:p-8 shadow-2xl">
               <h3 className="font-display text-xl font-extrabold text-[#0a1633]">Send a message</h3>
               <p className="mt-1 text-[13px] text-slate-500">Ask about fabric, defects, courses or features.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Your name</span>
-                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Arif Rahman" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-[#0a1633] placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
+                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Arif Rahman" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0a1633] placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
                 </label>
                 <label className="block">
                   <span className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Email</span>
-                  <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@mill.com" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-[#0a1633] placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
+                  <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@mill.com" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0a1633] placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
                 </label>
               </div>
               <label className="mt-4 block">
                 <span className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Topic</span>
-                <select value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-[#0a1633] focus:border-indigo-500 focus:bg-white">
+                <select value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0a1633] focus:border-indigo-500 focus:bg-white">
                   {["Technical question", "Troubleshooting help", "Guest article", "Partnership", "Course / training", "Other"].map((t) => <option key={t}>{t}</option>)}
                 </select>
               </label>
               <label className="mt-4 block">
                 <span className="mb-1.5 block text-[12.5px] font-bold text-slate-600">Message</span>
-                <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="My 12oz twill shows 5% skew after enzyme wash. How do I correct it on the stenter?" className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-[#0a1633] placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
+                <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="My 12oz twill shows 5% skew after enzyme wash. How do I correct it on the stenter?" className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0a1633] placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
               </label>
-              <button type="submit" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0a1633] py-4 font-display text-[15px] font-bold text-white transition hover:bg-indigo-700">
+              <button type="submit" className="mt-5 inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl bg-[#0a1633] py-3.5 font-display text-[15px] font-bold text-white transition active:scale-95 hover:bg-indigo-700">
                 {sent ? (<><CheckCircle2 size={18} className="text-emerald-400" /> Message sent — we'll reply soon!</>) : (<><Send size={17} /> Send message</>)}
               </button>
               <p className="mt-3 text-center text-[11.5px] text-slate-400">By sending, you agree to be contacted about denim topics. No spam, ever.</p>
@@ -253,17 +253,17 @@ export function Footer() {
           </div>
           <nav aria-label="Learn">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Learn</p>
-            <ul className="mt-4 space-y-2.5 text-[13.5px]">
+            <ul className="mt-4 space-y-2 text-[13.5px]">
               {[["Fabric Process", "#process"], ["Troubleshooting", "#troubleshooting"], ["Denim Insights", "#insights"], ["Dictionary", "#dictionary"], ["Gallery", "#gallery"]].map(([l, h]) => (
-                <li key={l}><a href={h} className="transition hover:text-amber-300">{l}</a></li>
+                <li key={l}><a href={h} className="inline-block py-1 transition hover:text-amber-300 active:text-amber-400">{l}</a></li>
               ))}
             </ul>
           </nav>
           <nav aria-label="Explore">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Explore</p>
-            <ul className="mt-4 space-y-2.5 text-[13.5px]">
+            <ul className="mt-4 space-y-2 text-[13.5px]">
               {[["Fashion", "#fashion"], ["Sustainability", "#sustainability"], ["Categories", "#categories"], ["About", "#about"], ["Contact", "#contact"]].map(([l, h]) => (
-                <li key={l}><a href={h} className="transition hover:text-amber-300">{l}</a></li>
+                <li key={l}><a href={h} className="inline-block py-1 transition hover:text-amber-300 active:text-amber-400">{l}</a></li>
               ))}
             </ul>
           </nav>
@@ -271,27 +271,27 @@ export function Footer() {
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Stay in the loop</p>
             <p className="mt-4 text-[13px]">One denim lesson per week. Join 12,000+ subscribers.</p>
             <form onSubmit={(e) => e.preventDefault()} className="mt-4 flex overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-1.5">
-              <input required type="email" placeholder="you@mill.com" aria-label="Email for newsletter" className="w-full bg-transparent px-3 text-sm text-white placeholder:text-indigo-200/40" />
-              <button aria-label="Subscribe" className="flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-[#0a1633] transition hover:bg-amber-300">
+              <input required type="email" placeholder="you@mill.com" aria-label="Email for newsletter" className="w-full bg-transparent px-3 text-sm text-white placeholder:text-indigo-200/40 focus:outline-none" />
+              <button aria-label="Subscribe" className="flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-[#0a1633] transition active:scale-95 hover:bg-amber-300">
                 <Send size={16} />
               </button>
             </form>
-            <a href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#0f66d6]">
+            <a href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-[13px] font-bold text-white transition active:scale-95 hover:bg-[#0f66d6]">
               <FacebookIcon size={15} /> Follow 48K+
             </a>
           </div>
         </div>
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-[12px] sm:flex-row">
-          <p>© 2026 {siteConfig.brand}. All rights reserved. Made with indigo & care.</p>
-          <p className="flex items-center gap-4">
-            <a href="#home" className="hover:text-amber-300">Privacy</a>
-            <a href="#home" className="hover:text-amber-300">Terms</a>
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 pb-safe text-[12px] sm:flex-row">
+          <p className="text-center sm:text-left">© 2026 {siteConfig.brand}. All rights reserved. Made with indigo & care.</p>
+          <p className="flex flex-wrap items-center justify-center gap-4">
+            <a href="#home" className="hover:text-amber-300 py-1">Privacy</a>
+            <a href="#home" className="hover:text-amber-300 py-1">Terms</a>
             <button
               onClick={() => {
                 setIsAdminOpen(false);
                 setIsLoginModalOpen(true);
               }}
-              className="text-indigo-300/60 hover:text-amber-300 transition underline underline-offset-2"
+              className="text-indigo-300/60 hover:text-amber-300 transition underline underline-offset-2 py-1"
             >
               Admin Portal
             </button>

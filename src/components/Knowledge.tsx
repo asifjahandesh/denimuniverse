@@ -33,12 +33,12 @@ export function ProcessSection() {
 
         {/* Step pills */}
         <Reveal delay={100}>
-          <div className="mt-10 flex gap-2 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="touch-scroll mt-10 flex gap-2 overflow-x-auto pb-3 pr-6 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {PROCESS_STEPS.map((s, i) => (
               <button
                 key={s.no}
                 onClick={() => setActive(i)}
-                className={`flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 text-[13px] font-bold transition ${
+                className={`flex shrink-0 snap-start items-center gap-2.5 rounded-full border px-4 py-2.5 text-[13px] font-bold transition active:scale-95 ${
                   i === active
                     ? "border-[#0a1633] bg-[#0a1633] text-white shadow-lg"
                     : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-800"
@@ -54,7 +54,7 @@ export function ProcessSection() {
         {/* Detail card */}
         <Reveal delay={150}>
           <div className="mt-4 grid overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(10,22,51,0.10)] lg:grid-cols-2">
-            <div className="relative min-h-[280px] lg:min-h-[420px]">
+            <div className="relative min-h-[260px] sm:min-h-[320px] lg:min-h-[420px]">
               <img key={step.image} src={step.image} alt={step.title} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#060d22]/85 via-[#060d22]/10 to-transparent" />
               <span className="font-display absolute left-5 top-5 rounded-xl bg-amber-400 px-3.5 py-1.5 text-sm font-black text-[#0a1633] shadow-lg">
@@ -62,27 +62,32 @@ export function ProcessSection() {
               </span>
               <div className="absolute bottom-5 left-5 right-5">
                 <p className="font-mono2 text-[11px] uppercase tracking-[0.25em] text-amber-300">{step.aka}</p>
-                <h3 className="font-display text-3xl font-extrabold text-white">{step.title}</h3>
+                <h3 className="font-display text-2xl font-extrabold text-white sm:text-3xl">{step.title}</h3>
               </div>
             </div>
-            <div className="flex flex-col justify-center p-6 sm:p-10">
-              <p className="text-[15px] leading-relaxed text-slate-600">{step.desc}</p>
+            <div className="flex flex-col justify-center p-5 sm:p-10">
+              <p className="text-[14.5px] leading-relaxed text-slate-600 sm:text-[15px]">{step.desc}</p>
               <ul className="mt-5 space-y-2.5">
                 {step.points.map((p) => (
-                  <li key={p} className="flex items-center gap-2.5 rounded-xl bg-indigo-50/70 px-4 py-2.5 text-[13.5px] font-semibold text-indigo-950">
+                  <li key={p} className="flex items-center gap-2.5 rounded-xl bg-indigo-50/70 px-3.5 py-2.5 text-[13px] font-semibold text-indigo-950 sm:px-4 sm:text-[13.5px]">
                     <CheckCircle2 size={16} className="shrink-0 text-emerald-600" /> {p}
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 flex items-center justify-between">
-                <div className="flex gap-1.5">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-1.5 py-1">
                   {PROCESS_STEPS.map((_, i) => (
-                    <button key={i} aria-label={`Go to step ${i + 1}`} onClick={() => setActive(i)} className={`h-2 rounded-full transition ${i === active ? "w-8 bg-amber-500" : "w-2 bg-slate-200 hover:bg-indigo-300"}`} />
+                    <button
+                      key={i}
+                      aria-label={`Go to step ${i + 1}`}
+                      onClick={() => setActive(i)}
+                      className={`h-2.5 rounded-full transition-all ${i === active ? "w-8 bg-amber-500" : "w-2.5 bg-slate-200 hover:bg-indigo-300"}`}
+                    />
                   ))}
                 </div>
                 <button
                   onClick={() => setActive((active + 1) % PROCESS_STEPS.length)}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#0a1633] px-5 py-2.5 text-[13px] font-bold text-white transition hover:bg-indigo-700"
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#0a1633] px-5 py-2.5 text-[13px] font-bold text-white transition active:scale-95 hover:bg-indigo-700"
                 >
                   Next stage <ArrowRight size={15} />
                 </button>
@@ -173,13 +178,13 @@ export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void })
           <div className="mt-8 flex flex-col items-center gap-4">
             <button
               onClick={onOpenAll}
-              className="group inline-flex items-center gap-2 rounded-2xl bg-amber-400 px-8 py-4 font-display text-[15px] font-bold text-[#0a1633] shadow-[0_12px_40px_rgba(232,182,76,0.3)] transition hover:-translate-y-0.5 hover:bg-amber-300"
+              className="group inline-flex min-h-[50px] w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-amber-400 px-8 py-3.5 font-display text-[15px] font-bold text-[#0a1633] shadow-[0_12px_40px_rgba(232,182,76,0.3)] transition active:scale-95 hover:-translate-y-0.5 hover:bg-amber-300"
             >
               <Wrench size={17} /> View All Troubleshooting
               <ArrowRight size={17} className="transition group-hover:translate-x-1" />
             </button>
-            <p className="flex items-center gap-2 text-[13px] text-indigo-200/70">
-              <AlertTriangle size={14} className="text-amber-400" /> {troubles.length} documented cases · Dyeing to washing · Free forever
+            <p className="flex items-center gap-2 text-center text-[12.5px] sm:text-[13px] text-indigo-200/70">
+              <AlertTriangle size={14} className="text-amber-400 shrink-0" /> {troubles.length} documented cases · Dyeing to washing · Free forever
             </p>
           </div>
         </Reveal>
@@ -285,7 +290,7 @@ export function SustainabilitySection() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {SUST_TOPICS.map((t, i) => {
             const Icon = iconMap[t.icon] ?? Leaf;
             return (

@@ -24,6 +24,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -31,7 +32,14 @@ body {
   background: #f5f7fb;
   color: #0a1633;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch responsiveness: eliminate 300ms tap delay and double-tap zoom delay */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
 }
 
 .font-display {
@@ -154,6 +162,29 @@ body {
 /* Range / focus */
 input:focus, textarea:focus, select:focus {
   outline: none;
+}
+
+/* Prevent iOS Safari from auto-zooming into inputs below 16px */
+@media screen and (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile smooth momentum scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Safe area insets for mobile phone gestures/notches */
+.pb-safe {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top));
 }
 
 /* Hero outline text */

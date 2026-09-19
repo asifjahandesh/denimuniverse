@@ -69,21 +69,21 @@ export default function Navbar() {
           scrolled ? "bg-[#0a1633]/95 shadow-[0_8px_30px_rgba(6,13,34,0.35)] backdrop-blur-xl" : "denim-texture"
         }`}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3.5 py-2.5 sm:px-6 sm:py-3">
           {/* Logo */}
-          <a href="#home" className="group flex items-center gap-3">
+          <a href="#home" className="group flex items-center gap-2.5 sm:gap-3 min-w-0">
             <span className="relative flex shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
               <img
                 src={logoImg}
                 alt="Denim Universe Official Logo"
-                className="h-11 w-11 rounded-full object-cover shadow-lg ring-2 ring-white/20 transition-all duration-300 group-hover:ring-amber-400/60"
+                className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover shadow-lg ring-2 ring-white/20 transition-all duration-300 group-hover:ring-amber-400/60"
               />
             </span>
-            <span className="leading-none">
-              <span className="font-display block text-[17px] font-extrabold tracking-tight text-white">
+            <span className="leading-none truncate">
+              <span className="font-display block text-[15px] sm:text-[17px] font-extrabold tracking-tight text-white">
                 DENIM <span className="text-amber-400">UNIVERSE</span>
               </span>
-              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.28em] text-indigo-200/70">
+              <span className="mt-0.5 sm:mt-1 block text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] sm:tracking-[0.28em] text-indigo-200/70 truncate">
                 Explore the world of denim
               </span>
             </span>
@@ -126,7 +126,7 @@ export default function Navbar() {
           <button
             onClick={() => setOpen(!open)}
             aria-label="Toggle menu"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white xl:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition active:scale-95 hover:bg-white/20 xl:hidden"
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -137,32 +137,36 @@ export default function Navbar() {
       {/* Mobile drawer */}
       <div className={`fixed inset-0 z-[80] xl:hidden ${open ? "" : "pointer-events-none"}`}>
         <div
-          className={`absolute inset-0 bg-[#060d22]/70 backdrop-blur-sm transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 bg-[#060d22]/75 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
           onClick={() => setOpen(false)}
         />
         <aside
-          className={`denim-texture absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col shadow-2xl transition-transform duration-300 ${
+          className={`touch-scroll denim-texture absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col shadow-2xl transition-transform duration-300 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-white/10 p-5">
+          <div className="flex items-center justify-between border-b border-white/10 p-4 sm:p-5">
             <div className="flex items-center gap-2.5">
               <img src={logoImg} alt="Denim Universe Logo" className="h-9 w-9 rounded-full object-cover shadow-md ring-1 ring-white/20" />
               <span className="font-display text-lg font-extrabold text-white">
                 DENIM <span className="text-amber-400">UNIVERSE</span>
               </span>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="Close menu" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white">
-              <X size={18} />
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close menu"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition active:scale-95 hover:bg-white/20"
+            >
+              <X size={19} />
             </button>
           </div>
-          <nav className="flex-1 overflow-y-auto p-4" aria-label="Mobile">
+          <nav className="flex-1 overflow-y-auto p-3.5 sm:p-4" aria-label="Mobile">
             {NAV_LINKS.map((l, i) => (
               <a
                 key={l.label}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="group flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-semibold text-indigo-100 transition hover:bg-white/10 hover:text-white"
+                className="group flex min-h-[46px] items-center justify-between rounded-xl px-4 py-3 text-[15px] font-semibold text-indigo-100 transition hover:bg-white/10 active:bg-white/20 hover:text-white"
               >
                 <span className="flex items-center gap-3">
                   <span className="font-mono2 text-[11px] text-amber-400/80">{String(i + 1).padStart(2, "0")}</span>
@@ -172,12 +176,12 @@ export default function Navbar() {
               </a>
             ))}
           </nav>
-          <div className="border-t border-white/10 p-5">
+          <div className="border-t border-white/10 p-4 pb-safe sm:p-5">
             <a
               href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-2xl bg-[#1877F2] py-3.5 font-bold text-white"
+              className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[#1877F2] py-3 font-bold text-white shadow-lg transition active:scale-95 hover:bg-[#0f66d6]"
             >
               <FacebookIcon size={18} /> Follow on Facebook
             </a>
@@ -187,7 +191,7 @@ export default function Navbar() {
                 setOpen(false);
                 handleAdminClick();
               }}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
+              className="mt-3 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 py-3 text-sm font-bold text-amber-300 transition active:scale-95 hover:bg-amber-400/20"
             >
               <Shield size={16} />
               <span>Admin Portal</span>

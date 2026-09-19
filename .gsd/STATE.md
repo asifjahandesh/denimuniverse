@@ -38,7 +38,15 @@
    - Interactive **"Test Supabase Connection"** button with real-time error/success banner.
    - Enhanced `FashionManager.tsx` and `GalleryManager.tsx` with cloud image upload and loading spinners.
 
-6. **Production Deployment Configuration**:
-   - `vercel.json`: Single-page app routing rewrites (`/*` -> `/index.html`) and asset caching headers.
-   - `DEPLOYMENT_GUIDE.md`: Step-by-step instructions for Supabase and Vercel.
-   - `push-updates.bat`: One-click git push to `https://github.com/asifjahandesh/denimuniverse`.
+6. **PC & Mobile Browse-Friendly UI Optimization**:
+   - `src/index.css`: Added `touch-action: manipulation` across interactive elements, eliminated tap highlight flashes with `-webkit-tap-highlight-color: transparent`, prevented iOS Safari auto-zoom on inputs with `@media (max-width: 640px) { input, select, textarea { font-size: 16px !important; } }`, added `.touch-scroll` and `.pb-safe`.
+   - `src/components/common.tsx`: Upgraded `Modal` to mobile bottom sheet on small screens with `max-h-[90dvh]`, drag pill indicator, accessible sticky 44px close button, and smooth momentum scrolling.
+   - `src/components/Navbar.tsx`: Added responsive logo scaling for narrow phone screens (320-360px), 44px+ touch targets on all drawer links and buttons, and `.pb-safe` to prevent mobile home bar overlap.
+   - `src/components/Hero.tsx`: Scaled headline font sizing preventing overflow, full-width CTA buttons on mobile with 50px min height, and adaptive padding on stats grid.
+   - `src/components/Knowledge.tsx`: 9-step process pills upgraded with horizontal snap scrolling (`snap-x snap-mandatory`), touch momentum, and spacious step indicator dots; responsive grid columns (`md:grid-cols-3 lg:grid-cols-5`) for sustainability topics.
+   - `src/components/Content.tsx`: Fixed horizontal pill container `justify-center` left-clipping bug on mobile with `justify-start sm:justify-center`, enhanced Gallery cards to show captions and expand affordance on touchscreens without needing hover, and upgraded Lightbox with touch-friendly 44px controls.
+   - `src/components/Closing.tsx`: Contact form inputs styled for iOS and desktop, full-width touch submit button, and touch-spaced footer link navigation.
+   - `src/components/admin/AdminPanel.tsx`: Mobile header displays active tab name; mobile drawer supports touch-friendly section switching with auto-close; content container has adaptive padding and `.pb-safe`.
+   - `src/components/admin/AdminLoginModal.tsx`: Keypad buttons upgraded to 50px min touch height with active haptic-like scaling.
+   - Admin Managers (`TroubleManager`, `FashionManager`, `GalleryManager`, `DictionaryManager`, `ContactManager`): Edit/Delete action buttons visible and easily tappable on mobile without requiring mouse hover; modal forms support scrollable mobile sheet layout with stacked full-width touch action buttons.
+   - `push-updates.bat`: One-click git push updated with default commit message `feat: optimize UI and touch interfaces for mobile and PC users`.

@@ -61,13 +61,13 @@ export default function AdminLoginModal() {
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/20 bg-gradient-to-b from-[#0a1633] via-[#0d1c42] to-[#060d22] p-6 text-white shadow-[0_25px_60px_rgba(0,0,0,0.6)] sm:p-8">
+      <div className="relative w-full max-w-sm sm:max-w-md overflow-hidden rounded-[2rem] border border-white/20 bg-gradient-to-b from-[#0a1633] via-[#0d1c42] to-[#060d22] p-5 sm:p-8 text-white shadow-[0_25px_60px_rgba(0,0,0,0.6)]">
         <button
           onClick={() => setIsLoginModalOpen(false)}
           aria-label="Close"
-          className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
+          className="absolute right-4 top-4 sm:right-5 sm:top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white active:scale-95"
         >
-          <X size={18} />
+          <X size={19} />
         </button>
 
         <div className="flex flex-col items-center text-center">
@@ -108,7 +108,7 @@ export default function AdminLoginModal() {
                   }
                 }}
                 placeholder="••••"
-                className={`w-full rounded-2xl border bg-black/30 px-4 py-4 text-center font-mono2 text-3xl font-bold tracking-[0.6em] text-white transition focus:outline-none ${
+                className={`w-full rounded-2xl border bg-black/30 px-4 py-3.5 sm:py-4 text-center font-mono2 text-3xl font-bold tracking-[0.6em] text-white transition focus:outline-none ${
                   error
                     ? "border-rose-500 bg-rose-950/30 text-rose-300 ring-2 ring-rose-500/50"
                     : "border-white/15 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/40"
@@ -129,7 +129,7 @@ export default function AdminLoginModal() {
                   key={num}
                   type="button"
                   onClick={() => handleKeypad(num)}
-                  className="flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 font-display text-lg font-bold text-white transition hover:bg-white/15 active:scale-95"
+                  className="flex min-h-[50px] sm:h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 font-display text-xl font-bold text-white select-none transition hover:bg-white/15 active:scale-95 active:bg-white/20"
                 >
                   {num}
                 </button>
@@ -137,20 +137,20 @@ export default function AdminLoginModal() {
               <button
                 type="button"
                 onClick={handleBackspace}
-                className="flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 font-mono2 text-xs uppercase tracking-wider text-indigo-200/80 transition hover:bg-white/15 active:scale-95"
+                className="flex min-h-[50px] sm:h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 font-mono2 text-xs uppercase tracking-wider text-indigo-200/80 select-none transition hover:bg-white/15 active:scale-95 active:bg-white/20"
               >
                 Clear
               </button>
               <button
                 type="button"
                 onClick={() => handleKeypad("0")}
-                className="flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 font-display text-lg font-bold text-white transition hover:bg-white/15 active:scale-95"
+                className="flex min-h-[50px] sm:h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 font-display text-xl font-bold text-white select-none transition hover:bg-white/15 active:scale-95 active:bg-white/20"
               >
                 0
               </button>
               <button
                 type="submit"
-                className="flex h-12 items-center justify-center rounded-xl bg-amber-400 font-display text-sm font-black text-[#0a1633] shadow-md transition hover:bg-amber-300 active:scale-95"
+                className="flex min-h-[50px] sm:h-12 items-center justify-center rounded-2xl bg-amber-400 font-display text-sm font-black text-[#0a1633] select-none shadow-md transition hover:bg-amber-300 active:scale-95"
               >
                 <ArrowRight size={18} />
               </button>

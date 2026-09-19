@@ -87,21 +87,27 @@ export function Modal({ open, onClose, children, wide = false }: { open: boolean
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-[#060d22]/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#060d22]/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
       <div
-        className={`relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl ${
+        className={`touch-scroll relative max-h-[90dvh] w-full overflow-y-auto rounded-t-[2rem] bg-white pb-safe shadow-2xl transition-transform duration-300 sm:max-h-[88vh] sm:rounded-3xl ${
           wide ? "max-w-4xl" : "max-w-2xl"
         }`}
       >
+        {/* Mobile drag / sheet indicator */}
+        <div className="sticky top-0 z-30 flex justify-center bg-white/95 pt-2.5 pb-1 backdrop-blur-sm sm:hidden" aria-hidden="true">
+          <span className="h-1.5 w-12 rounded-full bg-slate-300" />
+        </div>
+
+        {/* Accessible close button with 44px touch target */}
         <button
           onClick={onClose}
-          aria-label="Close"
-          className="sticky top-4 z-10 ml-auto mr-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#0a1633] text-white shadow-lg transition hover:rotate-90 hover:bg-indigo-700"
-          style={{ position: "sticky", float: "right" }}
+          aria-label="Close modal"
+          className="absolute right-3.5 top-3.5 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-[#0a1633]/90 text-white shadow-xl backdrop-blur transition hover:scale-105 hover:bg-indigo-700 active:scale-95 sm:right-4 sm:top-4"
         >
-          <X size={18} />
+          <X size={20} />
         </button>
-        <div className="clear-both">{children}</div>
+
+        <div>{children}</div>
       </div>
     </div>
   );

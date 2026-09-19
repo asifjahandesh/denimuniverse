@@ -43,30 +43,33 @@ export default function AdminPanel() {
   return (
     <div className="fixed inset-0 z-[90] flex flex-col bg-[#060d22] text-white">
       {/* Top Admin Navigation Bar */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a1633] px-4 sm:px-6">
-        <div className="flex items-center gap-3">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a1633] px-3.5 sm:px-6">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white md:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white transition active:scale-95 md:hidden"
             aria-label="Toggle admin menu"
           >
             {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <img
               src={logoImg}
               alt="Denim Universe"
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-400/40"
+              className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover ring-2 ring-amber-400/40"
             />
-            <div className="leading-tight">
-              <span className="font-display flex items-center gap-1.5 text-base font-black tracking-tight text-white">
+            <div className="leading-tight truncate">
+              <span className="font-display flex items-center gap-1.5 text-sm sm:text-base font-black tracking-tight text-white truncate">
                 {siteConfig.brand}
-                <span className="rounded bg-amber-400/20 px-1.5 py-0.2 font-mono2 text-[10px] font-bold text-amber-300">
+                <span className="rounded bg-amber-400/20 px-1.5 py-0.5 font-mono2 text-[10px] font-bold text-amber-300">
                   ADMIN
                 </span>
               </span>
-              <span className="text-[11px] text-indigo-200/60 hidden sm:block">
+              <span className="text-[11px] text-amber-300/80 md:hidden block font-medium truncate">
+                {tabs.find((t) => t.id === activeTab)?.label}
+              </span>
+              <span className="text-[11px] text-indigo-200/60 hidden md:block">
                 Content Management System
               </span>
             </div>
@@ -74,10 +77,10 @@ export default function AdminPanel() {
         </div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={closeAdmin}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-indigo-100 transition hover:bg-white/15 hover:text-white"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-indigo-100 transition active:scale-95 hover:bg-white/15 hover:text-white"
           >
             <ExternalLink size={14} />
             <span className="hidden sm:inline">View Website</span>
@@ -85,7 +88,7 @@ export default function AdminPanel() {
 
           <button
             onClick={logout}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-300 transition active:scale-95 hover:bg-rose-500/20"
           >
             <LogOut size={14} />
             <span>Logout</span>
@@ -142,8 +145,11 @@ export default function AdminPanel() {
 
         {/* Mobile Navigation Drawer */}
         {mobileNavOpen && (
-          <div className="fixed inset-x-0 bottom-0 top-16 z-50 flex bg-[#071026] p-4 md:hidden">
-            <div className="w-full space-y-1">
+          <div className="touch-scroll fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col justify-between overflow-y-auto bg-[#071026] p-4 pb-safe md:hidden">
+            <div className="w-full space-y-1.5">
+              <p className="px-3 pb-1 font-mono2 text-[10px] font-bold uppercase tracking-wider text-indigo-300/50">
+                Switch Section
+              </p>
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
@@ -154,7 +160,7 @@ export default function AdminPanel() {
                       setActiveTab(tab.id);
                       setMobileNavOpen(false);
                     }}
-                    className={`flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-sm font-bold transition ${
+                    className={`flex min-h-[48px] w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition active:scale-95 ${
                       active
                         ? "bg-amber-400 text-[#0a1633]"
                         : "text-indigo-100 hover:bg-white/5"
@@ -173,11 +179,14 @@ export default function AdminPanel() {
                 );
               })}
             </div>
+            <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center">
+              <p className="text-xs text-indigo-300/60">Protected Admin Session</p>
+            </div>
           </div>
         )}
 
         {/* Tab Content Container */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#060d22]">
+        <main className="touch-scroll flex-1 overflow-y-auto p-3.5 pb-safe sm:p-6 lg:p-8 bg-[#060d22]">
           <div className="mx-auto max-w-6xl">
             {activeTab === "overview" && <AdminOverview onSelectTab={(t) => setActiveTab(t as TabId)} />}
             {activeTab === "troubles" && <TroubleManager />}
