@@ -6,17 +6,21 @@ import { ProcessSection, TroubleshootingSection, FashionSection, SustainabilityS
 import { InsightsSection, DictionarySection, GallerySection } from "./components/Content";
 import { AboutSection, FacebookSection, ContactSection, Footer } from "./components/Closing";
 import { Modal, Reveal } from "./components/common";
-import { TROUBLES, CATEGORIES } from "./data/content";
+import { CATEGORIES } from "./data/content";
+import { DataProvider, useData } from "./context/DataContext";
+import AdminLoginModal from "./components/admin/AdminLoginModal";
+import AdminPanel from "./components/admin/AdminPanel";
 
-export default function App() {
+function MainApp() {
   const [showAllTroubles, setShowAllTroubles] = useState(false);
   const [catOpen, setCatOpen] = useState<string | null>(null);
   const [tSearch, setTSearch] = useState("");
+  const { troubles } = useData();
 
   const catData = useMemo(() => CATEGORIES.find((c) => c.name === catOpen), [catOpen]);
   const troublesFiltered = useMemo(
-    () => TROUBLES.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(tSearch.toLowerCase())),
-    [tSearch]
+    () => troubles.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(tSearch.toLowerCase())),
+    [troubles, tSearch]
   );
 
   return (
@@ -38,11 +42,15 @@ export default function App() {
       </main>
       <Footer />
 
+      {/* Admin Modals */}
+      <AdminLoginModal />
+      <AdminPanel />
+
       {/* All troubleshooting modal */}
       <Modal open={showAllTroubles} onClose={() => setShowAllTroubles(false)} wide>
         <div className="p-6 sm:p-9">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#0a1633] px-4 py-1.5 font-mono2 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300">
-            <Wrench size={13} /> Complete library · {TROUBLES.length} cases
+            <Wrench size={13} /> Complete library · {troubles.length} cases
           </span>
           <h3 className="font-display mt-3 text-2xl font-extrabold text-[#0a1633] sm:text-3xl">All Troubleshooting Cases</h3>
           <p className="mt-2 text-sm text-slate-500">Problem → Possible Cause → Solution for every common denim defect.</p>
@@ -61,7 +69,7 @@ export default function App() {
           </div>
           <div className="mt-5 space-y-3">
             {troublesFiltered.map((t) => (
-              <details key={t.title} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white open:border-indigo-300 open:shadow-lg">
+              <details key={t.id || t.title} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white open:border-indigo-300 open:shadow-lg">
                 <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
                   <span className="rounded-full bg-indigo-50 px-2.5 py-1 font-mono2 text-[10px] font-bold uppercase tracking-widest text-indigo-700">{t.tag}</span>
                   <span className="font-display flex-1 text-[15px] font-bold text-[#0a1633]">{t.title}</span>
@@ -71,11 +79,11 @@ export default function App() {
                   <p className="text-[13.5px] leading-relaxed text-slate-600"><span className="font-bold text-rose-600">Problem: </span>{t.problem}</p>
                   <div>
                     <p className="text-[12px] font-bold uppercase tracking-widest text-amber-600">Causes</p>
-                    <ul className="mt-1 space-y-1">{t.causes.map((c) => <li key={c} className="text-[13.5px] text-slate-600">▸ {c}</li>)}</ul>
+                    <ul className="mt-1 space-y-1">{t.causes.map((c, i) => <li key={i} className="text-[13.5px] text-slate-600">▸ {c}</li>)}</ul>
                   </div>
                   <div>
                     <p className="text-[12px] font-bold uppercase tracking-widest text-emerald-600">Solutions</p>
-                    <ul className="mt-1 space-y-1">{t.solutions.map((c) => <li key={c} className="flex gap-1.5 text-[13.5px] text-slate-600"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />{c}</li>)}</ul>
+                    <ul className="mt-1 space-y-1">{t.solutions.map((c, i) => <li key={i} className="flex gap-1.5 text-[13.5px] text-slate-600"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />{c}</li>)}</ul>
                   </div>
                 </div>
               </details>
@@ -122,5 +130,13 @@ export default function App() {
         )}
       </Modal>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <DataProvider>
+      <MainApp />
+    </DataProvider>
   );
 }

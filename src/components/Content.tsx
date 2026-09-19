@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, Clock, Search, X, Expand, ChevronLeft, ChevronRight, Quote } from "lucide-react";
-import { ARTICLES, DICTIONARY, GALLERY, GALLERY_CATS, type Article } from "../data/content";
+import { ARTICLES, GALLERY_CATS, type Article } from "../data/content";
+import { useData } from "../context/DataContext";
 import { Reveal, SectionHeading, Modal } from "./common";
 
 /* ============ INSIGHTS ============ */
@@ -142,13 +143,14 @@ export function InsightsSection() {
 
 /* ============ DICTIONARY ============ */
 export function DictionarySection() {
+  const { dictionary } = useData();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [expanded, setExpanded] = useState<string | null>("GSM");
-  const cats = ["All", ...Array.from(new Set(DICTIONARY.map((d) => d.cat)))];
+  const cats = ["All", ...Array.from(new Set(dictionary.map((d) => d.cat)))];
   const list = useMemo(
-    () => DICTIONARY.filter((d) => (cat === "All" || d.cat === cat) && (d.term + d.short + d.detail).toLowerCase().includes(q.toLowerCase())),
-    [q, cat]
+    () => dictionary.filter((d) => (cat === "All" || d.cat === cat) && (d.term + d.short + d.detail).toLowerCase().includes(q.toLowerCase())),
+    [dictionary, q, cat]
   );
   return (
     <section id="dictionary" className="denim-texture-light py-20 sm:py-24">
@@ -176,7 +178,7 @@ export function DictionarySection() {
                   <X size={16} />
                 </button>
               ) : (
-                <span className="mr-1 hidden rounded-xl bg-[#0a1633] px-4 py-2.5 text-[13px] font-bold text-white sm:block">{DICTIONARY.length} terms</span>
+                <span className="mr-1 hidden rounded-xl bg-[#0a1633] px-4 py-2.5 text-[13px] font-bold text-white sm:block">{dictionary.length} terms</span>
               )}
             </div>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -237,9 +239,10 @@ export function DictionarySection() {
 
 /* ============ GALLERY ============ */
 export function GallerySection() {
+  const { gallery } = useData();
   const [cat, setCat] = useState("All");
   const [light, setLight] = useState<number | null>(null);
-  const list = useMemo(() => (cat === "All" ? GALLERY : GALLERY.filter((g) => g.cat === cat)), [cat]);
+  const list = useMemo(() => (cat === "All" ? gallery : gallery.filter((g) => g.cat === cat)), [gallery, cat]);
 
   const step = (dir: 1 | -1) => {
     if (light === null) return;

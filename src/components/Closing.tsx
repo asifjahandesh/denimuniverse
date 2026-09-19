@@ -4,9 +4,9 @@ import {
   Send, CheckCircle2, BookOpen, FlaskConical, Shirt, Leaf, Calculator,
   Download, Briefcase, Newspaper, MessagesSquare, Award,
 } from "lucide-react";
-import { SITE_CONFIG } from "../data/content";
 import { Reveal, SectionHeading } from "./common";
 import { FacebookIcon } from "./Navbar";
+import { useData } from "../context/DataContext";
 import logoImg from "../assets/logo.png";
 
 /* ============ ABOUT ============ */
@@ -108,6 +108,7 @@ export function AboutSection() {
 
 /* ============ FACEBOOK CTA ============ */
 export function FacebookSection() {
+  const { siteConfig } = useData();
   return (
     <section className="relative overflow-hidden bg-[#1877F2] py-16 sm:py-20">
       <div className="absolute inset-0 opacity-[0.12]">
@@ -120,13 +121,13 @@ export function FacebookSection() {
           <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-[#1877F2] shadow-2xl">
             <FacebookIcon size={30} />
           </span>
-          <h2 className="font-display mt-6 text-3xl font-black text-white sm:text-5xl">Follow Denim Universe</h2>
+          <h2 className="font-display mt-6 text-3xl font-black text-white sm:text-5xl">Follow {siteConfig.brand}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-white/90">
             Follow us for regular denim knowledge, technical information, fashion updates, sustainability topics and industry insights — one useful post at a time.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
             <a
-              href={SITE_CONFIG.facebookUrl}
+              href={siteConfig.facebookUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2.5 rounded-2xl bg-white px-8 py-4 font-display text-[15px] font-extrabold text-[#1877F2] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#0a1633] hover:text-white"
@@ -143,6 +144,7 @@ export function FacebookSection() {
 
 /* ============ CONTACT ============ */
 export function ContactSection() {
+  const { siteConfig } = useData();
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", topic: "Technical question", message: "" });
   const submit = (e: FormEvent) => {
@@ -164,10 +166,10 @@ export function ContactSection() {
         <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-4">
             {[
-              { icon: Mail, label: "Email", value: SITE_CONFIG.email, href: `mailto:${SITE_CONFIG.email}`, sub: "For articles & partnerships" },
-              { icon: FacebookIcon as unknown as typeof Mail, label: "Facebook", value: "Denim Universe Page", href: SITE_CONFIG.facebookUrl, sub: "Fastest response · daily posts" },
-              { icon: MessageCircle, label: "WhatsApp", value: "Chat with the team", href: SITE_CONFIG.whatsapp, sub: "Mon–Sat · 9am–8pm GMT+6" },
-              { icon: MapPin, label: "Base", value: SITE_CONFIG.location, href: "#contact", sub: "Remote-first, mill-connected" },
+              { icon: Mail, label: "Email", value: siteConfig.email, href: `mailto:${siteConfig.email}`, sub: "For articles & partnerships" },
+              { icon: FacebookIcon as unknown as typeof Mail, label: "Facebook", value: "Denim Universe Page", href: siteConfig.facebookUrl, sub: "Fastest response · daily posts" },
+              { icon: MessageCircle, label: "WhatsApp", value: "Chat with the team", href: siteConfig.whatsapp, sub: "Mon–Sat · 9am–8pm GMT+6" },
+              { icon: MapPin, label: "Base", value: siteConfig.location, href: "#contact", sub: "Remote-first, mill-connected" },
             ].map((c, i) => (
               <Reveal key={c.label} delay={i * 70}>
                 <a href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="group flex items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur transition hover:border-amber-400/50 hover:bg-white/[0.1]">
@@ -186,7 +188,7 @@ export function ContactSection() {
             <Reveal delay={200}>
               <div className="flex items-center gap-3 rounded-3xl bg-white/[0.04] p-5">
                 {["FB", "IG", "YT", "IN", "TT"].map((s) => (
-                  <a key={s} href={SITE_CONFIG.facebookUrl} target="_blank" rel="noreferrer" aria-label={s} className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 font-display text-[11px] font-black text-white transition hover:bg-amber-400 hover:text-[#0a1633]">
+                  <a key={s} href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" aria-label={s} className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 font-display text-[11px] font-black text-white transition hover:bg-amber-400 hover:text-[#0a1633]">
                     {s}
                   </a>
                 ))}
@@ -233,6 +235,7 @@ export function ContactSection() {
 
 /* ============ FOOTER ============ */
 export function Footer() {
+  const { siteConfig, setIsLoginModalOpen, setIsAdminOpen, isAuthenticated } = useData();
   return (
     <footer className="bg-[#060d22] pb-8 pt-14 text-indigo-100/70">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -240,13 +243,13 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <img src={logoImg} alt="Denim Universe Official Logo" className="h-11 w-11 rounded-full object-cover shadow-lg ring-2 ring-white/20" />
-              <span className="font-display text-lg font-extrabold text-white">DENIM <span className="text-amber-400">UNIVERSE</span></span>
+              <span className="font-display text-lg font-extrabold text-white">{siteConfig.brand.toUpperCase()}</span>
             </div>
             <p className="mt-4 max-w-sm text-[13.5px] leading-relaxed">
               The denim knowledge hub — fabric processes, troubleshooting, fashion, sustainability and technology. Practical, free, and made for the people who make jeans.
             </p>
             <div className="stitch-line mt-5 max-w-[220px] opacity-70" />
-            <p className="font-mono2 mt-3 text-[11px] uppercase tracking-[0.25em] text-indigo-300/60">Explore the world of denim</p>
+            <p className="font-mono2 mt-3 text-[11px] uppercase tracking-[0.25em] text-indigo-300/60">{siteConfig.tagline}</p>
           </div>
           <nav aria-label="Learn">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Learn</p>
@@ -273,16 +276,22 @@ export function Footer() {
                 <Send size={16} />
               </button>
             </form>
-            <a href={SITE_CONFIG.facebookUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#0f66d6]">
+            <a href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#0f66d6]">
               <FacebookIcon size={15} /> Follow 48K+
             </a>
           </div>
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-[12px] sm:flex-row">
-          <p>© 2026 Denim Universe. All rights reserved. Made with indigo & care.</p>
+          <p>© 2026 {siteConfig.brand}. All rights reserved. Made with indigo & care.</p>
           <p className="flex items-center gap-4">
             <a href="#home" className="hover:text-amber-300">Privacy</a>
             <a href="#home" className="hover:text-amber-300">Terms</a>
+            <button
+              onClick={() => (isAuthenticated ? setIsAdminOpen(true) : setIsLoginModalOpen(true))}
+              className="text-indigo-300/60 hover:text-amber-300 transition underline underline-offset-2"
+            >
+              Admin Portal
+            </button>
             <span className="font-mono2 text-[11px] text-indigo-300/50">COTTON → INDIGO → ICON</span>
           </p>
         </div>

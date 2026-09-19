@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowRight, BookOpen, Play, Award, Users, Factory, Leaf } from "lucide-react";
 import { HERO_IMG, SITE_CONFIG } from "../data/content";
+import { useData } from "../context/DataContext";
 import { Reveal } from "./common";
 import { FacebookIcon } from "./Navbar";
 import logoImg from "../assets/logo.png";
@@ -17,6 +18,7 @@ const TICKER = [
 ];
 
 export default function Hero() {
+  const { siteConfig } = useData();
   return (
     <section id="home" className="denim-texture relative overflow-hidden">
       {/* BG image layer */}
@@ -77,7 +79,7 @@ export default function Hero() {
                   <ArrowRight size={17} className="transition group-hover:translate-x-1" />
                 </a>
                 <a
-                  href={SITE_CONFIG.facebookUrl}
+                  href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-7 py-4 font-display text-[15px] font-bold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-[#1877F2] hover:border-[#1877F2]"

@@ -4,7 +4,9 @@ import {
   Layers, Droplet, Grid3x3, Sparkles, Waves, BadgeCheck, Wrench, Shirt, Leaf,
   Cpu, TrendingUp,
 } from "lucide-react";
-import { PROCESS_STEPS, TROUBLES, FASHION_CARDS, SUST_STATS, SUST_TOPICS, CATEGORIES, type TroubleItem } from "../data/content";
+import { PROCESS_STEPS, SUST_STATS, SUST_TOPICS, CATEGORIES } from "../data/content";
+import { TroubleItem } from "../types/content";
+import { useData } from "../context/DataContext";
 import { Reveal, SectionHeading, Modal, Counter } from "./common";
 
 const iconMap: Record<string, typeof Layers> = {
@@ -127,9 +129,10 @@ function TroubleCard({ t, onOpen }: { t: TroubleItem; onOpen: () => void }) {
 }
 
 export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void }) {
+  const { troubles } = useData();
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<TroubleItem | null>(null);
-  const filtered = useMemo(() => TROUBLES.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(q.toLowerCase())).slice(0, 6), [q]);
+  const filtered = useMemo(() => troubles.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(q.toLowerCase())).slice(0, 6), [troubles, q]);
   return (
     <section id="troubleshooting" className="denim-texture relative py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -176,7 +179,7 @@ export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void })
               <ArrowRight size={17} className="transition group-hover:translate-x-1" />
             </button>
             <p className="flex items-center gap-2 text-[13px] text-indigo-200/70">
-              <AlertTriangle size={14} className="text-amber-400" /> 12 documented cases · Dyeing to washing · Free forever
+              <AlertTriangle size={14} className="text-amber-400" /> {troubles.length} documented cases · Dyeing to washing · Free forever
             </p>
           </div>
         </Reveal>
@@ -214,6 +217,7 @@ export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void })
 
 /* ============ FASHION ============ */
 export function FashionSection() {
+  const { fashionCards } = useData();
   return (
     <section id="fashion" className="denim-texture-light relative py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -225,8 +229,8 @@ export function FashionSection() {
           />
         </Reveal>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {FASHION_CARDS.map((c, i) => (
-            <Reveal key={c.title} delay={(i % 4) * 80}>
+          {fashionCards.map((c, i) => (
+            <Reveal key={c.id || c.title} delay={(i % 4) * 80}>
               <article className="group relative h-[380px] overflow-hidden rounded-3xl shadow-lg">
                 <img src={c.image} alt={c.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#060d22] via-[#060d22]/25 to-transparent" />

@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'update site changes'): "
-if "%MSG%"=="" set MSG=update: update site changes and Facebook link
+set /p MSG="Enter commit message (press Enter for 'feat: integrate Supabase cloud and deployment setup'): "
+if "%MSG%"=="" set MSG=feat: integrate Supabase cloud database, storage bucket and Vercel deployment setup
 
 echo.
 echo 1. Staging changes...

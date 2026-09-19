@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronRight, Shield } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "../data/content";
+import { useData } from "../context/DataContext";
 import logoImg from "../assets/logo.png";
 
 export function FacebookIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
@@ -15,6 +16,15 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("Home");
+  const { siteConfig, isAuthenticated, setIsAdminOpen, setIsLoginModalOpen } = useData();
+
+  const handleAdminClick = () => {
+    if (isAuthenticated) {
+      setIsAdminOpen(true);
+    } else {
+      setIsLoginModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -41,9 +51,18 @@ export default function Navbar() {
           </p>
           <div className="flex items-center gap-5">
             <span className="font-mono2 tracking-widest text-[11px] uppercase">EST. For denim minds</span>
-            <a href={SITE_CONFIG.facebookUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-amber-300">
+            <a href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-amber-300">
               <FacebookIcon size={13} /> Follow 48K+
             </a>
+            <button
+              type="button"
+              onClick={handleAdminClick}
+              className="flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300 transition hover:bg-amber-400/20"
+              title="Open Admin Panel"
+            >
+              <Shield size={12} className="text-amber-400" />
+              <span>Admin</span>
+            </button>
           </div>
         </div>
       </div>
@@ -88,13 +107,22 @@ export default function Navbar() {
               </a>
             ))}
             <a
-              href={SITE_CONFIG.facebookUrl}
+              href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl}
               target="_blank"
               rel="noreferrer"
               className="ml-2 inline-flex items-center gap-2 rounded-full bg-[#1877F2] px-4 py-2 text-[13px] font-bold text-white shadow-lg shadow-blue-900/40 transition hover:-translate-y-0.5 hover:bg-[#0f66d6]"
             >
               <FacebookIcon size={15} /> Follow
             </a>
+            <button
+              type="button"
+              onClick={handleAdminClick}
+              className="ml-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-amber-400/10 px-3.5 py-2 text-[13px] font-bold text-amber-300 transition hover:bg-amber-400 hover:text-[#0a1633]"
+              title="Admin Panel"
+            >
+              <Shield size={14} />
+              <span>Admin</span>
+            </button>
           </nav>
 
           {/* Mobile toggle */}
@@ -149,13 +177,24 @@ export default function Navbar() {
           </nav>
           <div className="border-t border-white/10 p-5">
             <a
-              href={SITE_CONFIG.facebookUrl}
+              href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl}
               target="_blank"
               rel="noreferrer"
               className="flex items-center justify-center gap-2 rounded-2xl bg-[#1877F2] py-3.5 font-bold text-white"
             >
               <FacebookIcon size={18} /> Follow on Facebook
             </a>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                handleAdminClick();
+              }}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
+            >
+              <Shield size={16} />
+              <span>Admin Portal (PIN: 0707)</span>
+            </button>
             <p className="mt-3 text-center text-xs text-indigo-200/60">Daily denim knowledge · fashion · sustainability</p>
           </div>
         </aside>
