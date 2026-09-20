@@ -22,6 +22,7 @@ import {
   CreditCard,
   Upload,
   Phone,
+  Clock,
 } from "lucide-react";
 import { Modal } from "./common";
 import { useData } from "../context/DataContext";
@@ -38,6 +39,7 @@ export default function MemberLoginModal() {
     membershipSettings,
     siteConfig,
     openCheckout,
+    openMemberProfile,
   } = useData();
 
   // Form states
@@ -57,7 +59,25 @@ export default function MemberLoginModal() {
   const [trxId, setTrxId] = useState("");
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string>("");
 
+  // Under Review confirmation screen after paid plan registration
+  const [underReviewState, setUnderReviewState] = useState<{
+    name: string;
+    email: string;
+    planName: string;
+    planPrice: string;
+    trxId: string;
+    method: string;
+    screenshotAttached: boolean;
+  } | null>(null);
+
   if (!isMemberLoginModalOpen) return null;
+
+  const handleClose = () => {
+    setUnderReviewState(null);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setIsMemberLoginModalOpen(false);
+  };
 
   const handleCopy = (text: string, key: string) => {
     const cleanNumber = text.split(" ")[0];
@@ -148,17 +168,38 @@ export default function MemberLoginModal() {
       });
 
       if (result.success) {
-        setSuccessMsg(result.message);
-        setTimeout(() => {
-          setIsMemberLoginModalOpen(false);
+        if (result.paymentPending) {
+          // Switch modal to dedicated "Activation Under Review" view
+          setUnderReviewState({
+            name: name.trim() || email.split("@")[0],
+            email: email.trim().toLowerCase(),
+            planName: selectedPlan === "basic" ? "Basic Plan" : "Premium VIP Plan",
+            planPrice:
+              selectedPlan === "basic"
+                ? membershipSettings.basicPlan?.price || "199 BDT"
+                : membershipSettings.premiumPlan?.price || "499 BDT",
+            trxId: trxId.trim().toUpperCase(),
+            method: paymentMethod,
+            screenshotAttached: !!screenshotDataUrl,
+          });
           setName("");
           setEmail("");
           setPassword("");
           setTrxId("");
           setSenderNumber("");
           setScreenshotDataUrl("");
+          setErrorMsg(null);
           setSuccessMsg(null);
-        }, result.paymentPending ? 2600 : 900);
+        } else {
+          setSuccessMsg(result.message);
+          setTimeout(() => {
+            setIsMemberLoginModalOpen(false);
+            setName("");
+            setEmail("");
+            setPassword("");
+            setSuccessMsg(null);
+          }, 900);
+        }
       } else {
         setErrorMsg(result.message);
       }

@@ -657,7 +657,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setMembers((prev) => [newMember, ...prev]);
       setPayments((prev) => [newPayment, ...prev]);
       setCurrentMember(newMember);
-      setIsMemberLoginModalOpen(false);
 
       syncRemoteMember(newMember);
       syncRemotePayment(newPayment);
