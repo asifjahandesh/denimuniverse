@@ -76,7 +76,18 @@ interface DataContextType {
   setMemberAuthMode: (mode: "signin" | "signup" | "packages") => void;
   openMemberModal: (mode?: "signin" | "signup" | "packages") => void;
   memberLogin: (email: string, pass: string) => { success: boolean; message: string };
-  memberSignUp: (data: { name: string; email: string; password: string; plan?: "free" | "basic" | "premium" }) => { success: boolean; message: string; member?: MemberAccount };
+  memberSignUp: (data: {
+    name: string;
+    email: string;
+    password: string;
+    plan?: "free" | "basic" | "premium";
+    payment?: {
+      method: "bkash" | "nagad" | "bank" | "other";
+      senderNumber?: string;
+      trxId: string;
+      screenshotUrl?: string;
+    };
+  }) => { success: boolean; message: string; member?: MemberAccount; paymentPending?: boolean };
   memberLogout: () => void;
   hasResourceAccess: (resourceId: string) => boolean;
 
@@ -568,7 +579,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string;
     password: string;
     plan?: "free" | "basic" | "premium";
-  }): { success: boolean; message: string; member?: MemberAccount } => {
+    payment?: {
+      method: "bkash" | "nagad" | "bank" | "other";
+      senderNumber?: string;
+      trxId: string;
+      screenshotUrl?: string;
+    };
+  }): { success: boolean; message: string; member?: MemberAccount; paymentPending?: boolean } => {
     const cleanEmail = data.email.trim().toLowerCase();
     const cleanName = data.name.trim();
     const cleanPass = data.password.trim();
@@ -586,16 +603,84 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: "An account with this email already exists. Please sign in instead." };
     }
 
+    // If user chose Basic or Premium plan, payment & Transaction ID are mandatory
+    if (chosenPlan !== "free") {
+      const cleanTrx = data.payment?.trxId?.trim().toUpperCase() || "";
+      if (!cleanTrx || cleanTrx.length < 5) {
+        return {
+          success: false,
+          message: `Transaction ID (min 5 characters) is required to complete registration for the ${
+            chosenPlan === "basic" ? "Basic Plan (199 BDT)" : "Premium VIP Plan (499 BDT)"
+          }.`,
+        };
+      }
+
+      const planPrice =
+        chosenPlan === "basic"
+          ? membershipSettings.basicPlan?.price || "199 BDT"
+          : membershipSettings.premiumPlan?.price || "499 BDT";
+      const planName = chosenPlan === "basic" ? "Basic Plan" : "Premium VIP Plan";
+
+      // Create member with "free" status temporarily until admin verifies the payment
+      const newMember: MemberAccount = {
+        id: `mem-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+        email: cleanEmail,
+        password: cleanPass,
+        name: cleanName || cleanEmail.split("@")[0],
+        status: "active",
+        plan: "free", // Kept as free until admin approval
+        accessAll: false,
+        allowedResourceIds: [],
+        notes: `Registered with ${chosenPlan.toUpperCase()} request (${planPrice}). Payment submitted (TrxID: ${cleanTrx}). Pending admin verification.`,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Create pending payment record for Admin Panel
+      const newPayment: PaymentRecord = {
+        id: `pay-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+        memberId: newMember.id,
+        memberName: newMember.name,
+        memberEmail: newMember.email,
+        paymentType: "plan",
+        planId: chosenPlan,
+        planName,
+        amount: planPrice,
+        method: data.payment?.method || "bkash",
+        senderNumber: data.payment?.senderNumber?.trim() || undefined,
+        trxId: cleanTrx,
+        screenshotUrl: data.payment?.screenshotUrl || undefined,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+        adminNotes: `Submitted during Sign Up for ${chosenPlan} plan. Requires admin review & activation.`,
+      };
+
+      setMembers((prev) => [newMember, ...prev]);
+      setPayments((prev) => [newPayment, ...prev]);
+      setCurrentMember(newMember);
+      setIsMemberLoginModalOpen(false);
+
+      syncRemoteMember(newMember);
+      syncRemotePayment(newPayment);
+
+      return {
+        success: true,
+        message: `Registration & Payment received! Your ${planName} request (${planPrice}, TrxID: ${cleanTrx}) is under review. Our admin will activate your package shortly.`,
+        member: newMember,
+        paymentPending: true,
+      };
+    }
+
+    // Free account: immediate registration, no payment required
     const newMember: MemberAccount = {
       id: `mem-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
       email: cleanEmail,
       password: cleanPass,
       name: cleanName || cleanEmail.split("@")[0],
       status: "active",
-      plan: chosenPlan,
-      accessAll: chosenPlan === "premium",
+      plan: "free",
+      accessAll: false,
       allowedResourceIds: [],
-      notes: chosenPlan !== "free" ? `Registered with requested ${chosenPlan} plan` : "Self-registered free account",
+      notes: "Self-registered free account",
       createdAt: new Date().toISOString(),
     };
 

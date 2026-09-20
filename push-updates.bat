@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'fix: calibrate PDF font metrics and eliminate right-border text clipping'): "
-if "%MSG%"=="" set MSG=fix: calibrate PDF font metrics and eliminate right-border text clipping
+set /p MSG="Enter commit message (press Enter for 'feat: require payment for Basic and Premium plans during Sign Up'): "
+if "%MSG%"=="" set MSG=feat: require payment for Basic and Premium plans during Sign Up
 
 echo.
 echo 1. Staging changes...

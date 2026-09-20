@@ -20,6 +20,8 @@ import {
   BookOpen,
   HelpCircle,
   CreditCard,
+  Upload,
+  Phone,
 } from "lucide-react";
 import { Modal } from "./common";
 import { useData } from "../context/DataContext";
@@ -49,12 +51,37 @@ export default function MemberLoginModal() {
   const [submitting, setSubmitting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  // Payment states for Basic / Premium signup
+  const [paymentMethod, setPaymentMethod] = useState<"bkash" | "nagad" | "bank">("bkash");
+  const [senderNumber, setSenderNumber] = useState("");
+  const [trxId, setTrxId] = useState("");
+  const [screenshotDataUrl, setScreenshotDataUrl] = useState<string>("");
+
   if (!isMemberLoginModalOpen) return null;
 
   const handleCopy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
+    const cleanNumber = text.split(" ")[0];
+    navigator.clipboard.writeText(cleanNumber || text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      setErrorMsg("Screenshot size must be under 3MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setScreenshotDataUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSignInSubmit = (e: React.FormEvent) => {
@@ -87,6 +114,20 @@ export default function MemberLoginModal() {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
+
+    // If Basic or Premium is selected, Transaction ID is strictly required
+    if (selectedPlan !== "free") {
+      const cleanTrx = trxId.trim().toUpperCase();
+      if (!cleanTrx || cleanTrx.length < 5) {
+        setErrorMsg(
+          `Please enter your Transaction ID (at least 5 characters) to complete registration for the ${
+            selectedPlan === "basic" ? "Basic Plan (199 BDT)" : "Premium VIP Plan (499 BDT)"
+          }.`
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -95,6 +136,15 @@ export default function MemberLoginModal() {
         email,
         password,
         plan: selectedPlan,
+        payment:
+          selectedPlan !== "free"
+            ? {
+                method: paymentMethod,
+                senderNumber: senderNumber.trim() || undefined,
+                trxId: trxId.trim().toUpperCase(),
+                screenshotUrl: screenshotDataUrl || undefined,
+              }
+            : undefined,
       });
 
       if (result.success) {
@@ -104,8 +154,11 @@ export default function MemberLoginModal() {
           setName("");
           setEmail("");
           setPassword("");
+          setTrxId("");
+          setSenderNumber("");
+          setScreenshotDataUrl("");
           setSuccessMsg(null);
-        }, 900);
+        }, result.paymentPending ? 2600 : 900);
       } else {
         setErrorMsg(result.message);
       }
@@ -128,6 +181,9 @@ export default function MemberLoginModal() {
       setPassword("denim2026");
     }
   };
+
+  const bkashNumber = membershipSettings?.paymentMethods?.bkash || "01700000000 (Personal)";
+  const nagadNumber = membershipSettings?.paymentMethods?.nagad || "01800000000 (Personal)";
 
   const whatsappPhone =
     membershipSettings?.paymentMethods?.whatsapp?.replace(/[^0-9]/g, "") ||
@@ -453,13 +509,194 @@ export default function MemberLoginModal() {
               </div>
             </div>
 
+            {/* Free Plan Information Banner */}
+            {selectedPlan === "free" && (
+              <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
+                <div className="flex items-center gap-2 font-bold text-emerald-300">
+                  <CheckCircle2 size={15} className="text-emerald-400" />
+                  <span>Free Member Account</span>
+                </div>
+                <p className="mt-1 text-[11.5px] text-emerald-200/80 leading-relaxed">
+                  Immediate free access to online technical articles and knowledge base. No payment required.
+                </p>
+              </div>
+            )}
+
+            {/* Basic / Premium Payment Gateway Section */}
+            {selectedPlan !== "free" && (
+              <div className="space-y-3.5 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4">
+                {/* Header & Payable Amount */}
+                <div className="flex items-center justify-between border-b border-amber-400/20 pb-3">
+                  <div>
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-amber-300">
+                      Payment Required For {selectedPlan === "basic" ? "Basic Plan" : "Premium VIP Plan"}
+                    </span>
+                    <p className="text-[11.5px] text-slate-300 mt-0.5">
+                      Send money via bKash / Nagad Personal, then enter your TrxID below:
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-[9.5px] uppercase font-bold text-amber-200/60">Payable</span>
+                    <span className="text-base font-black text-amber-400">
+                      {selectedPlan === "basic"
+                        ? membershipSettings.basicPlan?.price || "199 BDT"
+                        : membershipSettings.premiumPlan?.price || "499 BDT"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* bKash & Nagad Accounts with Copy */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-pink-500/25 bg-pink-500/10 p-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-pink-300 uppercase">bKash (Personal)</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(bkashNumber, "bkash")}
+                        className="flex items-center gap-1 text-[10px] text-pink-200 hover:text-white transition cursor-pointer"
+                      >
+                        {copiedKey === "bkash" ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                        <span>{copiedKey === "bkash" ? "Copied!" : "Copy"}</span>
+                      </button>
+                    </div>
+                    <p className="mt-1 font-mono text-xs font-bold text-white tracking-wide">{bkashNumber}</p>
+                  </div>
+
+                  <div className="rounded-xl border border-orange-500/25 bg-orange-500/10 p-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-orange-300 uppercase">Nagad (Personal)</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(nagadNumber, "nagad")}
+                        className="flex items-center gap-1 text-[10px] text-orange-200 hover:text-white transition cursor-pointer"
+                      >
+                        {copiedKey === "nagad" ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                        <span>{copiedKey === "nagad" ? "Copied!" : "Copy"}</span>
+                      </button>
+                    </div>
+                    <p className="mt-1 font-mono text-xs font-bold text-white tracking-wide">{nagadNumber}</p>
+                  </div>
+                </div>
+
+                {/* Payment Method Selector */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-indigo-200/70">
+                    Payment Method Used *
+                  </label>
+                  <div className="mt-1.5 grid grid-cols-3 gap-2">
+                    {(["bkash", "nagad", "bank"] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setPaymentMethod(m)}
+                        className={`rounded-xl border py-2 text-center text-xs font-bold capitalize transition ${
+                          paymentMethod === m
+                            ? "border-amber-400 bg-amber-400/20 text-amber-300 shadow-sm"
+                            : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        }`}
+                      >
+                        {m === "bank" ? "Bank" : m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sender Mobile Number (Optional) */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-indigo-200/70">
+                    Sender Mobile Number (Optional)
+                  </label>
+                  <div className="relative mt-1">
+                    <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-300/60" />
+                    <input
+                      type="text"
+                      value={senderNumber}
+                      onChange={(e) => setSenderNumber(e.target.value)}
+                      placeholder="017XXXXXXXX"
+                      className="w-full rounded-xl border border-white/15 bg-white/5 py-2 pl-9 pr-3 font-mono text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Transaction ID (Required) */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                      Transaction ID (TrxID) *
+                    </label>
+                    <span className="text-[10px] text-amber-200/70">From bKash / Nagad SMS</span>
+                  </div>
+                  <div className="relative mt-1">
+                    <CheckCircle2 size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400" />
+                    <input
+                      required
+                      type="text"
+                      value={trxId}
+                      onChange={(e) => setTrxId(e.target.value)}
+                      placeholder="e.g., BLK92A87X or 9H43B12"
+                      className="w-full rounded-xl border border-amber-400/40 bg-amber-400/10 py-2.5 pl-9 pr-3 font-mono text-xs font-bold text-white placeholder:text-amber-200/30 focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Proof Screenshot (Optional) */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-indigo-200/70">
+                    Payment Proof Screenshot (Optional)
+                  </label>
+                  <div className="mt-1">
+                    {screenshotDataUrl ? (
+                      <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <img
+                            src={screenshotDataUrl}
+                            alt="Screenshot preview"
+                            className="h-8 w-8 rounded object-cover border border-emerald-400/30"
+                          />
+                          <span className="text-xs text-emerald-300 truncate">Screenshot attached</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setScreenshotDataUrl("")}
+                          className="text-xs font-bold text-red-400 hover:text-red-300 px-2 cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/5 py-2.5 px-3 text-xs text-indigo-200 hover:border-amber-400 hover:bg-white/10 transition">
+                        <Upload size={14} className="text-amber-400" />
+                        <span>Upload payment screenshot</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleScreenshotChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 py-3 text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 active:scale-95 disabled:opacity-50"
+              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 py-3 text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               <User size={16} />
-              <span>{submitting ? "Registering..." : "Create Account & Get Started"}</span>
+              <span>
+                {submitting
+                  ? "Processing Registration..."
+                  : selectedPlan === "free"
+                  ? "Create Free Account"
+                  : `Pay ${
+                      selectedPlan === "basic"
+                        ? membershipSettings.basicPlan?.price || "199 BDT"
+                        : membershipSettings.premiumPlan?.price || "499 BDT"
+                    } & Complete Registration`}
+              </span>
             </button>
 
             {/* Switch to Sign In */}

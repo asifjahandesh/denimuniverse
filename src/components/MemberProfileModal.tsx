@@ -106,6 +106,10 @@ export default function MemberProfileModal() {
   const isPremium = currentMember.plan === "premium" || currentMember.accessAll;
   const isBasic = currentMember.plan === "basic";
 
+  const pendingPlanPayment = memberPayments.find(
+    (p) => p.paymentType === "plan" && p.status === "pending"
+  );
+
   return (
     <Modal
       open={isMemberProfileModalOpen}
@@ -212,6 +216,28 @@ export default function MemberProfileModal() {
             </div>
           </div>
         </div>
+
+        {/* Pending Plan Verification Banner */}
+        {pendingPlanPayment && (
+          <div className="bg-amber-400/10 border-b border-amber-400/20 px-5 py-3 sm:px-7 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <Clock size={16} className="text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="font-bold text-amber-300">
+                  {pendingPlanPayment.planName || "Membership"} Activation Pending:
+                </span>{" "}
+                Payment of {pendingPlanPayment.amount} via {pendingPlanPayment.method.toUpperCase()} (TrxID:{" "}
+                <span className="font-mono font-bold text-white bg-amber-400/20 px-1.5 py-0.5 rounded">
+                  {pendingPlanPayment.trxId}
+                </span>
+                ) is awaiting admin verification.
+              </div>
+            </div>
+            <span className="shrink-0 self-start sm:self-auto rounded-full border border-amber-400/30 bg-amber-400/20 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-300">
+              Admin Review in Progress
+            </span>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex border-b border-white/10 px-5 sm:px-7">
