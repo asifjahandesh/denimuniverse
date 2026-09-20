@@ -242,14 +242,218 @@ export default function MemberLoginModal() {
   return (
     <Modal
       open={isMemberLoginModalOpen}
-      onClose={() => setIsMemberLoginModalOpen(false)}
-      wide={memberAuthMode === "packages"}
+      onClose={handleClose}
+      wide={memberAuthMode === "packages" || !!underReviewState}
     >
       <div className="relative overflow-hidden rounded-3xl bg-[#0a1633] text-white">
-        {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-7">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-400 ring-1 ring-amber-400/20">
+        {underReviewState ? (
+          /* ================================================================= */
+          /* ACTIVATION UNDER REVIEW CONFIRMATION VIEW                          */
+          /* ================================================================= */
+          <div>
+            {/* Review Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-7 bg-amber-500/10">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400/20 text-amber-400 ring-1 ring-amber-400/30">
+                  <Clock size={20} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-white sm:text-lg">
+                    Registration Complete — Activation Under Review
+                  </h3>
+                  <p className="text-xs text-amber-200/80">
+                    Payment verification in progress. Our admin verifies all Transaction IDs manually.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleClose}
+                className="rounded-xl bg-white/5 p-2 text-slate-400 transition hover:bg-white/10 hover:text-white cursor-pointer"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Review Content */}
+            <div className="p-5 sm:p-7 space-y-5">
+              {/* Security / Anti-Fraud Info Banner */}
+              <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 sm:p-5 text-amber-200">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-400">
+                    <ShieldCheck size={18} />
+                  </div>
+                  <div className="text-xs space-y-1.5 leading-relaxed">
+                    <p className="font-bold text-sm text-amber-300">
+                      Why is my package activation under review?
+                    </p>
+                    <p className="text-amber-200/90">
+                      To protect Denim Universe against fake or invalid Transaction IDs, all{" "}
+                      <strong className="text-white">Basic ({membershipSettings.basicPlan?.price || "199 BDT"})</strong> and{" "}
+                      <strong className="text-white">Premium VIP ({membershipSettings.premiumPlan?.price || "499 BDT"})</strong>{" "}
+                      packages require manual verification by our administration before full download access to technical PDFs is enabled.
+                    </p>
+                    <p className="text-amber-200/80">
+                      Your account is currently active on the <strong className="text-white">Free tier</strong>. You can sign in immediately to explore all documents, research summaries, and free publications. As soon as admin verifies your Transaction ID with our bKash/Nagad merchant statement, your package will be activated instantly!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submitted Payment & Account Summary Card */}
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Submitted Registration Details
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
+                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+                    Pending Admin Approval
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                    <div className="text-slate-400">Member Account</div>
+                    <div className="font-semibold text-white mt-0.5">{underReviewState.name}</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5 flex items-center gap-1">
+                      <Mail size={11} className="text-slate-500" />
+                      {underReviewState.email}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                    <div className="text-slate-400">Selected Package</div>
+                    <div className="font-bold text-amber-300 mt-0.5 flex items-center gap-1.5">
+                      <Crown size={13} className="text-amber-400" />
+                      {underReviewState.planName}
+                    </div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">
+                      Amount: <strong className="text-white">{underReviewState.planPrice}</strong>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+                    <div className="text-slate-400">Payment Gateway</div>
+                    <div className="font-bold text-white uppercase mt-0.5">
+                      {underReviewState.method}
+                    </div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">
+                      Proof Screenshot:{" "}
+                      {underReviewState.screenshotAttached ? (
+                        <span className="text-emerald-400 font-semibold inline-flex items-center gap-1">
+                          <Check size={11} /> Attached
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">None attached</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-3">
+                    <div className="text-amber-300/80 font-medium">Submitted TrxID</div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <span className="font-mono text-sm font-bold text-white tracking-wider">
+                        {underReviewState.trxId}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(underReviewState.trxId, "review-trx")}
+                        className="inline-flex items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-400/20 transition cursor-pointer"
+                      >
+                        {copiedKey === "review-trx" ? (
+                          <>
+                            <Check size={11} className="text-emerald-400" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={11} />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* What Happens Next steps */}
+              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-xs space-y-2.5">
+                <span className="font-bold uppercase tracking-wider text-slate-300 text-[11px] block">
+                  What Happens Next?
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[11px] font-bold text-amber-400">
+                      1
+                    </span>
+                    <span className="text-slate-300">
+                      Admin matches your Transaction ID against our merchant statement.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[11px] font-bold text-amber-400">
+                      2
+                    </span>
+                    <span className="text-slate-300">
+                      Upon confirmation, full package access is enabled automatically.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[11px] font-bold text-amber-400">
+                      3
+                    </span>
+                    <span className="text-slate-300">
+                      You can check your status anytime from your Member Profile.
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleClose();
+                    openMemberProfile();
+                  }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 py-3 text-xs font-bold text-slate-950 hover:brightness-110 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                >
+                  <User size={15} />
+                  <span>View Status in Member Profile</span>
+                </button>
+
+                <a
+                  href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
+                    `Hello Denim Universe! I just registered for ${underReviewState.planName} (${underReviewState.planPrice}) with TrxID: ${underReviewState.trxId} for ${underReviewState.email}. Please verify and activate my account.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 transition"
+                >
+                  <MessageCircle size={15} />
+                  <span>Fast-Track via WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white transition cursor-pointer"
+                >
+                  <span>Explore Library (Free Tier)</span>
+                  <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Top Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-400 ring-1 ring-amber-400/20">
               {memberAuthMode === "packages" ? <Crown size={19} /> : <Lock size={18} />}
             </div>
             <div>
@@ -266,8 +470,8 @@ export default function MemberLoginModal() {
             </div>
           </div>
           <button
-            onClick={() => setIsMemberLoginModalOpen(false)}
-            className="rounded-xl bg-white/5 p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            onClick={handleClose}
+            className="rounded-xl bg-white/5 p-2 text-slate-400 transition hover:bg-white/10 hover:text-white cursor-pointer"
             aria-label="Close"
           >
             <X size={18} />
@@ -935,6 +1139,8 @@ export default function MemberLoginModal() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </Modal>

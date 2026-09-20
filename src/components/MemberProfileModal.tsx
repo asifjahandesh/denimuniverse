@@ -166,9 +166,16 @@ export default function MemberProfileModal() {
                     </span>
                   )}
                   {!isPremium && !isBasic && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/30 bg-slate-500/10 px-2.5 py-0.5 text-xs font-medium text-slate-400">
-                      FREE ACCOUNT
-                    </span>
+                    pendingPlanPayment ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-0.5 text-xs font-bold text-amber-300 animate-pulse">
+                        <Clock size={12} className="text-amber-400" />
+                        {pendingPlanPayment.planName?.toUpperCase() || "PACKAGE"} ACTIVATION UNDER REVIEW
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/30 bg-slate-500/10 px-2.5 py-0.5 text-xs font-medium text-slate-400">
+                        FREE ACCOUNT
+                      </span>
+                    )
                   )}
                 </div>
 

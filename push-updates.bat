@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: require payment for Basic and Premium plans during Sign Up'): "
-if "%MSG%"=="" set MSG=feat: require payment for Basic and Premium plans during Sign Up
+set /p MSG="Enter commit message (press Enter for 'feat: manual admin verification & under review flow for paid signups'): "
+if "%MSG%"=="" set MSG=feat: manual admin verification and under review flow for paid signups
 
 echo.
 echo 1. Staging changes...
