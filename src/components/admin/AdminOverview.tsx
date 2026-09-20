@@ -17,6 +17,7 @@ import {
   BarChart3,
   Users,
   TrendingUp,
+  FileText,
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { testSupabaseConnection } from "../../lib/supabase";
@@ -28,7 +29,7 @@ interface AdminOverviewProps {
 }
 
 export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
-  const { troubles, fashionCards, dictionary, gallery, siteConfig, isCloudConnected, cloudHost } = useData();
+  const { troubles, fashionCards, dictionary, gallery, siteConfig, isCloudConnected, cloudHost, resources, members } = useData();
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [stats, setStats] = useState<VisitorStats>(getVisitorStats());
@@ -58,6 +59,15 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
   };
 
   const cards = [
+    {
+      id: "resources",
+      title: "Technical Resources & PDFs",
+      count: resources.length,
+      desc: `${members.length} members · Paid PDF manuals & SOPs`,
+      icon: FileText,
+      color: "from-amber-500 to-orange-700",
+      pill: "Technical Manuals",
+    },
     {
       id: "troubles",
       title: "Troubleshooting Library",

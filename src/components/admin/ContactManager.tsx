@@ -828,13 +828,18 @@ export default function ContactManager() {
               <ol className="list-decimal list-inside space-y-1.5 text-[11.5px] text-indigo-200/80 leading-relaxed">
                 <li>Sign up for a free account at <strong className="text-white">resend.com</strong>.</li>
                 <li>Go to <strong className="text-white">API Keys</strong> and click <strong className="text-white">Create API Key</strong> (it starts with <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-300 font-mono2">re_...</code>).</li>
-                <li>Open your <strong className="text-white">Vercel Dashboard</strong> &gt; Select <strong className="text-white">denimuniverse</strong> &gt; <strong className="text-white">Settings</strong> &gt; <strong className="text-white">Environment Variables</strong>.</li>
-                <li>Add variable: <code className="bg-black/50 px-2 py-0.5 rounded text-amber-300 font-mono2">RESEND_API_KEY</code> = <span className="text-slate-400 font-mono2">re_your_api_key_here</span></li>
-                <li>Click <strong className="text-white">Save</strong> and redeploy. All new subscribers will immediately receive automated welcome emails!</li>
+                <li>Open your <strong className="text-white">Vercel Dashboard</strong> &gt; Select <strong className="text-white">denimuniverse</strong> &gt; <strong className="text-white">Settings</strong> &gt; <strong className="text-white">Environment Variables</strong> and add <code className="bg-black/50 px-2 py-0.5 rounded text-amber-300 font-mono2">RESEND_API_KEY</code>.</li>
+                <li>
+                  <strong className="text-amber-300">Sandbox Rule:</strong> In Resend's free trial, emails are sent from <code className="text-indigo-200">onboarding@resend.dev</code> and will <em>only</em> deliver to your registered account email (<code className="text-white">asif.hdlplan@gmail.com</code>).
+                </li>
+                <li>
+                  <strong className="text-white">To send to ANY visitor:</strong>
+                  <ul className="list-disc list-inside pl-4 pt-1 space-y-1 text-[11px] text-indigo-200/90">
+                    <li><strong>If you have a domain:</strong> Go to <strong className="text-white">resend.com/domains</strong>, add your domain DNS records, and add Vercel variable <code className="text-amber-300">RESEND_FROM_EMAIL=Denim Universe &lt;hello@yourdomain.com&gt;</code>.</li>
+                    <li><strong>If you don't have a domain:</strong> Add <code className="text-amber-300">BREVO_API_KEY</code> and <code className="text-amber-300">BREVO_SENDER_EMAIL=asif.hdlplan@gmail.com</code> in Vercel. Brevo sends to any email directly from your Gmail with zero custom domain!</li>
+                  </ul>
+                </li>
               </ol>
-              <div className="pt-1 text-[11px] text-indigo-300/60 border-t border-white/5 flex items-center justify-between">
-                <span>Default test sender: <code className="text-indigo-200">onboarding@resend.dev</code> (instant delivery without custom domain setup)</span>
-              </div>
             </div>
           </div>
 

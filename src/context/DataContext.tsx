@@ -5,6 +5,10 @@ import {
   DictTerm,
   GalleryItem,
   SiteConfig,
+  ResourceItem,
+  MemberAccount,
+  MembershipSettings,
+  PaymentRecord,
 } from "../types/content";
 import {
   TROUBLES as DEFAULT_TROUBLES,
@@ -13,6 +17,11 @@ import {
   GALLERY as DEFAULT_GALLERY,
   SITE_CONFIG as DEFAULT_SITE_CONFIG,
 } from "../data/content";
+import {
+  DEFAULT_RESOURCES,
+  DEFAULT_MEMBERS,
+  DEFAULT_MEMBERSHIP_SETTINGS,
+} from "../data/resources";
 import {
   isSupabaseConfigured,
   fetchRemoteData,
@@ -25,6 +34,12 @@ import {
   syncRemoteGallery,
   deleteRemoteGallery,
   syncRemoteSiteConfig,
+  syncRemoteResource,
+  deleteRemoteResource,
+  syncRemoteMember,
+  deleteRemoteMember,
+  syncRemotePayment,
+  deleteRemotePayment,
   getSupabaseHost,
 } from "../lib/supabase";
 
@@ -34,12 +49,14 @@ interface DataContextType {
   dictionary: DictTerm[];
   gallery: GalleryItem[];
   siteConfig: SiteConfig;
+  resources: ResourceItem[];
+  members: MemberAccount[];
 
   // Cloud status
   isCloudConnected: boolean;
   cloudHost: string;
 
-  // Auth & Navigation
+  // Admin Auth & Navigation
   isAdminOpen: boolean;
   setIsAdminOpen: (open: boolean) => void;
   isLoginModalOpen: boolean;
@@ -48,6 +65,63 @@ interface DataContextType {
   login: (pin: string) => boolean;
   logout: () => void;
   closeAdmin: () => void;
+
+  // Member Auth & Plans (For Paid PDF Resources)
+  membershipSettings: MembershipSettings;
+  updateMembershipSettings: (settings: Partial<MembershipSettings>) => void;
+  currentMember: MemberAccount | null;
+  isMemberLoginModalOpen: boolean;
+  setIsMemberLoginModalOpen: (open: boolean) => void;
+  memberAuthMode: "signin" | "signup" | "packages";
+  setMemberAuthMode: (mode: "signin" | "signup" | "packages") => void;
+  openMemberModal: (mode?: "signin" | "signup" | "packages") => void;
+  memberLogin: (email: string, pass: string) => { success: boolean; message: string };
+  memberSignUp: (data: { name: string; email: string; password: string; plan?: "free" | "basic" | "premium" }) => { success: boolean; message: string; member?: MemberAccount };
+  memberLogout: () => void;
+  hasResourceAccess: (resourceId: string) => boolean;
+
+  // Payments & Activations
+  payments: PaymentRecord[];
+  submitPayment: (data: {
+    memberName: string;
+    memberEmail: string;
+    paymentType: "plan" | "single_pdf";
+    planId?: "basic" | "premium";
+    planName?: string;
+    resourceId?: string;
+    resourceTitle?: string;
+    amount: string;
+    method: "bkash" | "nagad" | "bank" | "other";
+    senderNumber?: string;
+    trxId: string;
+    screenshotUrl?: string;
+  }) => { success: boolean; autoActivated: boolean; message: string; payment: PaymentRecord };
+  approvePayment: (paymentId: string, notes?: string) => void;
+  rejectPayment: (paymentId: string, notes?: string) => void;
+  deletePayment: (paymentId: string) => void;
+
+  // Member Profile Modal
+  isMemberProfileModalOpen: boolean;
+  setIsMemberProfileModalOpen: (open: boolean) => void;
+  openMemberProfile: () => void;
+
+  // Checkout / Payment Modal
+  isCheckoutModalOpen: boolean;
+  setIsCheckoutModalOpen: (open: boolean) => void;
+  checkoutTarget: {
+    type: "plan" | "single_pdf";
+    planId?: "basic" | "premium";
+    planName?: string;
+    planPrice?: string;
+    resource?: ResourceItem;
+  } | null;
+  openCheckout: (target: {
+    type: "plan" | "single_pdf";
+    planId?: "basic" | "premium";
+    planName?: string;
+    planPrice?: string;
+    resource?: ResourceItem;
+  }) => void;
 
   // Trouble CRUD
   addTrouble: (item: Omit<TroubleItem, "id">) => void;
@@ -69,6 +143,16 @@ interface DataContextType {
   updateGalleryItem: (id: string, item: Partial<GalleryItem>) => void;
   deleteGalleryItem: (id: string) => void;
 
+  // Resource CRUD
+  addResource: (item: Omit<ResourceItem, "id">) => void;
+  updateResource: (id: string, item: Partial<ResourceItem>) => void;
+  deleteResource: (id: string) => void;
+
+  // Member Account CRUD
+  addMember: (item: Omit<MemberAccount, "id" | "createdAt">) => void;
+  updateMember: (id: string, item: Partial<MemberAccount>) => void;
+  deleteMember: (id: string) => void;
+
   // Site Config
   updateSiteConfig: (config: Partial<SiteConfig>) => void;
 
@@ -85,7 +169,38 @@ const STORAGE_KEYS = {
   DICTIONARY: "du_dictionary_v1",
   GALLERY: "du_gallery_v1",
   CONFIG: "du_config_v1",
+  RESOURCES: "du_resources_v1",
+  MEMBERS: "du_members_v1",
+  MEMBER_SESSION: "du_member_session_v1",
+  PLANS: "du_plan_settings_v1",
+  PAYMENTS: "du_payments_v1",
 };
+
+function initMembershipSettings(): MembershipSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.PLANS);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Auto-migrate legacy USD or previous prices to: Basic 199 BDT, Premium 499 BDT
+      if (
+        parsed.basicPlan?.price?.includes("$") ||
+        parsed.basicPlan?.price?.includes("990") ||
+        !parsed.basicPlan?.price ||
+        parsed.premiumPlan?.price?.includes("$") ||
+        parsed.premiumPlan?.price?.includes("1,990") ||
+        parsed.premiumPlan?.price?.includes("1990") ||
+        !parsed.premiumPlan?.price
+      ) {
+        parsed.basicPlan.price = "199 BDT";
+        parsed.premiumPlan.price = "499 BDT";
+      }
+      return parsed;
+    }
+  } catch (e) {
+    console.error("Error reading plan settings from storage", e);
+  }
+  return { ...DEFAULT_MEMBERSHIP_SETTINGS };
+}
 
 // Initializer helper with ID injection if missing
 function initTroubles(): TroubleItem[] {
@@ -140,14 +255,105 @@ function initGallery(): GalleryItem[] {
   }));
 }
 
-function initConfig(): SiteConfig {
+function initSiteConfig(): SiteConfig {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.CONFIG);
     if (stored) return JSON.parse(stored);
   } catch (e) {
-    console.error("Error reading site config from storage", e);
+    console.error("Error reading config from storage", e);
   }
   return { ...DEFAULT_SITE_CONFIG };
+}
+
+function initResources(): ResourceItem[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.RESOURCES);
+    if (stored) {
+      const parsed: ResourceItem[] = JSON.parse(stored);
+      // Auto-migrate legacy USD / old BDT prices to user's specified prices: Single 49 BDT, Basic 199 BDT, Premium 499 BDT
+      return parsed.map((r) => {
+        let priceBadge = r.priceBadge || "";
+        let singlePrice = r.singlePrice || "49 BDT";
+        if (priceBadge.includes("$19") || priceBadge.includes("1,990") || priceBadge.includes("1990")) priceBadge = "499 BDT · Premium SOP";
+        if (priceBadge.includes("$15") || priceBadge.includes("1,490") || priceBadge.includes("1490")) priceBadge = "499 BDT · Premium SOP";
+        if (priceBadge.includes("$9") || priceBadge.includes("990")) priceBadge = "199 BDT · Basic Manual";
+        if (singlePrice.includes("$4") || singlePrice.includes("390") || singlePrice === "$4") singlePrice = "49 BDT";
+        return {
+          ...r,
+          priceBadge: priceBadge || (r.accessTier === "premium" ? "499 BDT · Premium SOP" : r.accessTier === "basic" ? "199 BDT · Basic Manual" : "Free"),
+          singlePrice: singlePrice || "49 BDT",
+        };
+      });
+    }
+  } catch (e) {
+    console.error("Error reading resources from storage", e);
+  }
+  return DEFAULT_RESOURCES;
+}
+
+function initMembers(): MemberAccount[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.MEMBERS);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.error("Error reading members from storage", e);
+  }
+  return DEFAULT_MEMBERS;
+}
+
+function initMemberSession(): MemberAccount | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.MEMBER_SESSION);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.error("Error reading member session", e);
+  }
+  return null;
+}
+
+function initPayments(): PaymentRecord[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.error("Error reading payments from storage", e);
+  }
+  return [
+    {
+      id: "pay-seed-1",
+      memberId: "mem-premium-demo",
+      memberName: "Denim Specialist",
+      memberEmail: "demo@denimuniverse.com",
+      paymentType: "plan",
+      planId: "premium",
+      planName: "Premium VIP Lifetime",
+      amount: "499 BDT",
+      method: "bkash",
+      senderNumber: "01700000000",
+      trxId: "BK9X84J21L",
+      status: "approved",
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      reviewedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      adminNotes: "Auto-approved demo account",
+    },
+    {
+      id: "pay-seed-2",
+      memberId: "mem-basic-demo",
+      memberName: "Apparel Tech",
+      memberEmail: "basic@denimuniverse.com",
+      paymentType: "plan",
+      planId: "basic",
+      planName: "Basic Library Plan",
+      amount: "199 BDT",
+      method: "nagad",
+      senderNumber: "01800000000",
+      trxId: "NG4P71Q99K",
+      status: "approved",
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      reviewedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      adminNotes: "Auto-approved demo account",
+    },
+  ];
 }
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -155,26 +361,62 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [fashionCards, setFashionCards] = useState<FashionCard[]>(initFashion);
   const [dictionary, setDictionary] = useState<DictTerm[]>(initDictionary);
   const [gallery, setGallery] = useState<GalleryItem[]>(initGallery);
-  const [siteConfig, setSiteConfig] = useState<SiteConfig>(initConfig);
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>(initSiteConfig);
+  const [resources, setResources] = useState<ResourceItem[]>(initResources);
+  const [members, setMembers] = useState<MemberAccount[]>(initMembers);
+  const [membershipSettings, setMembershipSettings] = useState<MembershipSettings>(initMembershipSettings);
 
-  const [isCloudConnected, setIsCloudConnected] = useState<boolean>(isSupabaseConfigured);
-  const [cloudHost] = useState<string>(getSupabaseHost);
+  // Cloud status
+  const [isCloudConnected, setIsCloudConnected] = useState(false);
+  const [cloudHost, setCloudHost] = useState("");
 
+  // Admin Auth State
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Clear any leftover tokens from storage on load
-  useEffect(() => {
-    try {
-      sessionStorage.removeItem("du_admin_auth_v1");
-      localStorage.removeItem("du_admin_auth_v1");
-    } catch {}
-  }, []);
+  // Member Auth State (For Protected PDF Resources)
+  const [currentMember, setCurrentMember] = useState<MemberAccount | null>(initMemberSession);
+  const [isMemberLoginModalOpen, setIsMemberLoginModalOpen] = useState(false);
+  const [memberAuthMode, setMemberAuthMode] = useState<"signin" | "signup" | "packages">("signin");
 
-  // Initial remote fetch if Supabase is configured
+  // Member Profile Modal
+  const [isMemberProfileModalOpen, setIsMemberProfileModalOpen] = useState(false);
+  const openMemberProfile = () => {
+    setIsMemberProfileModalOpen(true);
+  };
+
+  // Payments & Checkout Modal
+  const [payments, setPayments] = useState<PaymentRecord[]>(initPayments);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [checkoutTarget, setCheckoutTarget] = useState<{
+    type: "plan" | "single_pdf";
+    planId?: "basic" | "premium";
+    planName?: string;
+    planPrice?: string;
+    resource?: ResourceItem;
+  } | null>(null);
+
+  const openCheckout = (target: {
+    type: "plan" | "single_pdf";
+    planId?: "basic" | "premium";
+    planName?: string;
+    planPrice?: string;
+    resource?: ResourceItem;
+  }) => {
+    setCheckoutTarget(target);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const openMemberModal = (mode: "signin" | "signup" | "packages" = "signin") => {
+    setMemberAuthMode(mode);
+    setIsMemberLoginModalOpen(true);
+  };
+
+  // Check Supabase on Mount
   useEffect(() => {
     if (isSupabaseConfigured()) {
+      setCloudHost(getSupabaseHost());
       fetchRemoteData()
         .then((remote) => {
           if (remote.troubles && remote.troubles.length > 0) setTroubles(remote.troubles);
@@ -182,6 +424,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (remote.dictionary && remote.dictionary.length > 0) setDictionary(remote.dictionary);
           if (remote.gallery && remote.gallery.length > 0) setGallery(remote.gallery);
           if (remote.siteConfig) setSiteConfig(remote.siteConfig);
+          if (remote.resources && remote.resources.length > 0) setResources(remote.resources);
+          if (remote.members && remote.members.length > 0) setMembers(remote.members);
+          if (remote.payments && remote.payments.length > 0) setPayments(remote.payments);
           setIsCloudConnected(true);
         })
         .catch((err) => {
@@ -231,8 +476,43 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [siteConfig]);
 
-  // Auth Methods
-  // Auth Methods — Strictly in-memory, NEVER stored to disk or session
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(resources));
+    } catch (e) {
+      console.error("Failed to save resources", e);
+    }
+  }, [resources]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+    } catch (e) {
+      console.error("Failed to save members", e);
+    }
+  }, [members]);
+
+  useEffect(() => {
+    try {
+      if (currentMember) {
+        localStorage.setItem(STORAGE_KEYS.MEMBER_SESSION, JSON.stringify(currentMember));
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.MEMBER_SESSION);
+      }
+    } catch (e) {
+      console.error("Failed to save member session", e);
+    }
+  }, [currentMember]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+    } catch (e) {
+      console.error("Failed to save payments", e);
+    }
+  }, [payments]);
+
+  // Admin Auth Methods — Strictly in-memory, NEVER stored to disk or session
   const login = (pin: string): boolean => {
     if (pin.trim() === ADMIN_PIN) {
       setIsAuthenticated(true);
@@ -257,6 +537,289 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
     setIsAdminOpen(false);
     setIsLoginModalOpen(false);
+  };
+
+  // Member Auth Methods (For Paid PDF Download Access)
+  const memberLogin = (email: string, pass: string): { success: boolean; message: string } => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
+
+    const member = members.find((m) => m.email.toLowerCase() === cleanEmail);
+
+    if (!member) {
+      return { success: false, message: "No account found with this email. Please sign up or check your spelling." };
+    }
+
+    if (member.password !== cleanPass) {
+      return { success: false, message: "Incorrect password. Please check your password or contact support." };
+    }
+
+    if (member.status !== "active") {
+      return { success: false, message: "This account is currently suspended. Please contact admin." };
+    }
+
+    setCurrentMember(member);
+    setIsMemberLoginModalOpen(false);
+    return { success: true, message: `Welcome back, ${member.name || member.email}!` };
+  };
+
+  const memberSignUp = (data: {
+    name: string;
+    email: string;
+    password: string;
+    plan?: "free" | "basic" | "premium";
+  }): { success: boolean; message: string; member?: MemberAccount } => {
+    const cleanEmail = data.email.trim().toLowerCase();
+    const cleanName = data.name.trim();
+    const cleanPass = data.password.trim();
+    const chosenPlan = data.plan || "free";
+
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      return { success: false, message: "Please provide a valid email address." };
+    }
+    if (!cleanPass || cleanPass.length < 4) {
+      return { success: false, message: "Password must be at least 4 characters." };
+    }
+
+    const exists = members.some((m) => m.email.toLowerCase() === cleanEmail);
+    if (exists) {
+      return { success: false, message: "An account with this email already exists. Please sign in instead." };
+    }
+
+    const newMember: MemberAccount = {
+      id: `mem-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+      email: cleanEmail,
+      password: cleanPass,
+      name: cleanName || cleanEmail.split("@")[0],
+      status: "active",
+      plan: chosenPlan,
+      accessAll: chosenPlan === "premium",
+      allowedResourceIds: [],
+      notes: chosenPlan !== "free" ? `Registered with requested ${chosenPlan} plan` : "Self-registered free account",
+      createdAt: new Date().toISOString(),
+    };
+
+    setMembers((prev) => [newMember, ...prev]);
+    setCurrentMember(newMember);
+    setIsMemberLoginModalOpen(false);
+    syncRemoteMember(newMember);
+
+    return {
+      success: true,
+      message: `Account created successfully! Welcome, ${newMember.name}.`,
+      member: newMember,
+    };
+  };
+
+  const memberLogout = () => {
+    setCurrentMember(null);
+  };
+
+  const updateMembershipSettings = (updated: Partial<MembershipSettings>) => {
+    setMembershipSettings((prev) => {
+      const next = { ...prev, ...updated };
+      try {
+        localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(next));
+      } catch (e) {
+        console.error("Error saving plan settings", e);
+      }
+      return next;
+    });
+  };
+
+  const hasResourceAccess = (resourceId: string): boolean => {
+    const res = resources.find((r) => r.id === resourceId);
+    if (!res) return false;
+    // Free tier is open to all visitors
+    if (res.accessTier === "free" || !res.isPremium) return true;
+
+    // Any non-free manual requires an active logged-in member
+    if (!currentMember || currentMember.status !== "active") return false;
+
+    // Premium plan members or full access accounts have access to ALL manuals
+    if (currentMember.plan === "premium" || currentMember.accessAll) return true;
+
+    // Basic plan members have access if the resource is Basic tier
+    if (currentMember.plan === "basic") {
+      if (res.accessTier === "basic" || res.accessTier === "free" || !res.isPremium) return true;
+    }
+
+    // Explicit individual manual grant
+    return currentMember.allowedResourceIds?.includes(resourceId) ?? false;
+  };
+
+  // Payments & Plan Activations
+  const submitPayment = (data: {
+    memberName: string;
+    memberEmail: string;
+    paymentType: "plan" | "single_pdf";
+    planId?: "basic" | "premium";
+    planName?: string;
+    resourceId?: string;
+    resourceTitle?: string;
+    amount: string;
+    method: "bkash" | "nagad" | "bank" | "other";
+    senderNumber?: string;
+    trxId: string;
+    screenshotUrl?: string;
+  }): { success: boolean; autoActivated: boolean; message: string; payment: PaymentRecord } => {
+    const isSingle = data.paymentType === "single_pdf";
+    const status = isSingle ? "approved" : "pending";
+
+    const newPayment: PaymentRecord = {
+      id: `pay-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+      memberId: currentMember?.id,
+      memberName: data.memberName.trim() || currentMember?.name || "Member",
+      memberEmail: data.memberEmail.trim().toLowerCase() || currentMember?.email || "",
+      paymentType: data.paymentType,
+      planId: data.planId,
+      planName: data.planName,
+      resourceId: data.resourceId,
+      resourceTitle: data.resourceTitle,
+      amount: data.amount,
+      method: data.method,
+      senderNumber: data.senderNumber,
+      trxId: data.trxId.trim().toUpperCase(),
+      screenshotUrl: data.screenshotUrl,
+      status,
+      createdAt: new Date().toISOString(),
+      reviewedAt: isSingle ? new Date().toISOString() : undefined,
+      adminNotes: isSingle ? "Auto-unlocked upon transaction ID submission" : undefined,
+    };
+
+    setPayments((prev) => [newPayment, ...prev]);
+    syncRemotePayment(newPayment);
+
+    // If single PDF, auto-unlock instantly
+    if (isSingle && data.resourceId) {
+      if (currentMember) {
+        const currentAllowed = currentMember.allowedResourceIds || [];
+        if (!currentAllowed.includes(data.resourceId)) {
+          const updatedAllowed = [...currentAllowed, data.resourceId];
+          const updatedMember: MemberAccount = {
+            ...currentMember,
+            allowedResourceIds: updatedAllowed,
+          };
+          setCurrentMember(updatedMember);
+          setMembers((prev) => prev.map((m) => (m.id === currentMember.id ? updatedMember : m)));
+          syncRemoteMember(updatedMember);
+        }
+      } else {
+        const cleanEmail = (data.memberEmail || "").trim().toLowerCase();
+        const existing = members.find((m) => m.email.toLowerCase() === cleanEmail);
+        if (existing) {
+          const currentAllowed = existing.allowedResourceIds || [];
+          const updatedAllowed = currentAllowed.includes(data.resourceId)
+            ? currentAllowed
+            : [...currentAllowed, data.resourceId];
+          const updatedMember: MemberAccount = {
+            ...existing,
+            allowedResourceIds: updatedAllowed,
+          };
+          setCurrentMember(updatedMember);
+          setMembers((prev) => prev.map((m) => (m.id === existing.id ? updatedMember : m)));
+          syncRemoteMember(updatedMember);
+        } else if (cleanEmail) {
+          const newMember: MemberAccount = {
+            id: `mem-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+            email: cleanEmail,
+            name: data.memberName.trim() || cleanEmail.split("@")[0],
+            status: "active",
+            plan: "free",
+            accessAll: false,
+            allowedResourceIds: [data.resourceId],
+            notes: "Created via Single PDF Checkout",
+            createdAt: new Date().toISOString(),
+          };
+          setMembers((prev) => [newMember, ...prev]);
+          setCurrentMember(newMember);
+          syncRemoteMember(newMember);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      autoActivated: isSingle,
+      message: isSingle
+        ? "Payment verified! Your document has been unlocked and is ready to download."
+        : "Payment submitted successfully! Your account will be upgraded as soon as Admin reviews your transaction ID.",
+      payment: newPayment,
+    };
+  };
+
+  const approvePayment = (paymentId: string, notes?: string) => {
+    const payment = payments.find((p) => p.id === paymentId);
+    if (!payment) return;
+
+    const updatedPayment: PaymentRecord = {
+      ...payment,
+      status: "approved",
+      reviewedAt: new Date().toISOString(),
+      adminNotes: notes || payment.adminNotes || "Approved by Admin",
+    };
+
+    setPayments((prev) => prev.map((p) => (p.id === paymentId ? updatedPayment : p)));
+    syncRemotePayment(updatedPayment);
+
+    // If payment was for a plan, upgrade target member
+    if (payment.paymentType === "plan" && payment.planId) {
+      const targetMember = members.find(
+        (m) => (payment.memberId && m.id === payment.memberId) || m.email.toLowerCase() === payment.memberEmail.toLowerCase()
+      );
+      if (targetMember) {
+        const upgradedMember: MemberAccount = {
+          ...targetMember,
+          plan: payment.planId,
+          accessAll: payment.planId === "premium",
+          notes: `Upgraded to ${payment.planId} via TrxID ${payment.trxId}`,
+        };
+        setMembers((prev) => prev.map((m) => (m.id === targetMember.id ? upgradedMember : m)));
+        if (currentMember && currentMember.id === targetMember.id) {
+          setCurrentMember(upgradedMember);
+        }
+        syncRemoteMember(upgradedMember);
+      }
+    } else if (payment.paymentType === "single_pdf" && payment.resourceId) {
+      // If single pdf manual approval
+      const targetMember = members.find(
+        (m) => (payment.memberId && m.id === payment.memberId) || m.email.toLowerCase() === payment.memberEmail.toLowerCase()
+      );
+      if (targetMember) {
+        const currentAllowed = targetMember.allowedResourceIds || [];
+        if (!currentAllowed.includes(payment.resourceId)) {
+          const upgradedMember: MemberAccount = {
+            ...targetMember,
+            allowedResourceIds: [...currentAllowed, payment.resourceId],
+          };
+          setMembers((prev) => prev.map((m) => (m.id === targetMember.id ? upgradedMember : m)));
+          if (currentMember && currentMember.id === targetMember.id) {
+            setCurrentMember(upgradedMember);
+          }
+          syncRemoteMember(upgradedMember);
+        }
+      }
+    }
+  };
+
+  const rejectPayment = (paymentId: string, notes?: string) => {
+    const payment = payments.find((p) => p.id === paymentId);
+    if (!payment) return;
+
+    const updatedPayment: PaymentRecord = {
+      ...payment,
+      status: "rejected",
+      reviewedAt: new Date().toISOString(),
+      adminNotes: notes || "Payment verification rejected by Admin",
+    };
+
+    setPayments((prev) => prev.map((p) => (p.id === paymentId ? updatedPayment : p)));
+    syncRemotePayment(updatedPayment);
+  };
+
+  const deletePayment = (paymentId: string) => {
+    setPayments((prev) => prev.filter((p) => p.id !== paymentId));
+    deleteRemotePayment(paymentId);
   };
 
   // Trouble CRUD
@@ -355,6 +918,63 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteRemoteGallery(id);
   };
 
+  // Resource CRUD
+  const addResource = (item: Omit<ResourceItem, "id">) => {
+    const newItem: ResourceItem = {
+      ...item,
+      id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    setResources((prev) => [newItem, ...prev]);
+    syncRemoteResource(newItem);
+  };
+
+  const updateResource = (id: string, updated: Partial<ResourceItem>) => {
+    setResources((prev) => {
+      const next = prev.map((r) => (r.id === id ? { ...r, ...updated } : r));
+      const target = next.find((r) => r.id === id);
+      if (target) syncRemoteResource(target);
+      return next;
+    });
+  };
+
+  const deleteResource = (id: string) => {
+    setResources((prev) => prev.filter((r) => r.id !== id));
+    deleteRemoteResource(id);
+  };
+
+  // Member CRUD
+  const addMember = (item: Omit<MemberAccount, "id" | "createdAt">) => {
+    const newMember: MemberAccount = {
+      ...item,
+      id: `mem-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setMembers((prev) => [newMember, ...prev]);
+    syncRemoteMember(newMember);
+  };
+
+  const updateMember = (id: string, updated: Partial<MemberAccount>) => {
+    setMembers((prev) => {
+      const next = prev.map((m) => (m.id === id ? { ...m, ...updated } : m));
+      const target = next.find((m) => m.id === id);
+      if (target) {
+        syncRemoteMember(target);
+        if (currentMember && currentMember.id === id) {
+          setCurrentMember(target);
+        }
+      }
+      return next;
+    });
+  };
+
+  const deleteMember = (id: string) => {
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    if (currentMember && currentMember.id === id) {
+      setCurrentMember(null);
+    }
+    deleteRemoteMember(id);
+  };
+
   // Site Config
   const updateSiteConfig = (config: Partial<SiteConfig>) => {
     setSiteConfig((prev) => {
@@ -388,12 +1008,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDictionary(defaultDict);
     setGallery(defaultGal);
     setSiteConfig({ ...DEFAULT_SITE_CONFIG });
+    setResources([...DEFAULT_RESOURCES]);
+    setMembers([...DEFAULT_MEMBERS]);
+    setMembershipSettings({ ...DEFAULT_MEMBERSHIP_SETTINGS });
+    setPayments(initPayments());
+    setCurrentMember(null);
 
     localStorage.removeItem(STORAGE_KEYS.TROUBLES);
     localStorage.removeItem(STORAGE_KEYS.FASHION);
     localStorage.removeItem(STORAGE_KEYS.DICTIONARY);
     localStorage.removeItem(STORAGE_KEYS.GALLERY);
     localStorage.removeItem(STORAGE_KEYS.CONFIG);
+    localStorage.removeItem(STORAGE_KEYS.RESOURCES);
+    localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+    localStorage.removeItem(STORAGE_KEYS.MEMBER_SESSION);
+    localStorage.removeItem(STORAGE_KEYS.PLANS);
+    localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
   };
 
   return (
@@ -404,6 +1034,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dictionary,
         gallery,
         siteConfig,
+        resources,
+        members,
+        membershipSettings,
+        updateMembershipSettings,
         isCloudConnected,
         cloudHost,
         isAdminOpen,
@@ -414,6 +1048,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         closeAdmin,
+        currentMember,
+        isMemberLoginModalOpen,
+        setIsMemberLoginModalOpen,
+        memberAuthMode,
+        setMemberAuthMode,
+        openMemberModal,
+        memberLogin,
+        memberSignUp,
+        memberLogout,
+        hasResourceAccess,
+        payments,
+        submitPayment,
+        approvePayment,
+        rejectPayment,
+        deletePayment,
+        isMemberProfileModalOpen,
+        setIsMemberProfileModalOpen,
+        openMemberProfile,
+        isCheckoutModalOpen,
+        setIsCheckoutModalOpen,
+        checkoutTarget,
+        openCheckout,
         addTrouble,
         updateTrouble,
         deleteTrouble,
@@ -426,6 +1082,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addGalleryItem,
         updateGalleryItem,
         deleteGalleryItem,
+        addResource,
+        updateResource,
+        deleteResource,
+        addMember,
+        updateMember,
+        deleteMember,
         updateSiteConfig,
         resetToDefaults,
       }}

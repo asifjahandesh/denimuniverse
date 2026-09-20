@@ -252,3 +252,106 @@ VALUES
 ('gal-11', 'https://images.pexels.com/photos/1482180/pexels-photo-1482180.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', 'Copper rivet macro', 'Garments', false),
 ('gal-12', 'https://images.pexels.com/photos/13924870/pexels-photo-13924870.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940', 'Cotton origin', 'Sustainability', false)
 ON CONFLICT (id) DO NOTHING;
+
+-- ==============================================================================
+-- 6. RESOURCES & MEMBERS TABLES (Paid PDF Access System)
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS public.resources (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  slug TEXT,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author TEXT,
+  read_time TEXT,
+  published_at TEXT,
+  image TEXT,
+  is_premium BOOLEAN DEFAULT true,
+  access_tier TEXT DEFAULT 'premium',
+  price_badge TEXT,
+  pdf_title TEXT,
+  pdf_url TEXT,
+  pdf_size TEXT,
+  pdf_pages INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ensure columns exist for existing table setups
+ALTER TABLE public.resources ADD COLUMN IF NOT EXISTS access_tier TEXT DEFAULT 'premium';
+
+CREATE TABLE IF NOT EXISTS public.members (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  name TEXT NOT NULL,
+  status TEXT DEFAULT 'active',
+  plan TEXT DEFAULT 'free',
+  access_all BOOLEAN DEFAULT false,
+  allowed_resource_ids JSONB DEFAULT '[]'::jsonb,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ensure column exists for existing table setups
+ALTER TABLE public.resources ADD COLUMN IF NOT EXISTS single_price TEXT DEFAULT '$4';
+ALTER TABLE public.members ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'free';
+
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read resources" ON public.resources;
+CREATE POLICY "Public read resources" ON public.resources FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public mutate resources" ON public.resources;
+CREATE POLICY "Public mutate resources" ON public.resources FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public read members" ON public.members;
+CREATE POLICY "Public read members" ON public.members FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public mutate members" ON public.members;
+CREATE POLICY "Public mutate members" ON public.members FOR ALL USING (true) WITH CHECK (true);
+
+-- ==============================================================================
+-- 9. PAYMENT RECORDS & SUBMISSIONS (public.payments)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.payments (
+  id TEXT PRIMARY KEY,
+  member_id TEXT,
+  member_name TEXT NOT NULL,
+  member_email TEXT NOT NULL,
+  payment_type TEXT NOT NULL, -- 'plan' | 'single_pdf'
+  plan_id TEXT, -- 'basic' | 'premium'
+  plan_name TEXT,
+  resource_id TEXT,
+  resource_title TEXT,
+  amount TEXT NOT NULL,
+  method TEXT NOT NULL, -- 'bkash' | 'nagad' | 'bank' | 'other'
+  sender_number TEXT,
+  trx_id TEXT NOT NULL,
+  screenshot_url TEXT,
+  status TEXT DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  admin_notes TEXT
+);
+
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read payments" ON public.payments;
+CREATE POLICY "Public read payments" ON public.payments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public mutate payments" ON public.payments;
+CREATE POLICY "Public mutate payments" ON public.payments FOR ALL USING (true) WITH CHECK (true);
+
+-- Seed Demo Members (Basic & Premium)
+INSERT INTO public.members (id, email, password, name, status, plan, access_all, allowed_resource_ids, notes)
+VALUES
+('mem-basic', 'basic@denimuniverse.com', 'denim2026', 'Tariqul (Basic Member)', 'active', 'basic', false, '[]'::jsonb, 'Demo Basic Account — Access to Basic Level PDFs'),
+('mem-demo', 'demo@denimuniverse.com', 'denim2026', 'Engr. Asif (Premium VIP)', 'active', 'premium', true, '[]'::jsonb, 'Default test account — full access to all technical PDF manuals')
+ON CONFLICT (id) DO UPDATE SET plan = EXCLUDED.plan, access_all = EXCLUDED.access_all;
+
+

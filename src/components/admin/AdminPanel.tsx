@@ -13,21 +13,23 @@ import {
   Menu,
   X,
   Shield,
+  FileText,
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import logoImg from "../../assets/logo.png";
 import AdminOverview from "./AdminOverview";
 import VisitorAnalytics from "./VisitorAnalytics";
+import ResourceManager from "./ResourceManager";
 import TroubleManager from "./TroubleManager";
 import FashionManager from "./FashionManager";
 import DictionaryManager from "./DictionaryManager";
 import GalleryManager from "./GalleryManager";
 import ContactManager from "./ContactManager";
 
-type TabId = "overview" | "analytics" | "troubles" | "fashion" | "dictionary" | "gallery" | "contact";
+type TabId = "overview" | "analytics" | "resources" | "troubles" | "fashion" | "dictionary" | "gallery" | "contact";
 
 export default function AdminPanel() {
-  const { isAdminOpen, setIsAdminOpen, logout, closeAdmin, siteConfig, troubles, fashionCards, dictionary, gallery } = useData();
+  const { isAdminOpen, setIsAdminOpen, logout, closeAdmin, siteConfig, troubles, fashionCards, dictionary, gallery, resources, members } = useData();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -45,6 +47,7 @@ export default function AdminPanel() {
   const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; count?: number }[] = [
     { id: "overview", label: "Dashboard", icon: LayoutDashboard },
     { id: "analytics", label: "Visitor Analytics", icon: BarChart3 },
+    { id: "resources", label: "Resources & Members", icon: FileText, count: resources.length },
     { id: "troubles", label: "Troubleshooting", icon: Wrench, count: troubles.length },
     { id: "fashion", label: "Fashion & Trends", icon: Shirt, count: fashionCards.length },
     { id: "dictionary", label: "Dictionary", icon: BookOpen, count: dictionary.length },
@@ -202,6 +205,7 @@ export default function AdminPanel() {
           <div className="mx-auto max-w-6xl">
             {activeTab === "overview" && <AdminOverview onSelectTab={(t) => setActiveTab(t as TabId)} />}
             {activeTab === "analytics" && <VisitorAnalytics />}
+            {activeTab === "resources" && <ResourceManager />}
             {activeTab === "troubles" && <TroubleManager />}
             {activeTab === "fashion" && <FashionManager />}
             {activeTab === "dictionary" && <DictionaryManager />}

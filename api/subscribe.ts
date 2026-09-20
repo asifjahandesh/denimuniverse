@@ -1,4 +1,4 @@
-// Vercel Serverless Function: Automatic Welcome Email Dispatcher via Resend
+// Vercel Serverless Function: Automatic Welcome Email Dispatcher via Resend or Brevo
 // Endpoint: POST /api/subscribe
 
 export default async function handler(req: any, res: any) {
@@ -13,16 +13,23 @@ export default async function handler(req: any, res: any) {
 
   // Diagnostic GET request to check configuration status
   if (req.method === "GET") {
-    const isConfigured = Boolean(process.env.RESEND_API_KEY);
-    const sender = process.env.RESEND_FROM_EMAIL || "Denim Universe <onboarding@resend.dev>";
+    const hasResend = Boolean(process.env.RESEND_API_KEY);
+    const hasBrevo = Boolean(process.env.BREVO_API_KEY);
+
     return res.status(200).json({
       status: "ready",
-      service: "Resend",
-      resendConfigured: isConfigured,
-      sender: isConfigured ? sender : "Unconfigured (add RESEND_API_KEY in Vercel)",
-      hint: isConfigured
-        ? "Resend is connected and ready to send automatic welcome emails."
-        : "Add RESEND_API_KEY in Vercel Project Settings > Environment Variables.",
+      providers: {
+        resend: {
+          configured: hasResend,
+          sender: process.env.RESEND_FROM_EMAIL || "Denim Universe <onboarding@resend.dev>",
+          note: "Requires verified domain at resend.com/domains to send to external recipients.",
+        },
+        brevo: {
+          configured: hasBrevo,
+          sender: process.env.BREVO_SENDER_EMAIL || "Unset",
+          note: "Works with any verified Gmail address (no custom domain required).",
+        },
+      },
     });
   }
 
@@ -38,50 +45,99 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: "A valid email address is required." });
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    const senderEmail = process.env.RESEND_FROM_EMAIL || "Denim Universe <onboarding@resend.dev>";
+    const resendKey = process.env.RESEND_API_KEY;
+    const brevoKey = process.env.BREVO_API_KEY;
 
-    // If Resend API key is not yet set in Vercel, record gracefully without failing
-    if (!apiKey) {
-      console.warn("RESEND_API_KEY is not configured in Vercel environment variables.");
+    // ------------------------------------------------------------------------
+    // PATH 1: Brevo (Recommended if no custom domain owned; sends from Gmail)
+    // ------------------------------------------------------------------------
+    if (brevoKey) {
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || "asif.hdlplan@gmail.com";
+      const senderName = process.env.BREVO_SENDER_NAME || "Denim Universe";
+
+      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": brevoKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email }],
+          subject: "Welcome to Denim Universe — Your First Denim Guide Inside 👖",
+          htmlContent: getWelcomeEmailHtml(email),
+        }),
+      });
+
+      const brevoData = await brevoRes.json();
+      if (!brevoRes.ok) {
+        console.error("Brevo API responded with error:", brevoData);
+        return res.status(200).json({
+          success: true,
+          emailSent: false,
+          warning: brevoData.message || "Brevo API error",
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        emailSent: false,
-        message: "Subscription saved! To receive automatic emails, add RESEND_API_KEY to your Vercel Project Environment Variables.",
+        emailSent: true,
+        provider: "Brevo",
+        id: brevoData.messageId,
+        message: `Welcome email successfully sent to ${email} via Brevo!`,
       });
     }
 
-    // Call Resend API directly via native fetch
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: senderEmail,
-        to: [email],
-        subject: "Welcome to Denim Universe — Your First Denim Guide Inside 👖",
-        html: getWelcomeEmailHtml(email),
-      }),
-    });
+    // ------------------------------------------------------------------------
+    // PATH 2: Resend
+    // ------------------------------------------------------------------------
+    if (resendKey) {
+      const senderEmail = process.env.RESEND_FROM_EMAIL || "Denim Universe <onboarding@resend.dev>";
 
-    const data = await response.json();
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: senderEmail,
+          to: [email],
+          subject: "Welcome to Denim Universe — Your First Denim Guide Inside 👖",
+          html: getWelcomeEmailHtml(email),
+        }),
+      });
 
-    if (!response.ok) {
-      console.error("Resend API responded with error:", data);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Resend API responded with error:", data);
+        const isSandboxRestricted = (data.message || "").includes("testing emails to your own email address");
+
+        return res.status(200).json({
+          success: true,
+          emailSent: false,
+          isSandboxRestricted,
+          warning: isSandboxRestricted
+            ? "Resend is in Sandbox Mode: In sandbox, it only sends to your registered email (asif.hdlplan@gmail.com). To send to all visitors, verify your domain at resend.com/domains."
+            : data.message || "Resend API error",
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        emailSent: false,
-        warning: data.message || "Resend API error",
+        emailSent: true,
+        provider: "Resend",
+        id: data.id,
+        message: `Welcome email successfully sent to ${email} via Resend!`,
       });
     }
 
+    // Neither key configured
     return res.status(200).json({
       success: true,
-      emailSent: true,
-      id: data.id,
-      message: `Welcome email successfully sent to ${email}!`,
+      emailSent: false,
+      message: "Subscriber saved! Add RESEND_API_KEY (with verified domain) or BREVO_API_KEY (works with any Gmail) in Vercel to dispatch live welcome emails.",
     });
   } catch (error: any) {
     console.error("Error dispatching welcome email:", error);

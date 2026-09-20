@@ -1,24 +1,29 @@
-# Roadmap: Supabase Integration & Online Deployment
+# Roadmap: Denim Technical Resources & Paid PDF Access System
 
-## Phase 1: Dependency, Environment & Client Layer
-- Add `@supabase/supabase-js` dependency.
-- Create `.env.example` and update `.gitignore` to prevent secret leaks.
-- Implement `src/lib/supabase.ts` with connection verification, client initialization, and storage helpers.
+## Phase 1: Data Models & Default Technical Seed Data
+- Define `ResourceItem` and `MemberAccount` interfaces in `src/types/content.ts`.
+- Create `src/data/resources.ts` with 4 comprehensive default technical resources and a test member account (`demo@denimuniverse.com` / `denim2026`).
+- Update `NAV_LINKS` in `src/data/content.ts` to include `{ label: "Resources", href: "#resources" }` between Fabric Process and Troubleshooting.
 
-## Phase 2: Database Schema & Migration Script
-- Author `supabase-schema.sql` containing:
-  - Table definitions (`troubles`, `fashion`, `dictionary`, `gallery`, `site_config`).
-  - Row Level Security (RLS) policies allowing public read and authenticated/anon write.
-  - Storage bucket initialization (`denim-media`) with public access policies.
-  - Complete pre-seeded initial data matching all default cases, articles, dictionary words, and gallery photos.
+## Phase 2: State Store, Auth Logic & Cloud Sync
+- Extend `DataContext.tsx` to manage `resources`, `members`, and active visitor session `currentMember`.
+- Implement `memberLogin(email, password)`, `memberLogout()`, and `hasResourceAccess(resourceId)`.
+- Implement Resource and Member CRUD methods (`addResource`, `updateResource`, `deleteResource`, `addMember`, etc.).
+- Update `src/lib/supabase.ts` and `supabase-schema.sql` with tables `public.resources` and `public.members`.
 
-## Phase 3: DataContext Cloud Sync & Storage Integration
-- Wire `src/context/DataContext.tsx` to read from Supabase on initial load when configured.
-- Wire all CRUD mutations (`addTrouble`, `updateTrouble`, `deleteTrouble`, `addFashion`, etc.) to sync to Supabase.
-- Add image upload helper uploading directly to Supabase Storage `denim-media` bucket and returning public URL.
-- Update `AdminOverview.tsx` to display real-time connection status (🟢 Connected vs 🟡 Local Storage Mode) and a "Test Supabase Connection" diagnostic button.
+## Phase 3: User-Facing Technical Library & Reader
+- Build `ResourcesSection.tsx` and place between `ProcessSection` and `TroubleshootingSection` in `src/App.tsx`.
+- Build `ResourceDetailPage.tsx` full-page reader with article text and protected PDF download box.
+- Build `MemberLoginModal.tsx` for email/password authentication and access request instructions.
+- Connect `#resources/:id` routing with smooth browser history.
 
-## Phase 4: Production Deployment & Verification
-- Add `vercel.json` for optimal Vite client-side routing, asset caching, and security headers.
-- Update `push-updates.bat` and author clear deployment instructions for Vercel / Netlify.
-- Verify production build compatibility and zero regression.
+## Phase 4: Admin Panel Resource & Member Management
+- Build `ResourceManager.tsx` inside the Admin Panel with tabs for:
+  1. Article authoring, cover images, and PDF attachment upload.
+  2. Paid member account creation, password management, and resource access assignment.
+- Add "Resources & Members" tab to `AdminPanel.tsx` with live counter badge.
+
+## Phase 5: Verification & Push Script
+- Verify article reading, member login, and PDF download permissions.
+- Test Admin Panel CRUD operations for both articles and member accounts.
+- Update `push-updates.bat`, `.gsd/STATE.md`, and `walkthrough.md`.

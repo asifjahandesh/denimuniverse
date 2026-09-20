@@ -317,7 +317,7 @@ export function Footer() {
           <nav aria-label="Learn">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Learn</p>
             <ul className="mt-4 space-y-2 text-[13.5px]">
-              {[["Fabric Process", "#process"], ["Troubleshooting", "#troubleshooting"], ["Denim Insights", "#insights"], ["Dictionary", "#dictionary"], ["Gallery", "#gallery"]].map(([l, h]) => (
+              {[["Fabric Process", "#process"], ["Resources", "#resources"], ["Troubleshooting", "#troubleshooting"], ["Denim Insights", "#insights"], ["Dictionary", "#dictionary"], ["Gallery", "#gallery"]].map(([l, h]) => (
                 <li key={l}><a href={h} className="inline-block py-1 transition hover:text-amber-300 active:text-amber-400">{l}</a></li>
               ))}
             </ul>

@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { useData } from "../context/DataContext";
 import { trackVisit } from "../lib/analyticsTracker";
 
@@ -76,10 +75,18 @@ export default function Analytics() {
     };
   }, [activeGaId]);
 
-  return (
-    <>
-      {/* Vercel Web Analytics Collector */}
-      <VercelAnalytics />
-    </>
-  );
+  // Vercel Web Analytics (Edge Script injection on production with zero npm package dependency)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.getElementById("vercel-va-script")) return;
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      const script = document.createElement("script");
+      script.id = "vercel-va-script";
+      script.src = "/_vercel/insights/script.js";
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  return null;
 }

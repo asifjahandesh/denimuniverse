@@ -14,6 +14,7 @@ export const NAV_LINKS = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
   { label: "Fabric Process", href: "#process" },
+  { label: "Resources", href: "#resources" },
   { label: "Troubleshooting", href: "#troubleshooting" },
   { label: "Fashion", href: "#fashion" },
   { label: "Sustainability", href: "#sustainability" },

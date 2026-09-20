@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, X, ChevronRight, Shield } from "lucide-react";
+import { Menu, X, ChevronRight, Shield, Lock, User } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "../data/content";
 import { useData } from "../context/DataContext";
 import logoImg from "../assets/logo.png";
@@ -16,7 +16,16 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("Home");
-  const { siteConfig, isAuthenticated, setIsAdminOpen, setIsLoginModalOpen } = useData();
+  const {
+    siteConfig,
+    isAuthenticated,
+    setIsAdminOpen,
+    setIsLoginModalOpen,
+    currentMember,
+    setIsMemberLoginModalOpen,
+    openMemberProfile,
+    openMemberModal,
+  } = useData();
 
   const handleAdminClick = () => {
     setIsAdminOpen(false);
@@ -51,6 +60,30 @@ export default function Navbar() {
             <a href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-amber-300">
               <FacebookIcon size={13} /> Follow 48K+
             </a>
+            <button
+              type="button"
+              onClick={() => {
+                if (currentMember) {
+                  openMemberProfile();
+                } else {
+                  openMemberModal("signin");
+                }
+              }}
+              className="flex items-center gap-1.5 rounded-full border border-indigo-400/40 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-200 transition hover:bg-indigo-500/20"
+              title={currentMember ? "View Member Profile & Library" : "Paid Member Portal"}
+            >
+              {currentMember ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span>Member: {currentMember.name.split(" ")[0]}</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={11} className="text-indigo-400" />
+                  <span>Member Login</span>
+                </>
+              )}
+            </button>
             <button
               type="button"
               onClick={handleAdminClick}
@@ -111,6 +144,31 @@ export default function Navbar() {
             >
               <FacebookIcon size={15} /> Follow
             </a>
+            <button
+              type="button"
+              onClick={() => {
+                if (currentMember) {
+                  openMemberProfile();
+                } else {
+                  openMemberModal("signin");
+                }
+              }}
+              className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-[13px] font-bold text-indigo-200 transition hover:bg-indigo-500 hover:text-white cursor-pointer"
+              title={currentMember ? "View Member Profile & Library" : "Paid Member Portal"}
+            >
+              {currentMember ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <User size={13} className="text-emerald-400" />
+                  <span>{currentMember.name.split(" ")[0]}</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={13} />
+                  <span>Member</span>
+                </>
+              )}
+            </button>
             <button
               type="button"
               onClick={handleAdminClick}
@@ -189,9 +247,33 @@ export default function Navbar() {
               type="button"
               onClick={() => {
                 setOpen(false);
+                if (currentMember) {
+                  openMemberProfile();
+                } else {
+                  openMemberModal("signin");
+                }
+              }}
+              className="mt-3 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl border border-indigo-400/30 bg-indigo-500/10 py-3 text-sm font-bold text-indigo-200 transition active:scale-95 hover:bg-indigo-500/20"
+            >
+              {currentMember ? (
+                <>
+                  <User size={16} className="text-emerald-400" />
+                  <span>Member: {currentMember.name.split(" ")[0]} (Profile)</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={16} className="text-indigo-400" />
+                  <span>Paid Member Login</span>
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
                 handleAdminClick();
               }}
-              className="mt-3 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 py-3 text-sm font-bold text-amber-300 transition active:scale-95 hover:bg-amber-400/20"
+              className="mt-2.5 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 py-3 text-sm font-bold text-amber-300 transition active:scale-95 hover:bg-amber-400/20"
             >
               <Shield size={16} />
               <span>Admin Portal</span>

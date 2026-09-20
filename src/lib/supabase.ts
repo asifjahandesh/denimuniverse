@@ -5,6 +5,9 @@ import {
   DictTerm,
   GalleryItem,
   SiteConfig,
+  ResourceItem,
+  MemberAccount,
+  PaymentRecord,
 } from "../types/content";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
@@ -113,6 +116,9 @@ export async function fetchRemoteData(): Promise<{
   dictionary?: DictTerm[];
   gallery?: GalleryItem[];
   siteConfig?: SiteConfig;
+  resources?: ResourceItem[];
+  members?: MemberAccount[];
+  payments?: PaymentRecord[];
 }> {
   if (!isSupabaseConfigured() || !supabase) {
     return {};
@@ -124,15 +130,20 @@ export async function fetchRemoteData(): Promise<{
     dictionary?: DictTerm[];
     gallery?: GalleryItem[];
     siteConfig?: SiteConfig;
+    resources?: ResourceItem[];
+    members?: MemberAccount[];
+    payments?: PaymentRecord[];
   } = {};
 
   try {
-    const [tRes, fRes, dRes, gRes, cRes] = await Promise.all([
+    const [tRes, fRes, dRes, gRes, cRes, rRes, mRes] = await Promise.all([
       supabase.from("troubles").select("*").order("created_at", { ascending: true }),
       supabase.from("fashion").select("*").order("created_at", { ascending: true }),
       supabase.from("dictionary").select("*").order("created_at", { ascending: true }),
       supabase.from("gallery").select("*").order("created_at", { ascending: true }),
       supabase.from("site_config").select("*").eq("id", "main").single(),
+      supabase.from("resources").select("*").order("created_at", { ascending: true }),
+      supabase.from("members").select("*").order("created_at", { ascending: true }),
     ]);
 
     if (tRes.data && tRes.data.length > 0) {
@@ -194,6 +205,73 @@ export async function fetchRemoteData(): Promise<{
         svgIcon: cRes.data.svg_icon || "/favicon.svg",
         gaId: cRes.data.ga_id || "",
       };
+    }
+
+    if (rRes.data && rRes.data.length > 0) {
+      results.resources = rRes.data.map((item) => ({
+        id: item.id,
+        title: item.title,
+        slug: item.slug || undefined,
+        category: item.category,
+        desc: item.description || item.desc || "",
+        content: item.content || "",
+        author: item.author || "Denim Universe",
+        readTime: item.read_time || item.readTime || "5 min read",
+        publishedAt: item.published_at || item.publishedAt || "Recent",
+        image: item.image || "",
+        isPremium: item.is_premium !== false,
+        accessTier: (item.access_tier || (item.is_premium === false ? "free" : "premium")) as "free" | "basic" | "premium",
+        singlePrice: item.single_price || "49 BDT",
+        priceBadge: item.price_badge || "499 BDT · Paid Manual",
+        pdfTitle: item.pdf_title || "Technical_Document.pdf",
+        pdfUrl: item.pdf_url || "",
+        pdfSize: item.pdf_size || "4.5 MB",
+        pdfPages: item.pdf_pages || 20,
+      }));
+    }
+
+    if (mRes.data && mRes.data.length > 0) {
+      results.members = mRes.data.map((item) => ({
+        id: item.id,
+        email: item.email,
+        password: item.password,
+        name: item.name,
+        status: item.status || "active",
+        plan: (item.plan || (item.access_all ? "premium" : "free")) as "free" | "basic" | "premium",
+        accessAll: item.plan === "premium" || item.access_all === true,
+        allowedResourceIds: Array.isArray(item.allowed_resource_ids) ? item.allowed_resource_ids : [],
+        notes: item.notes || "",
+        createdAt: item.created_at || new Date().toISOString(),
+      }));
+    }
+
+    // Try fetching payments safely
+    try {
+      const payRes = await supabase.from("payments").select("*").order("created_at", { ascending: false });
+      if (payRes.data && payRes.data.length > 0) {
+        results.payments = payRes.data.map((d) => ({
+          id: d.id,
+          memberId: d.member_id || undefined,
+          memberName: d.member_name || "",
+          memberEmail: d.member_email || "",
+          paymentType: d.payment_type as "plan" | "single_pdf",
+          planId: d.plan_id || undefined,
+          planName: d.plan_name || undefined,
+          resourceId: d.resource_id || undefined,
+          resourceTitle: d.resource_title || undefined,
+          amount: d.amount || "",
+          method: (d.method || "bkash") as "bkash" | "nagad" | "bank" | "other",
+          senderNumber: d.sender_number || undefined,
+          trxId: d.trx_id || "",
+          screenshotUrl: d.screenshot_url || undefined,
+          status: (d.status || "pending") as "pending" | "approved" | "rejected",
+          createdAt: d.created_at || new Date().toISOString(),
+          reviewedAt: d.reviewed_at || undefined,
+          adminNotes: d.admin_notes || undefined,
+        }));
+      }
+    } catch (e) {
+      console.warn("Could not load payments table from Supabase", e);
     }
   } catch (err) {
     console.error("Failed to fetch remote data from Supabase:", err);
@@ -389,4 +467,144 @@ export async function fetchRemoteMessages(): Promise<Array<{ id: string; name: s
     return [];
   }
 }
+
+export async function syncRemoteResource(item: ResourceItem): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("resources").upsert({
+      id: item.id,
+      title: item.title,
+      slug: item.slug || null,
+      category: item.category,
+      description: item.desc,
+      content: item.content,
+      author: item.author,
+      read_time: item.readTime,
+      published_at: item.publishedAt,
+      image: item.image,
+      is_premium: item.isPremium,
+      access_tier: item.accessTier || (item.isPremium ? "premium" : "free"),
+      single_price: item.singlePrice || "49 BDT",
+      price_badge: item.priceBadge,
+      pdf_title: item.pdfTitle,
+      pdf_url: item.pdfUrl,
+      pdf_size: item.pdfSize,
+      pdf_pages: item.pdfPages || null,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn("Could not sync resource to Supabase", e);
+  }
+}
+
+export async function deleteRemoteResource(id: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("resources").delete().eq("id", id);
+  } catch (e) {
+    console.warn("Could not delete resource from Supabase", e);
+  }
+}
+
+export async function syncRemoteMember(item: MemberAccount): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("members").upsert({
+      id: item.id,
+      email: item.email.trim().toLowerCase(),
+      password: item.password,
+      name: item.name,
+      status: item.status,
+      plan: item.plan || (item.accessAll ? "premium" : "free"),
+      access_all: item.plan === "premium" || item.accessAll,
+      allowed_resource_ids: item.allowedResourceIds,
+      notes: item.notes || null,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn("Could not sync member to Supabase", e);
+  }
+}
+
+export async function deleteRemoteMember(id: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("members").delete().eq("id", id);
+  } catch (e) {
+    console.warn("Could not delete member from Supabase", e);
+  }
+}
+
+export async function syncRemotePayment(payment: PaymentRecord): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("payments").upsert({
+      id: payment.id,
+      member_id: payment.memberId || null,
+      member_name: payment.memberName,
+      member_email: payment.memberEmail.trim().toLowerCase(),
+      payment_type: payment.paymentType,
+      plan_id: payment.planId || null,
+      plan_name: payment.planName || null,
+      resource_id: payment.resourceId || null,
+      resource_title: payment.resourceTitle || null,
+      amount: payment.amount,
+      method: payment.method,
+      sender_number: payment.senderNumber || null,
+      trx_id: payment.trxId.trim(),
+      screenshot_url: payment.screenshotUrl || null,
+      status: payment.status,
+      created_at: payment.createdAt,
+      reviewed_at: payment.reviewedAt || null,
+      admin_notes: payment.adminNotes || null,
+    });
+  } catch (e) {
+    console.warn("Could not sync payment to Supabase", e);
+  }
+}
+
+export async function deleteRemotePayment(id: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("payments").delete().eq("id", id);
+  } catch (e) {
+    console.warn("Could not delete payment from Supabase", e);
+  }
+}
+
+export async function fetchRemotePayments(): Promise<PaymentRecord[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from("payments")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    if (!data) return [];
+    return data.map((d) => ({
+      id: d.id,
+      memberId: d.member_id || undefined,
+      memberName: d.member_name || "",
+      memberEmail: d.member_email || "",
+      paymentType: d.payment_type as "plan" | "single_pdf",
+      planId: d.plan_id || undefined,
+      planName: d.plan_name || undefined,
+      resourceId: d.resource_id || undefined,
+      resourceTitle: d.resource_title || undefined,
+      amount: d.amount || "",
+      method: (d.method || "bkash") as "bkash" | "nagad" | "bank" | "other",
+      senderNumber: d.sender_number || undefined,
+      trxId: d.trx_id || "",
+      screenshotUrl: d.screenshot_url || undefined,
+      status: (d.status || "pending") as "pending" | "approved" | "rejected",
+      createdAt: d.created_at || new Date().toISOString(),
+      reviewedAt: d.reviewed_at || undefined,
+      adminNotes: d.admin_notes || undefined,
+    }));
+  } catch (e) {
+    console.warn("Could not fetch remote payments from Supabase", e);
+    return [];
+  }
+}
+
 

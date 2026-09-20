@@ -78,3 +78,80 @@ export interface Article {
   featured?: boolean;
   body: string[];
 }
+
+export interface ResourceItem {
+  id: string;
+  title: string;
+  slug?: string;
+  category: string;
+  desc: string;
+  content: string;
+  author: string;
+  readTime: string;
+  publishedAt: string;
+  image: string;
+  isPremium: boolean;
+  accessTier: "free" | "basic" | "premium";
+  priceBadge: string;
+  pdfTitle: string;
+  pdfUrl: string;
+  pdfSize: string;
+  pdfPages?: number;
+  singlePrice?: string; // e.g. "49 BDT" for individual PDF unlock
+}
+
+export interface MemberAccount {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  status: "active" | "suspended";
+  plan: "free" | "basic" | "premium";
+  accessAll: boolean;
+  allowedResourceIds: string[];
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PlanTierConfig {
+  id: "basic" | "premium";
+  name: string;
+  price: string;
+  badge?: string;
+  period: string;
+  description: string;
+  features: string[];
+}
+
+export interface MembershipSettings {
+  basicPlan: PlanTierConfig;
+  premiumPlan: PlanTierConfig;
+  paymentMethods: {
+    bkash?: string;
+    nagad?: string;
+    bank?: string;
+    whatsapp?: string;
+    notice?: string;
+  };
+}
+
+export interface PaymentRecord {
+  id: string;
+  memberId?: string;
+  memberName: string;
+  memberEmail: string;
+  paymentType: "plan" | "single_pdf";
+  planId?: "basic" | "premium";
+  planName?: string;
+  resourceId?: string;
+  resourceTitle?: string;
+  amount: string;
+  method: "bkash" | "nagad" | "bank" | "other";
+  senderNumber?: string;
+  trxId: string;
+  screenshotUrl?: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  reviewedAt?: string;
+  adminNotes?: string;
+}

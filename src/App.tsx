@@ -12,14 +12,20 @@ import AdminLoginModal from "./components/admin/AdminLoginModal";
 import AdminPanel from "./components/admin/AdminPanel";
 import Analytics from "./components/Analytics";
 import FashionDetailPage from "./components/FashionDetailPage";
-import { FashionCard } from "./types/content";
+import { ResourcesSection } from "./components/ResourcesSection";
+import ResourceDetailPage from "./components/ResourceDetailPage";
+import MemberLoginModal from "./components/MemberLoginModal";
+import MemberProfileModal from "./components/MemberProfileModal";
+import CheckoutModal from "./components/CheckoutModal";
+import { FashionCard, ResourceItem } from "./types/content";
 
 function MainApp() {
   const [showAllTroubles, setShowAllTroubles] = useState(false);
   const [catOpen, setCatOpen] = useState<string | null>(null);
   const [tSearch, setTSearch] = useState("");
   const [selectedFashion, setSelectedFashion] = useState<FashionCard | null>(null);
-  const { troubles, fashionCards } = useData();
+  const [selectedResource, setSelectedResource] = useState<ResourceItem | null>(null);
+  const { troubles, fashionCards, resources } = useData();
 
   // Hash-based deep linking for fashion detail stories (#fashion/fash-1 or #fashion/article-slug)
   useEffect(() => {
@@ -50,6 +56,35 @@ function MainApp() {
     };
   }, [fashionCards, selectedFashion]);
 
+  // Hash-based deep linking for technical resource manuals (#resources/res-1 or #resources/slug)
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#resources/")) {
+        const idOrSlug = decodeURIComponent(hash.replace("#resources/", "")).trim().toLowerCase();
+        const found = resources.find((r) => {
+          const rId = (r.id || "").toLowerCase();
+          const rSlug = (r.slug || r.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")).toLowerCase();
+          return rId === idOrSlug || rSlug === idOrSlug || r.title.toLowerCase() === idOrSlug;
+        });
+        if (found) {
+          setSelectedResource(found);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } else if (selectedResource && !hash.startsWith("#resources/")) {
+        setSelectedResource(null);
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+    };
+  }, [resources, selectedResource]);
+
   const handleSelectFashion = (card: FashionCard) => {
     setSelectedFashion(card);
     const slug = card.id || card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -68,11 +103,45 @@ function MainApp() {
     }, 60);
   };
 
+  const handleSelectResource = (resource: ResourceItem) => {
+    setSelectedResource(resource);
+    const slug = resource.id || resource.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    window.location.hash = `#resources/${encodeURIComponent(slug)}`;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBackFromResource = () => {
+    setSelectedResource(null);
+    window.location.hash = "#resources";
+    setTimeout(() => {
+      const el = document.getElementById("resources");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 60);
+  };
+
   const catData = useMemo(() => CATEGORIES.find((c) => c.name === catOpen), [catOpen]);
   const troublesFiltered = useMemo(
     () => troubles.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(tSearch.toLowerCase())),
     [troubles, tSearch]
   );
+
+  // If a technical resource manual is currently selected, render the dedicated Resource Detail Page
+  if (selectedResource) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fb]">
+        <Analytics />
+        <ResourceDetailPage
+          resource={selectedResource}
+          allResources={resources}
+          onBack={handleBackFromResource}
+          onSelectResource={handleSelectResource}
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   // If a fashion story is currently selected, render the dedicated Fashion Article Detail Page
   if (selectedFashion) {
@@ -86,8 +155,6 @@ function MainApp() {
           onSelectFashion={handleSelectFashion}
         />
         <Footer />
-        <AdminLoginModal />
-        <AdminPanel />
       </div>
     );
   }
@@ -99,6 +166,7 @@ function MainApp() {
       <main>
         <Hero />
         <ProcessSection />
+        <ResourcesSection onSelectResource={handleSelectResource} />
         <TroubleshootingSection onOpenAll={() => setShowAllTroubles(true)} />
         <FashionSection onSelectFashion={handleSelectFashion} />
         <SustainabilitySection />
@@ -111,10 +179,6 @@ function MainApp() {
         <ContactSection />
       </main>
       <Footer />
-
-      {/* Admin Modals */}
-      <AdminLoginModal />
-      <AdminPanel />
 
       {/* All troubleshooting modal */}
       <Modal open={showAllTroubles} onClose={() => setShowAllTroubles(false)} wide>
@@ -202,6 +266,11 @@ export default function App() {
   return (
     <DataProvider>
       <MainApp />
+      <AdminLoginModal />
+      <AdminPanel />
+      <MemberLoginModal />
+      <MemberProfileModal />
+      <CheckoutModal />
     </DataProvider>
   );
 }
