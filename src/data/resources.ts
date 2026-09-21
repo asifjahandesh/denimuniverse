@@ -160,7 +160,7 @@ To achieve permanent, dimensional crease patterns on garment laps and knees:
 
 ---
 
-### 5. Download the Full 36-Page Factory Manual
+### 5. Official 36-Page Factory SOP Manual
 The complete PDF manual includes:
 - Exact recipe sheets for Stone Wash, Bleach Wash, Tinting, and Ozone Cycles.
 - Laser raster calibration curves for Jeanologia and Tonello machines.

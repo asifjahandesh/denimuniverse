@@ -3,7 +3,6 @@ import {
   User,
   Mail,
   FileText,
-  Download,
   CreditCard,
   CheckCircle2,
   Clock,
@@ -18,11 +17,10 @@ import {
   Check,
   Calendar,
   Layers,
-  Printer,
+  Eye,
 } from "lucide-react";
 import { Modal } from "./common";
 import { useData } from "../context/DataContext";
-import { downloadDenimUniversePdf, previewAndPrintDenimUniversePdf } from "../utils/pdfGenerator";
 
 export default function MemberProfileModal() {
   const {
@@ -33,9 +31,10 @@ export default function MemberProfileModal() {
     resources,
     hasResourceAccess,
     payments,
-    openCheckout,
     membershipSettings,
+    openCheckout,
     openMemberModal,
+    openPdfReader,
   } = useData();
 
   const [activeTab, setActiveTab] = useState<"unlocked" | "payments">("unlocked");
@@ -354,20 +353,14 @@ export default function MemberProfileModal() {
                         <div className="flex shrink-0 items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => downloadDenimUniversePdf(res, currentMember.name)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/10 transition hover:brightness-110 cursor-pointer"
+                            onClick={() => {
+                              setIsMemberProfileModalOpen(false);
+                              openPdfReader(res);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/20 transition active:scale-95 hover:brightness-110 cursor-pointer"
                           >
-                            <Download size={13} />
-                            Download PDF
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => previewAndPrintDenimUniversePdf(res, currentMember.name)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20 cursor-pointer"
-                            title="Print / Save as PDF"
-                          >
-                            <Printer size={13} className="text-amber-400" />
-                            Print
+                            <Eye size={14} />
+                            View PDF
                           </button>
                         </div>
                       </div>
@@ -469,7 +462,7 @@ export default function MemberProfileModal() {
         <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 bg-white/[0.02] px-5 py-4 sm:flex-row sm:px-7">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <ShieldCheck size={14} className="text-amber-400" />
-            <span>Need assistance with your payments or downloads? Contact support anytime.</span>
+            <span>Need assistance with your membership or library access? Contact support anytime.</span>
           </div>
           <button
             onClick={() => setIsMemberProfileModalOpen(false)}

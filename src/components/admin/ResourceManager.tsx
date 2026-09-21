@@ -16,7 +16,6 @@ import {
   Unlock,
   Eye,
   Sparkles,
-  Download,
   AlertCircle,
   CheckCircle2,
   Key,
@@ -55,6 +54,7 @@ export default function ResourceManager() {
     approvePayment,
     rejectPayment,
     deletePayment,
+    openPdfReader,
   } = useData();
 
   // Primary Tab: "resources" | "members" | "plans" | "payments"
@@ -702,19 +702,12 @@ export default function ResourceManager() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
-                        onClick={() => downloadDenimUniversePdf(res)}
-                        className="p-1.5 text-indigo-300 hover:text-amber-300 transition cursor-pointer"
-                        title="Download Watermarked Denim Universe PDF"
+                        onClick={() => openPdfReader(res)}
+                        className="flex items-center gap-1.5 rounded-lg border border-indigo-400/20 bg-indigo-500/10 px-2 py-1 text-xs text-indigo-300 transition hover:border-amber-400/40 hover:bg-amber-400/10 hover:text-amber-300 cursor-pointer"
+                        title="View Protected PDF SOP in Website Reader"
                       >
-                        <Download size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => previewAndPrintDenimUniversePdf(res)}
-                        className="p-1.5 text-indigo-300 hover:text-amber-300 transition cursor-pointer"
-                        title="Print / Save Watermarked PDF"
-                      >
-                        <Eye size={14} />
+                        <Eye size={13} />
+                        <span className="font-semibold text-[11px]">View PDF</span>
                       </button>
                     </div>
                   </div>
@@ -1567,7 +1560,7 @@ export default function ResourceManager() {
                   {editingResource ? "Edit Resource Article & PDF" : "New Educational Resource Article"}
                 </h3>
                 <p className="text-xs text-indigo-200/70">
-                  Publish industrial knowledge with attached technical PDF manual download.
+                  Publish industrial knowledge with attached technical PDF manual reader.
                 </p>
               </div>
               <button
@@ -1720,7 +1713,7 @@ export default function ResourceManager() {
                       Technical PDF Access Tier
                     </p>
                     <p className="text-[11px] text-indigo-200/70">
-                      Determine which membership plan is required to download this manual.
+                      Determine which membership plan is required to unlock and read this manual.
                     </p>
                   </div>
                 </div>
@@ -1827,7 +1820,7 @@ export default function ResourceManager() {
                         ? "🔒 Requires Premium VIP Plan (499 BDT) or Single Purchase."
                         : rAccessTier === "basic"
                         ? "⭐ Requires Basic Plan (199 BDT) or Single Purchase."
-                        : "🔓 Open: Free for all visitors to download."}
+                        : "🔓 Open: Free for all visitors to read."}
                     </p>
                   </div>
                 </div>
@@ -2029,7 +2022,7 @@ export default function ResourceManager() {
                     {editingMember ? "Edit Paid Member Account" : "Register New Paid Member"}
                   </h3>
                   <p className="text-xs text-indigo-200/70">
-                    Set up email and password credentials for paying PDF resource downloads.
+                    Set up email and password credentials for paying PDF resource access.
                   </p>
                 </div>
               </div>
@@ -2102,7 +2095,7 @@ export default function ResourceManager() {
                       onChange={() => setMStatus("active")}
                       className="text-amber-400 focus:ring-0"
                     />
-                    <span className="text-emerald-300">Active (Can Log In & Download)</span>
+                    <span className="text-emerald-300">Active (Can Log In & Read)</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold">
                     <input
@@ -2209,7 +2202,7 @@ export default function ResourceManager() {
                   <div className="rounded-xl bg-indigo-500/10 p-3 text-xs text-indigo-200 border border-indigo-500/20 flex items-center gap-2">
                     <Sparkles size={16} className="text-amber-400 shrink-0" />
                     <span>
-                      <strong>Full Access Active:</strong> This member can download all technical PDF manuals without individual restrictions.
+                      <strong>Full Access Active:</strong> This member can access and read all technical PDF manuals without individual restrictions.
                     </span>
                   </div>
                 ) : (

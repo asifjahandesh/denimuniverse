@@ -16,6 +16,7 @@ import ResourceDetailPage from "./components/ResourceDetailPage";
 import MemberLoginModal from "./components/MemberLoginModal";
 import MemberProfileModal from "./components/MemberProfileModal";
 import CheckoutModal from "./components/CheckoutModal";
+import PdfReaderModal from "./components/PdfReaderModal";
 import { FashionCard, ResourceItem } from "./types/content";
 import { getRelatedResourceForTrouble } from "./data/resources";
 
@@ -303,6 +304,7 @@ export default function App() {
       <MemberLoginModal />
       <MemberProfileModal />
       <CheckoutModal />
+      <PdfReaderModal />
     </DataProvider>
   );
 }

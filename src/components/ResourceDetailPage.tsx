@@ -7,7 +7,6 @@ import {
   FileText,
   Lock,
   Unlock,
-  Download,
   Check,
   ShieldCheck,
   CheckCircle2,
@@ -18,11 +17,10 @@ import {
   AlertCircle,
   ExternalLink,
   Crown,
-  Printer,
+  Eye,
 } from "lucide-react";
 import { ResourceItem } from "../types/content";
 import { useData } from "../context/DataContext";
-import { downloadDenimUniversePdf, previewAndPrintDenimUniversePdf } from "../utils/pdfGenerator";
 import { normalizeCategory } from "../data/resources";
 
 interface ResourceDetailPageProps {
@@ -47,6 +45,7 @@ export default function ResourceDetailPage({
     siteConfig,
     openCheckout,
     openMemberProfile,
+    openPdfReader,
   } = useData();
   const [copied, setCopied] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -83,7 +82,7 @@ export default function ResourceDetailPage({
     }
   };
 
-  const handleDownloadPdf = () => {
+  const handleOpenPdfReader = () => {
     if (!hasAccess) {
       if (currentMember) {
         openCheckout({
@@ -95,17 +94,7 @@ export default function ResourceDetailPage({
       }
       return;
     }
-    // Generate and download official watermarked Denim Universe PDF
-    downloadDenimUniversePdf(resource, currentMember?.name);
-  };
-
-  const handlePrintPdf = () => {
-    if (!hasAccess) {
-      handleDownloadPdf();
-      return;
-    }
-    // Open high-resolution printable watermarked document
-    previewAndPrintDenimUniversePdf(resource, currentMember?.name);
+    openPdfReader(resource);
   };
 
   const currentIndex = allResources.findIndex((r) => r.id === resource.id);
@@ -314,7 +303,7 @@ export default function ResourceDetailPage({
         </div>
 
         {/* ================================================================ */}
-        {/* PROTECTED PDF DOWNLOAD BOX                                       */}
+        {/* PROTECTED IN-WEBSITE PDF VIEWER                                  */}
         {/* ================================================================ */}
         <div className="mt-12 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#0e1d47] via-[#0a1633] to-[#071026] p-6 sm:p-8 shadow-2xl relative">
           <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-amber-500/10 blur-2xl" />
@@ -354,7 +343,7 @@ export default function ResourceDetailPage({
 
                 <p className="mt-1 text-xs text-indigo-200/70">
                   {resource.pdfPages ? `${resource.pdfPages} Pages · ` : ""}
-                  {resource.pdfSize || "Official PDF Document"} · Denim Universe Watermarked
+                  Protected In-Website SOP · Denim Universe Watermarked
                 </p>
               </div>
             </div>
@@ -365,21 +354,16 @@ export default function ResourceDetailPage({
                 <div className="flex flex-wrap items-center gap-2.5">
                   <button
                     type="button"
-                    onClick={handleDownloadPdf}
-                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-2.5 font-display text-xs sm:text-sm font-bold text-[#061e12] shadow-lg shadow-emerald-500/20 transition active:scale-95 hover:bg-emerald-300 cursor-pointer shrink-0"
+                    onClick={handleOpenPdfReader}
+                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-2.5 font-display text-xs sm:text-sm font-bold text-slate-950 shadow-lg shadow-amber-400/20 transition active:scale-95 hover:brightness-110 cursor-pointer shrink-0"
                   >
-                    <Download size={16} />
-                    <span>Download Official PDF</span>
+                    <Eye size={17} />
+                    <span>View PDF SOP</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={handlePrintPdf}
-                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 font-display text-xs font-bold text-white transition active:scale-95 hover:bg-white/20 cursor-pointer shrink-0"
-                    title="Print or Save as PDF"
-                  >
-                    <Printer size={15} className="text-amber-400" />
-                    <span>Print / Save PDF</span>
-                  </button>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-300 font-mono2 font-bold px-3 py-1.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                    <CheckCircle2 size={14} className="text-emerald-400" />
+                    <span>View-Only Protected Access</span>
+                  </span>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-2.5">
@@ -392,11 +376,11 @@ export default function ResourceDetailPage({
                         resource,
                       })
                     }
-                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2.5 font-display text-xs font-bold text-slate-950 shadow-md shadow-amber-400/20 transition active:scale-95 hover:brightness-110 cursor-pointer shrink-0"
+                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-5 py-2.5 font-display text-xs font-bold text-slate-950 shadow-md shadow-amber-400/20 transition active:scale-95 hover:brightness-110 cursor-pointer shrink-0"
                   >
-                    <Download size={14} />
+                    <Eye size={15} />
                     <span>
-                      Buy Single PDF ({resource.singlePrice || "49 BDT"})
+                      Unlock & View PDF ({resource.singlePrice || "49 BDT"})
                     </span>
                   </button>
 

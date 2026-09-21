@@ -3,7 +3,6 @@ import {
   FileText,
   Lock,
   Unlock,
-  Download,
   ArrowRight,
   BookOpen,
   Sparkles,
@@ -72,9 +71,9 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
         <Reveal>
           <SectionHeading
             dark
-            eyebrow="Technical Library & Downloads"
+            eyebrow="Technical Library & SOP Manuals"
             title="Denim Engineering & Manufacturing Resources"
-            desc="In-depth mill guides, chemical formulations, and operating standards written by industry specialists. Read full educational articles online or log in with your member credentials to download PDF manuals."
+            desc="In-depth mill guides, chemical formulations, and operating standards written by industry specialists. Read full educational articles online or log in with your member credentials to view protected PDF manuals in our website reader."
           />
         </Reveal>
 
@@ -117,7 +116,7 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
                       ? "Full VIP Access: All technical PDF manuals are unlocked."
                       : currentMember.plan === "basic"
                       ? "Basic Plan: Standard technical PDF manuals unlocked. Upgrade to VIP for all manuals."
-                      : "Free Reader: Upgrade to Basic or Premium to unlock PDF downloads."}
+                      : "Free Reader: Upgrade to Basic or Premium to unlock protected PDF manuals."}
                   </p>
                 </div>
               </button>
@@ -131,7 +130,7 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
                     Looking for factory PDF formulas & SOP manuals?
                   </p>
                   <p className="text-[11px] text-indigo-200/60">
-                    Articles are open for all. Attached PDF downloads are unlocked with Basic (199 BDT) or Premium VIP (499 BDT) plans.
+                    Articles are open for all. Attached PDF manuals are unlocked for protected online reading with Basic (199 BDT) or Premium VIP (499 BDT) plans.
                   </p>
                 </div>
               </div>

@@ -54,6 +54,10 @@ interface DataContextType {
   selectedResourceCategory: string;
   setSelectedResourceCategory: (cat: string) => void;
   navigateToResourceCategory: (cat: string) => void;
+  // Protected PDF Viewer Popup
+  readingPdfResource: ResourceItem | null;
+  openPdfReader: (resource: ResourceItem) => void;
+  closePdfReader: () => void;
   members: MemberAccount[];
 
   // Cloud status
@@ -409,6 +413,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.hash = "#resources";
       }
     }, 60);
+  };
+  const [readingPdfResource, setReadingPdfResource] = useState<ResourceItem | null>(null);
+  const openPdfReader = (resource: ResourceItem) => {
+    setReadingPdfResource(resource);
+  };
+  const closePdfReader = () => {
+    setReadingPdfResource(null);
   };
   const [members, setMembers] = useState<MemberAccount[]>(initMembers);
   const [membershipSettings, setMembershipSettings] = useState<MembershipSettings>(initMembershipSettings);
@@ -868,7 +879,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       success: true,
       autoActivated: isSingle,
       message: isSingle
-        ? "Payment verified! Your document has been unlocked and is ready to download."
+        ? "Payment verified! Your document has been unlocked for online viewing."
         : "Payment submitted successfully! Your account will be upgraded as soon as Admin reviews your transaction ID.",
       payment: newPayment,
     };
@@ -1169,6 +1180,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectedResourceCategory,
         setSelectedResourceCategory,
         navigateToResourceCategory,
+        readingPdfResource,
+        openPdfReader,
+        closePdfReader,
         members,
         membershipSettings,
         updateMembershipSettings,

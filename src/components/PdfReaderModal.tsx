@@ -1,0 +1,682 @@
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  Shield,
+  Lock,
+  BookOpen,
+  FileText,
+  CheckCircle2,
+  Award,
+} from "lucide-react";
+import { useData } from "../context/DataContext";
+import logoImg from "../assets/logo.png";
+
+interface ParsedBlock {
+  type: "heading" | "subheading" | "divider" | "table" | "bullet_list" | "numbered_list" | "paragraph";
+  text?: string;
+  items?: string[];
+  headers?: string[];
+  rows?: string[][];
+}
+
+/**
+ * Parses markdown inline formatting (**bold**, *italic*, `code`) into safe React elements.
+ */
+function renderInlineMarkdown(text: string): React.ReactNode {
+  if (!text) return null;
+  const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+  const tokens = text.split(regex);
+
+  return (
+    <>
+      {tokens.map((token, idx) => {
+        if (!token) return null;
+        if (token.startsWith("**") && token.endsWith("**") && token.length >= 4) {
+          return (
+            <strong key={idx} className="font-bold text-slate-950">
+              {token.slice(2, -2)}
+            </strong>
+          );
+        }
+        if (token.startsWith("*") && token.endsWith("*") && token.length >= 2) {
+          return (
+            <em key={idx} className="italic text-slate-700">
+              {token.slice(1, -1)}
+            </em>
+          );
+        }
+        if (token.startsWith("`") && token.endsWith("`") && token.length >= 2) {
+          return (
+            <code
+              key={idx}
+              className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-amber-800 border border-slate-200"
+            >
+              {token.slice(1, -1)}
+            </code>
+          );
+        }
+        return <span key={idx}>{token}</span>;
+      })}
+    </>
+  );
+}
+
+/**
+ * Parses multi-line markdown content into structured blocks (headings, paragraphs, lists, tables, dividers).
+ */
+function parseMarkdownBlocks(rawContent: string): ParsedBlock[] {
+  if (!rawContent) return [];
+  const normalized = rawContent.replace(/\r\n/g, "\n");
+  const lines = normalized.split("\n");
+
+  const blocks: ParsedBlock[] = [];
+  let currentListType: "bullet" | "numbered" | null = null;
+  let currentListItems: string[] = [];
+  let currentTableLines: string[] = [];
+  let currentParagraphLines: string[] = [];
+
+  const flushList = () => {
+    if (currentListType && currentListItems.length > 0) {
+      blocks.push({
+        type: currentListType === "bullet" ? "bullet_list" : "numbered_list",
+        items: [...currentListItems],
+      });
+      currentListType = null;
+      currentListItems = [];
+    }
+  };
+
+  const flushTable = () => {
+    if (currentTableLines.length > 0) {
+      const headerLine = currentTableLines[0];
+      const headers = headerLine
+        .split("|")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const dataLines = currentTableLines.slice(
+        currentTableLines.length > 1 && currentTableLines[1].includes("---") ? 2 : 1
+      );
+      const rows = dataLines.map((line) =>
+        line
+          .split("|")
+          .map((c) => c.trim())
+          .filter(Boolean)
+      );
+      blocks.push({
+        type: "table",
+        headers,
+        rows,
+      });
+      currentTableLines = [];
+    }
+  };
+
+  const flushParagraph = () => {
+    if (currentParagraphLines.length > 0) {
+      const text = currentParagraphLines.join(" ").trim();
+      if (text) {
+        blocks.push({
+          type: "paragraph",
+          text,
+        });
+      }
+      currentParagraphLines = [];
+    }
+  };
+
+  const flushAll = () => {
+    flushList();
+    flushTable();
+    flushParagraph();
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (!line) {
+      flushAll();
+      continue;
+    }
+
+    // Main Heading (### )
+    if (line.startsWith("### ")) {
+      flushAll();
+      blocks.push({
+        type: "heading",
+        text: line.replace(/^###\s+/, ""),
+      });
+      continue;
+    }
+
+    // Subheading (#### )
+    if (line.startsWith("#### ")) {
+      flushAll();
+      blocks.push({
+        type: "subheading",
+        text: line.replace(/^####\s+/, ""),
+      });
+      continue;
+    }
+
+    // Horizontal Divider (---)
+    if (line === "---" || line === "***" || line === "___") {
+      flushAll();
+      blocks.push({ type: "divider" });
+      continue;
+    }
+
+    // Table rows (| ... |)
+    if (line.startsWith("|") && line.endsWith("|")) {
+      flushList();
+      flushParagraph();
+      currentTableLines.push(line);
+      continue;
+    }
+
+    // Bullet List Item (- or *)
+    if (line.startsWith("- ") || line.startsWith("* ")) {
+      flushTable();
+      flushParagraph();
+      if (currentListType && currentListType !== "bullet") {
+        flushList();
+      }
+      currentListType = "bullet";
+      currentListItems.push(line.replace(/^[-*]\s+/, ""));
+      continue;
+    }
+
+    // Numbered List Item (1. , 2. )
+    const numMatch = line.match(/^(\d+)\.\s+(.*)/);
+    if (numMatch) {
+      flushTable();
+      flushParagraph();
+      if (currentListType && currentListType !== "numbered") {
+        flushList();
+      }
+      currentListType = "numbered";
+      currentListItems.push(numMatch[2]);
+      continue;
+    }
+
+    // Standard Paragraph text
+    flushList();
+    flushTable();
+    currentParagraphLines.push(line);
+  }
+
+  flushAll();
+  return blocks;
+}
+
+export default function PdfReaderModal() {
+  const { readingPdfResource, closePdfReader, currentMember } = useData();
+  const [zoom, setZoom] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const modalContainerRef = useRef<HTMLDivElement>(null);
+
+  const showSecurityNotice = (
+    msg: string = "Saving, downloading, and printing are disabled on this protected manual."
+  ) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage(msg);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3200);
+  };
+
+  // Keyboard shortcut protection (Ctrl+S, Ctrl+P, Cmd+S, Cmd+P, Ctrl+U, etc.)
+  useEffect(() => {
+    if (!readingPdfResource) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape closes modal
+      if (e.key === "Escape") {
+        closePdfReader();
+        return;
+      }
+
+      // Prevent Print (Ctrl+P / Cmd+P)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "P")) {
+        e.preventDefault();
+        e.stopPropagation();
+        showSecurityNotice("Printing is prohibited. Please read the document directly on Denim Universe.");
+        return;
+      }
+
+      // Prevent Save (Ctrl+S / Cmd+S)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        e.preventDefault();
+        e.stopPropagation();
+        showSecurityNotice("Saving or downloading this protected PDF manual is restricted.");
+        return;
+      }
+
+      // Prevent View Source (Ctrl+U)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "u" || e.key === "U")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+      document.body.style.overflow = origOverflow;
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, [readingPdfResource, closePdfReader]);
+
+  // Reset zoom on document change
+  useEffect(() => {
+    if (readingPdfResource) {
+      setZoom(100);
+    }
+  }, [readingPdfResource]);
+
+  const blocks = useMemo(() => {
+    if (!readingPdfResource?.content) return [];
+    return parseMarkdownBlocks(readingPdfResource.content);
+  }, [readingPdfResource?.content]);
+
+  if (!readingPdfResource) return null;
+
+  const resource = readingPdfResource;
+  const memberName = currentMember?.name || currentMember?.email || "Verified Paid Member";
+  const docRef = `DU-SOP-${(resource.id || "001").toUpperCase()}`;
+
+  const toggleFullscreen = () => {
+    if (!modalContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      modalContainerRef.current.requestFullscreen?.().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 140));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 10, 80));
+  const handleResetZoom = () => setZoom(100);
+
+  return (
+    <div
+      ref={modalContainerRef}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        showSecurityNotice("Right-click & saving are restricted on protected technical manuals.");
+      }}
+      className="fixed inset-0 z-[120] flex flex-col bg-[#050b18]/95 backdrop-blur-xl select-none"
+    >
+      {/* Hidden print blocker style */}
+      <style>
+        {`
+          @media print {
+            body * {
+              display: none !important;
+              visibility: hidden !important;
+            }
+            body::after {
+              content: "Protected Denim Universe Technical Manual. Printing and offline saving are strictly prohibited.";
+              display: block !important;
+              visibility: visible !important;
+              font-family: sans-serif;
+              font-size: 20pt;
+              color: #dc2626;
+              text-align: center;
+              padding-top: 60mm;
+            }
+          }
+        `}
+      </style>
+
+      {/* Top Security & Reader Control Bar */}
+      <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-white/10 bg-[#071126] px-3.5 py-2.5 sm:px-6 sm:py-3 shadow-lg">
+        {/* Document Title & Reference */}
+        <div className="flex items-center gap-3 min-w-0 pr-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/40">
+            <BookOpen size={17} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-amber-400/20 px-2 py-0.5 font-mono2 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-400/30 shrink-0">
+                {resource.category}
+              </span>
+              <span className="font-mono2 text-[11px] text-indigo-300/70 truncate hidden sm:inline">
+                REF: {docRef}
+              </span>
+              <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono2 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
+                <Shield size={10} /> View-Only Protected
+              </span>
+            </div>
+            <h2 className="font-display text-xs sm:text-sm font-extrabold text-white truncate mt-0.5">
+              {resource.title}
+            </h2>
+          </div>
+        </div>
+
+        {/* Center/Right Toolbar: Zoom, Fullscreen & Close */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Zoom Controls */}
+          <div className="flex items-center rounded-xl border border-white/15 bg-white/5 p-0.5">
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              disabled={zoom <= 80}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40 cursor-pointer"
+              title="Zoom Out"
+            >
+              <ZoomOut size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              className="px-2 font-mono2 text-[11px] font-bold text-amber-300 hover:underline cursor-pointer"
+              title="Reset Zoom (100%)"
+            >
+              {zoom}%
+            </button>
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              disabled={zoom >= 140}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40 cursor-pointer"
+              title="Zoom In"
+            >
+              <ZoomIn size={14} />
+            </button>
+          </div>
+
+          {/* Fullscreen Toggle */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="hidden sm:flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white cursor-pointer"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Reader"}
+          >
+            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={closePdfReader}
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-rose-500/20 text-rose-300 transition hover:bg-rose-500/30 hover:text-white border border-rose-500/40 cursor-pointer active:scale-95"
+            title="Close Protected Reader"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Security Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-2xl border border-amber-400/50 bg-[#0a1633] px-4 py-2.5 text-xs font-bold text-amber-300 shadow-2xl shadow-black/80 animate-in fade-in slide-in-from-top-2 duration-200">
+          <Lock size={14} className="text-amber-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Main Document Reading Canvas (Scrollable Container) */}
+      <div className="flex-1 overflow-y-auto overscroll-contain bg-[#070e1c]">
+        {/* Inner Flex Wrapper: items-start guarantees child takes NATURAL content height! */}
+        <div className="min-h-full w-full py-6 sm:py-10 px-2 sm:px-6 flex justify-center items-start">
+          {/* Pristine White A4 Technical Manual Sheet */}
+          <div
+            style={{
+              zoom: zoom !== 100 ? `${zoom}%` : undefined,
+            }}
+            className="relative w-full max-w-[850px] bg-white text-slate-900 rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.7)] border border-slate-200 p-6 sm:p-12 lg:p-16 shrink-0 transition-all"
+          >
+            {/* Continuous Tiled Security Watermark Pattern Across Entire Document Height */}
+            <div
+              className="pointer-events-none absolute inset-0 overflow-hidden select-none z-0 opacity-[0.035] rounded-2xl"
+              style={{
+                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='300'><text x='50%' y='45%' fill='%230a1633' font-size='16' font-weight='800' font-family='sans-serif' text-anchor='middle' transform='rotate(-28 220 150)'>DENIM UNIVERSE · PROTECTED SOP</text><text x='50%' y='60%' fill='%230a1633' font-size='11' font-weight='700' font-family='sans-serif' text-anchor='middle' transform='rotate(-28 220 150)'>OFFICIAL TECHNICAL MANUAL · VIEW ONLY</text></svg>")`,
+                backgroundRepeat: "repeat",
+              }}
+            />
+
+            <div className="relative z-10">
+              {/* Document Header Bar */}
+              <div className="border-b-2 border-[#0a1633] pb-5 mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src={logoImg}
+                    alt="Denim Universe Official Logo"
+                    className="h-12 w-12 rounded-full object-cover shadow ring-1 ring-slate-300"
+                  />
+                  <div>
+                    <h1 className="font-display text-xl sm:text-2xl font-black text-[#0a1633] tracking-tight">
+                      DENIM <span className="text-amber-600">UNIVERSE</span>
+                    </h1>
+                    <p className="font-mono2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                      Standard Operating Procedure · {resource.category}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="inline-block rounded-lg bg-amber-50/80 px-3 py-1.5 border border-amber-300/80 text-left font-mono2 text-[10.5px] text-amber-950 leading-relaxed shadow-sm">
+                    <div><strong>REF:</strong> {docRef}</div>
+                    <div><strong>ACCESS:</strong> CONTROLLED VIEW-ONLY</div>
+                    <div><strong>READER:</strong> {memberName}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Title & Executive Summary Box */}
+              <div className="mb-7 rounded-xl bg-slate-50 p-5 sm:p-6 border border-slate-200">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="rounded bg-indigo-100 px-2.5 py-0.5 font-mono2 text-[10.5px] font-bold uppercase tracking-wider text-indigo-800">
+                    Official Mill Specification Manual
+                  </span>
+                  <span className="font-mono2 text-[11px] text-slate-500">
+                    {resource.pdfPages ? `${resource.pdfPages} Pages` : "A4 Standard"} · Ref: {docRef}
+                  </span>
+                </div>
+
+                <h2 className="font-display mt-2.5 text-2xl sm:text-3xl font-extrabold text-[#0a1633] leading-tight">
+                  {resource.title}
+                </h2>
+
+                {resource.desc && (
+                  <p className="mt-2.5 text-sm text-slate-700 leading-relaxed font-medium">
+                    {renderInlineMarkdown(resource.desc)}
+                  </p>
+                )}
+
+                <div className="mt-4 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 font-mono2">
+                  <span>AUTHOR: {resource.author || "Engr. Asif Jahan · Wet Process Specialist"}</span>
+                  <span>PUBLISHED: {resource.publishedAt || "September 2026"}</span>
+                </div>
+              </div>
+
+              {/* Formatted Technical Document Body */}
+              <div className="space-y-4 text-[14.5px] leading-relaxed text-slate-800">
+                {blocks.map((block, bIdx) => {
+                  // Heading (### )
+                  if (block.type === "heading") {
+                    return (
+                      <h3
+                        key={bIdx}
+                        className="font-display mt-8 mb-3 text-lg sm:text-xl font-extrabold text-[#0a1633] border-b-2 border-slate-100 pb-2.5 flex items-center gap-2.5"
+                      >
+                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-xs font-bold text-slate-950 font-mono2 shadow-sm">
+                          §
+                        </span>
+                        <span>{renderInlineMarkdown(block.text || "")}</span>
+                      </h3>
+                    );
+                  }
+
+                  // Subheading (#### )
+                  if (block.type === "subheading") {
+                    return (
+                      <h4
+                        key={bIdx}
+                        className="font-display mt-5 mb-2 text-base font-bold text-slate-800"
+                      >
+                        {renderInlineMarkdown(block.text || "")}
+                      </h4>
+                    );
+                  }
+
+                  // Horizontal Divider (---)
+                  if (block.type === "divider") {
+                    return <hr key={bIdx} className="my-7 border-t border-slate-200" />;
+                  }
+
+                  // Table
+                  if (block.type === "table" && block.headers && block.rows) {
+                    return (
+                      <div
+                        key={bIdx}
+                        className="my-5 overflow-x-auto rounded-xl border border-slate-200 shadow-sm"
+                      >
+                        <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                          <thead className="bg-[#0a1633] text-white font-mono2 text-[11px] uppercase tracking-wider">
+                            <tr>
+                              {block.headers.map((h, hIdx) => (
+                                <th
+                                  key={hIdx}
+                                  className="p-3 border-r border-white/10 last:border-r-0 font-bold"
+                                >
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {block.rows.map((row, rIdx) => (
+                              <tr
+                                key={rIdx}
+                                className={rIdx % 2 === 0 ? "bg-white" : "bg-slate-50/70"}
+                              >
+                                {row.map((cell, cIdx) => (
+                                  <td
+                                    key={cIdx}
+                                    className="p-3 text-slate-700 border-r border-slate-100 last:border-r-0 font-medium"
+                                  >
+                                    {renderInlineMarkdown(cell)}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  }
+
+                  // Bullet List (- or *)
+                  if (block.type === "bullet_list" && block.items) {
+                    return (
+                      <ul key={bIdx} className="my-3.5 space-y-2.5 pl-1 sm:pl-2">
+                        {block.items.map((item, iIdx) => (
+                          <li
+                            key={iIdx}
+                            className="flex items-start gap-2.5 text-[14px] leading-relaxed text-slate-700"
+                          >
+                            <span className="text-amber-600 font-bold mt-0.5 shrink-0 text-sm">
+                              ▸
+                            </span>
+                            <span className="flex-1">{renderInlineMarkdown(item)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  }
+
+                  // Numbered List (1. , 2. )
+                  if (block.type === "numbered_list" && block.items) {
+                    return (
+                      <ol key={bIdx} className="my-3.5 space-y-2.5 pl-1 sm:pl-2">
+                        {block.items.map((item, iIdx) => (
+                          <li
+                            key={iIdx}
+                            className="flex items-start gap-3 text-[14px] leading-relaxed text-slate-700"
+                          >
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 font-mono2 text-[11px] font-bold text-amber-900 mt-0.5 border border-amber-200">
+                              {iIdx + 1}
+                            </span>
+                            <span className="flex-1">{renderInlineMarkdown(item)}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    );
+                  }
+
+                  // Standard Paragraph
+                  return (
+                    <p key={bIdx} className="text-slate-700 leading-relaxed my-2.5">
+                      {renderInlineMarkdown(block.text || "")}
+                    </p>
+                  );
+                })}
+              </div>
+
+              {/* Official Calibration & QA Verification Box */}
+              <div className="mt-12 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 sm:p-5 text-emerald-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+                    <Award size={20} />
+                  </div>
+                  <div>
+                    <p className="font-display font-bold text-xs sm:text-sm text-emerald-950">
+                      OFFICIAL CALIBRATION STATUS: VERIFIED & ACCREDITED
+                    </p>
+                    <p className="text-[11px] text-emerald-800/80">
+                      Denim Universe Technical Advisory Board · Standard Operating Procedure
+                    </p>
+                  </div>
+                </div>
+                <div className="text-left sm:text-right font-mono2 text-[10px] text-emerald-800">
+                  <div><strong>LICENSE:</strong> LICENSED-COPY-DU</div>
+                  <div><strong>SECURITY:</strong> DIGITAL WATERMARKED</div>
+                </div>
+              </div>
+
+              {/* Document Footer End Bar */}
+              <div className="mt-8 pt-5 border-t-2 border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 font-mono2">
+                <div>
+                  <strong>DENIM UNIVERSE SOP LIBRARY</strong> · END OF MANUAL
+                </div>
+                <div className="text-amber-800 font-bold">
+                  PROTECTED VIEW-ONLY · DOWNLOADING & PRINTING RESTRICTED
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Security Notice Footer */}
+      <footer className="sticky bottom-0 z-30 flex shrink-0 items-center justify-between border-t border-white/10 bg-[#071126] px-4 py-2 text-[11.5px] text-indigo-200/80">
+        <div className="flex items-center gap-2">
+          <Lock size={13} className="text-amber-400 shrink-0" />
+          <span>
+            <strong>Protected Digital Reader:</strong> Saving, exporting, or printing this manual is disabled to protect proprietary manufacturing formulas.
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={closePdfReader}
+          className="rounded-lg bg-white/10 hover:bg-white/20 px-3 py-1 font-bold text-white transition cursor-pointer active:scale-95"
+        >
+          Exit Reader
+        </button>
+      </footer>
+    </div>
+  );
+}

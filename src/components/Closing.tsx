@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import {
   ArrowRight, GraduationCap, Factory, Heart, Mail, MessageCircle, MapPin,
   Send, CheckCircle2, BookOpen, FlaskConical, Shirt, Leaf, Calculator,
-  Download, Briefcase, Newspaper, MessagesSquare, Award, Loader2, Check,
+  FileText, Briefcase, Newspaper, MessagesSquare, Award, Loader2, Check,
 } from "lucide-react";
 import { Reveal, SectionHeading } from "./common";
 import { FacebookIcon } from "./Navbar";
@@ -86,7 +86,7 @@ export function AboutSection() {
             <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 { icon: Calculator, t: "Denim Calculators", d: "GSM, consumption, skew & shrinkage math instantly." },
-                { icon: Download, t: "Technical Downloads", d: "PDF SOPs, shade bands & spec sheets." },
+                { icon: FileText, t: "Technical SOP Manuals", d: "Protected PDF SOPs, shade bands & spec sheets." },
                 { icon: Briefcase, t: "Denim Jobs", d: "Mill, QC and design roles worldwide." },
                 { icon: Newspaper, t: "Industry News", d: "Cotton prices, trade & mill investments." },
                 { icon: MessagesSquare, t: "Q&A Community", d: "Ask mill doctors, get answers fast." },

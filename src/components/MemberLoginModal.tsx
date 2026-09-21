@@ -291,7 +291,7 @@ export default function MemberLoginModal() {
                       To protect Denim Universe against fake or invalid Transaction IDs, all{" "}
                       <strong className="text-white">Basic ({membershipSettings.basicPlan?.price || "199 BDT"})</strong> and{" "}
                       <strong className="text-white">Premium VIP ({membershipSettings.premiumPlan?.price || "499 BDT"})</strong>{" "}
-                      packages require manual verification by our administration before full download access to technical PDFs is enabled.
+                      packages require manual verification by our administration before full access to technical PDF manuals is enabled.
                     </p>
                     <p className="text-amber-200/80">
                       Your account is currently active on the <strong className="text-white">Free tier</strong>. You can sign in immediately to explore all documents, research summaries, and free publications. As soon as admin verifies your Transaction ID with our bKash/Nagad merchant statement, your package will be activated instantly!
@@ -464,8 +464,8 @@ export default function MemberLoginModal() {
               </h3>
               <p className="text-xs text-indigo-200/70">
                 {memberAuthMode === "packages"
-                  ? "Select a plan to download industrial denim SOPs and laboratory manuals."
-                  : "Access protected technical PDF downloads & factory manuals."}
+                  ? "Select a plan to access and read industrial denim SOPs and laboratory manuals."
+                  : "Access protected technical PDF SOPs & factory manuals."}
               </p>
             </div>
           </div>

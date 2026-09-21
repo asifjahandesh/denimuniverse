@@ -6,22 +6,19 @@ import {
   Copy,
   Check,
   Upload,
-  FileText,
   Crown,
   ShieldCheck,
   AlertCircle,
-  Download,
   Sparkles,
   ArrowRight,
   Phone,
   Building2,
   ExternalLink,
-  Printer,
+  Eye,
 } from "lucide-react";
 import { Modal } from "./common";
 import { useData } from "../context/DataContext";
 import { ResourceItem, PaymentRecord } from "../types/content";
-import { downloadDenimUniversePdf, previewAndPrintDenimUniversePdf } from "../utils/pdfGenerator";
 
 export default function CheckoutModal() {
   const {
@@ -33,6 +30,7 @@ export default function CheckoutModal() {
     submitPayment,
     openMemberProfile,
     openMemberModal,
+    openPdfReader,
   } = useData();
 
   // Form State
@@ -203,29 +201,24 @@ export default function CheckoutModal() {
                   <Sparkles size={14} /> INSTANT AUTO-UNLOCKED
                 </span>
                 <h3 className="mt-3 font-display text-xl font-bold text-white sm:text-2xl">
-                  Payment Verified! PDF is Ready to Download
+                  Payment Verified! Document Unlocked
                 </h3>
                 <p className="mx-auto mt-2 max-w-md text-xs text-slate-300 sm:text-sm">
-                  Your transaction ID (<strong className="font-mono text-amber-400">{completedPayment.trxId}</strong>) has been verified. You now have full permanent access to this document.
+                  Your transaction ID (<strong className="font-mono text-amber-400">{completedPayment.trxId}</strong>) has been verified. You can now read this technical manual in the protected viewer anytime.
                 </p>
 
                 {resource && (
                   <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                     <button
                       type="button"
-                      onClick={() => downloadDenimUniversePdf(resource, currentMember?.name || name)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-amber-400/20 transition hover:brightness-110 cursor-pointer"
+                      onClick={() => {
+                        setIsCheckoutModalOpen(false);
+                        openPdfReader(resource);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-amber-400/20 transition active:scale-95 hover:brightness-110 cursor-pointer"
                     >
-                      <Download size={16} />
-                      Download Official PDF
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => previewAndPrintDenimUniversePdf(resource, currentMember?.name || name)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20 cursor-pointer"
-                    >
-                      <Printer size={16} className="text-amber-400" />
-                      Print / Save as PDF
+                      <Eye size={16} />
+                      <span>View PDF SOP</span>
                     </button>
                     <button
                       type="button"
@@ -233,7 +226,7 @@ export default function CheckoutModal() {
                         setIsCheckoutModalOpen(false);
                         openMemberProfile();
                       }}
-                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 cursor-pointer"
                     >
                       View in My Library
                     </button>
