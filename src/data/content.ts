@@ -1,3 +1,6 @@
+import sanforizingImg from "../assets/sanforizing-machine.jpg";
+import inspectionImg from "../assets/denim-inspection-machine.jpg";
+
 export const SITE_CONFIG = {
   brand: "Denim Universe",
   tagline: "Explore the World of Denim",
@@ -12,7 +15,7 @@ export const SITE_CONFIG = {
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
-  { label: "Fabric Process", href: "#process" },
+  { label: "Denim Manufacturing Process", href: "#process" },
   { label: "Resources", href: "#resources" },
   { label: "Troubleshooting", href: "#troubleshooting" },
   { label: "Fashion", href: "#fashion" },
@@ -95,7 +98,7 @@ export const PROCESS_STEPS: ProcessStep[] = [
     aka: "Sanforizing & More",
     desc: "Singing, mercerizing, sanforizing and skew control stabilize the fabric — locking in hand-feel, width and shrinkage.",
     points: ["Sanforized < 2% shrinkage", "Skew < 3% · Bow < 2%", "Soft / peach / coated finishes"],
-    image: "https://images.pexels.com/photos/32834844/pexels-photo-32834844.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    image: sanforizingImg,
   },
   {
     no: "09",
@@ -103,7 +106,7 @@ export const PROCESS_STEPS: ProcessStep[] = [
     aka: "4-Point Quality Gate",
     desc: "Every meter is scanned under light for defects and graded on the 4-point system before rolling, packing and dispatch.",
     points: ["4-point system < 28 pts", "Shade, GSM, width check", "AQL garment audit"],
-    image: "https://images.pexels.com/photos/4109759/pexels-photo-4109759.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    image: inspectionImg,
   },
 ];
 
