@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import {
   ArrowRight, ArrowUpRight, AlertTriangle, CheckCircle2, Search, FlaskConical,
   Layers, Droplet, Grid3x3, Sparkles, Waves, BadgeCheck, Wrench, Shirt, Leaf,
-  Cpu, TrendingUp,
+  Cpu, TrendingUp, BookOpen, FileText,
 } from "lucide-react";
 import { PROCESS_STEPS, SUST_STATS, SUST_TOPICS, CATEGORIES } from "../data/content";
-import { TroubleItem, FashionCard } from "../types/content";
+import { TroubleItem, FashionCard, ResourceItem } from "../types/content";
 import { useData } from "../context/DataContext";
 import { Reveal, SectionHeading, Modal, Counter } from "./common";
+import { getRelatedResourceForTrouble } from "../data/resources";
 
 const iconMap: Record<string, typeof Layers> = {
   layers: Layers, spool: Layers, droplet: Droplet, grid: Grid3x3, sparkles: Sparkles,
@@ -113,28 +114,78 @@ export function ProcessSection() {
 }
 
 /* ============ TROUBLESHOOTING ============ */
-function TroubleCard({ t, onOpen }: { t: TroubleItem; onOpen: () => void }) {
+function TroubleCard({
+  t,
+  onOpen,
+  relatedResource,
+  onSelectResource,
+}: {
+  t: TroubleItem;
+  onOpen: () => void;
+  relatedResource?: ResourceItem;
+  onSelectResource?: (resource: ResourceItem) => void;
+}) {
   const sevColor = t.severity === "High" ? "bg-rose-100 text-rose-700" : t.severity === "Medium" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700";
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
-      className="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:border-indigo-300 hover:shadow-[0_18px_50px_rgba(10,22,51,0.12)]"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="group flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:border-indigo-300 hover:shadow-[0_18px_50px_rgba(10,22,51,0.12)] cursor-pointer"
     >
-      <div className="flex items-center justify-between">
-        <span className="rounded-full bg-indigo-50 px-3 py-1 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.15em] text-indigo-700">{t.tag}</span>
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${sevColor}`}>{t.severity}</span>
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-indigo-50 px-3 py-1 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.15em] text-indigo-700">{t.tag}</span>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${sevColor}`}>{t.severity}</span>
+        </div>
+        <h3 className="font-display mt-4 text-[17px] font-extrabold text-[#0a1633] group-hover:text-indigo-700">{t.title}</h3>
+        <p className="mt-2 line-clamp-2 text-[13.5px] leading-relaxed text-slate-500">{t.problem}</p>
+        <span className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-bold text-indigo-700">
+          Problem → Cause → Solution <ArrowUpRight size={15} className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </span>
       </div>
-      <h3 className="font-display mt-4 text-[17px] font-extrabold text-[#0a1633] group-hover:text-indigo-700">{t.title}</h3>
-      <p className="mt-2 line-clamp-2 text-[13.5px] leading-relaxed text-slate-500">{t.problem}</p>
-      <span className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-bold text-indigo-700">
-        Problem → Cause → Solution <ArrowUpRight size={15} className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-      </span>
-    </button>
+
+      {relatedResource && (
+        <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-slate-500 font-medium truncate">
+            <BookOpen size={13} className="text-amber-500 shrink-0" />
+            <span className="truncate">{relatedResource.category} SOP</span>
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelectResource) {
+                onSelectResource(relatedResource);
+              } else {
+                window.location.hash = `#resources/${encodeURIComponent(relatedResource.id || "")}`;
+              }
+            }}
+            className="inline-flex items-center gap-1 font-bold text-[#0a1633] hover:text-indigo-700 bg-amber-100/80 hover:bg-amber-200/90 px-2.5 py-1 rounded-lg transition shrink-0 shadow-sm"
+          >
+            <span>Learn more</span>
+            <ArrowRight size={12} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
-export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void }) {
-  const { troubles } = useData();
+export function TroubleshootingSection({
+  onOpenAll,
+  onSelectResource,
+}: {
+  onOpenAll: () => void;
+  onSelectResource?: (resource: ResourceItem) => void;
+}) {
+  const { troubles, resources } = useData();
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<TroubleItem | null>(null);
   const filtered = useMemo(() => troubles.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(q.toLowerCase())).slice(0, 6), [troubles, q]);
@@ -167,11 +218,19 @@ export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void })
         </Reveal>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((t, i) => (
-            <Reveal key={t.title} delay={i * 70}>
-              <TroubleCard t={t} onOpen={() => setSel(t)} />
-            </Reveal>
-          ))}
+          {filtered.map((t, i) => {
+            const rel = getRelatedResourceForTrouble(t, resources);
+            return (
+              <Reveal key={t.title} delay={i * 70}>
+                <TroubleCard
+                  t={t}
+                  onOpen={() => setSel(t)}
+                  relatedResource={rel}
+                  onSelectResource={onSelectResource}
+                />
+              </Reveal>
+            );
+          })}
         </div>
 
         <Reveal delay={150}>
@@ -191,30 +250,73 @@ export function TroubleshootingSection({ onOpenAll }: { onOpenAll: () => void })
       </div>
 
       <Modal open={!!sel} onClose={() => setSel(null)}>
-        {sel && (
-          <div className="p-6 sm:p-9">
-            <span className="rounded-full bg-indigo-50 px-3 py-1 font-mono2 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700">{sel.tag} · {sel.severity} priority</span>
-            <h3 className="font-display mt-3 text-2xl font-extrabold text-[#0a1633] sm:text-3xl">{sel.title}</h3>
-            <div className="mt-6 space-y-4">
-              <div className="rounded-2xl border-l-4 border-rose-500 bg-rose-50 p-4">
-                <p className="font-display text-[13px] font-bold uppercase tracking-widest text-rose-700">Problem</p>
-                <p className="mt-1 text-sm leading-relaxed text-slate-700">{sel.problem}</p>
-              </div>
-              <div className="rounded-2xl border-l-4 border-amber-500 bg-amber-50 p-4">
-                <p className="font-display text-[13px] font-bold uppercase tracking-widest text-amber-700">Possible causes</p>
-                <ul className="mt-2 space-y-1.5">
-                  {sel.causes.map((c) => <li key={c} className="flex gap-2 text-sm text-slate-700"><span className="text-amber-500">▸</span>{c}</li>)}
-                </ul>
-              </div>
-              <div className="rounded-2xl border-l-4 border-emerald-500 bg-emerald-50 p-4">
-                <p className="font-display text-[13px] font-bold uppercase tracking-widest text-emerald-700">Solutions</p>
-                <ul className="mt-2 space-y-1.5">
-                  {sel.solutions.map((c) => <li key={c} className="flex gap-2 text-sm text-slate-700"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" />{c}</li>)}
-                </ul>
+        {sel && (() => {
+          const relatedResource = getRelatedResourceForTrouble(sel, resources);
+          return (
+            <div className="p-6 sm:p-9">
+              <span className="rounded-full bg-indigo-50 px-3 py-1 font-mono2 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700">{sel.tag} · {sel.severity} priority</span>
+              <h3 className="font-display mt-3 text-2xl font-extrabold text-[#0a1633] sm:text-3xl">{sel.title}</h3>
+              <div className="mt-6 space-y-4">
+                <div className="rounded-2xl border-l-4 border-rose-500 bg-rose-50 p-4">
+                  <p className="font-display text-[13px] font-bold uppercase tracking-widest text-rose-700">Problem</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-700">{sel.problem}</p>
+                </div>
+                <div className="rounded-2xl border-l-4 border-amber-500 bg-amber-50 p-4">
+                  <p className="font-display text-[13px] font-bold uppercase tracking-widest text-amber-700">Possible causes</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {sel.causes.map((c) => <li key={c} className="flex gap-2 text-sm text-slate-700"><span className="text-amber-500">▸</span>{c}</li>)}
+                  </ul>
+                </div>
+                <div className="rounded-2xl border-l-4 border-emerald-500 bg-emerald-50 p-4">
+                  <p className="font-display text-[13px] font-bold uppercase tracking-widest text-emerald-700">Solutions</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {sel.solutions.map((c) => <li key={c} className="flex gap-2 text-sm text-slate-700"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" />{c}</li>)}
+                  </ul>
+                </div>
+
+                {/* Related Technical Resource & In-Depth SOP Callout */}
+                {relatedResource && (
+                  <div className="mt-6 overflow-hidden rounded-2xl border-2 border-amber-400/70 bg-gradient-to-br from-[#0a1633] to-[#122353] p-5 text-white shadow-xl shadow-indigo-950/20">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 px-3 py-1 font-mono2 text-[10.5px] font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-400/40">
+                        <BookOpen size={13} className="text-amber-400" />
+                        Related Technical Resource · {relatedResource.category}
+                      </span>
+                      <span className="text-[12px] font-medium text-slate-300">{relatedResource.readTime || "In-Depth SOP"}</span>
+                    </div>
+                    <h4 className="font-display mt-3 text-lg font-bold text-white sm:text-xl">
+                      {relatedResource.title}
+                    </h4>
+                    <p className="mt-1.5 line-clamp-2 text-xs sm:text-sm text-indigo-100/80 leading-relaxed">
+                      {relatedResource.desc}
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-white/10">
+                      <p className="text-[12px] text-indigo-200/80">
+                        Want to learn the complete chemical parameters, machinery recipes & SOP?
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSel(null);
+                          if (onSelectResource) {
+                            onSelectResource(relatedResource);
+                          } else {
+                            window.location.hash = `#resources/${encodeURIComponent(relatedResource.id || "")}`;
+                          }
+                        }}
+                        className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs sm:text-sm font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300 shadow-md shadow-amber-400/20 cursor-pointer"
+                      >
+                        <FileText size={15} />
+                        <span>Learn More in Technical Resource</span>
+                        <ArrowRight size={15} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
     </section>
   );

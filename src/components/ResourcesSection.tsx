@@ -27,6 +27,8 @@ interface ResourcesSectionProps {
 export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
   const {
     resources,
+    selectedResourceCategory,
+    setSelectedResourceCategory,
     currentMember,
     memberLogout,
     setIsMemberLoginModalOpen,
@@ -36,7 +38,8 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
     openCheckout,
   } = useData();
 
-  const [activeCategory, setActiveCategory] = useState("All");
+  const activeCategory = selectedResourceCategory || "All";
+  const setActiveCategory = setSelectedResourceCategory;
   const [searchQuery, setSearchQuery] = useState("");
 
   // Strictly the 15 disciplines + All - no legacy categories allowed

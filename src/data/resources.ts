@@ -63,6 +63,50 @@ export function normalizeCategory(cat?: string): string {
   return trimmed;
 }
 
+export function getRelatedResourceForTrouble(
+  trouble: { title: string; tag?: string; resourceId?: string },
+  resources: ResourceItem[]
+): ResourceItem | undefined {
+  if (!trouble || !resources || resources.length === 0) return undefined;
+  const title = (trouble.title || "").toLowerCase();
+  const tag = (trouble.tag || "").toLowerCase();
+
+  // 1. If an explicit resourceId is linked
+  if (trouble.resourceId) {
+    const directMatch = resources.find((r) => r.id === trouble.resourceId);
+    if (directMatch) return directMatch;
+  }
+
+  // 2. Specific defect keyword to resource mapping
+  if (title.includes("slub") || tag.includes("spin")) {
+    return resources.find((r) => r.id === "res-spinning" || r.category === "Spinning") || resources[0];
+  }
+  if (title.includes("shade") || title.includes("uneven dyeing") || title.includes("crease") || (tag.includes("dye") && !tag.includes("finish"))) {
+    return resources.find((r) => r.id === "res-2" || r.category === "Dyeing") || resources[0];
+  }
+  if (title.includes("barre") || title.includes("streak") || tag.includes("weav")) {
+    return resources.find((r) => r.id === "res-3" || r.category === "Weaving") || resources[0];
+  }
+  if (title.includes("skew") || title.includes("shrink") || title.includes("bow") || tag.includes("finish")) {
+    return resources.find((r) => r.id === "res-1" || r.category === "Finishing") || resources[0];
+  }
+  if (title.includes("gsm") || tag.includes("qual") || tag.includes("qa")) {
+    return resources.find((r) => r.id === "res-qa" || r.category === "Quality Assurance" || r.category === "Fabric") || resources[0];
+  }
+  if (title.includes("fastness") || title.includes("wash") || tag.includes("wash")) {
+    return resources.find((r) => r.id === "res-4" || r.category === "Washing") || resources[0];
+  }
+
+  // 3. Discipline/Tag fallback matching
+  const catMatch = resources.find((r) => {
+    const norm = normalizeCategory(r.category).toLowerCase();
+    return norm.includes(tag) || tag.includes(norm);
+  });
+  if (catMatch) return catMatch;
+
+  return resources[0];
+}
+
 export const DEFAULT_RESOURCES: ResourceItem[] = [
   {
     id: "res-1",

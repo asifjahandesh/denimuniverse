@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, CheckCircle2, Search, Wrench, X } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Search, Wrench, X } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import { ProcessSection, TroubleshootingSection, FashionSection, SustainabilitySection, CategoriesSection } from "./components/Knowledge";
@@ -17,6 +17,7 @@ import MemberLoginModal from "./components/MemberLoginModal";
 import MemberProfileModal from "./components/MemberProfileModal";
 import CheckoutModal from "./components/CheckoutModal";
 import { FashionCard, ResourceItem } from "./types/content";
+import { getRelatedResourceForTrouble } from "./data/resources";
 
 function MainApp() {
   const [showAllTroubles, setShowAllTroubles] = useState(false);
@@ -166,7 +167,10 @@ function MainApp() {
         <Hero />
         <ProcessSection />
         <ResourcesSection onSelectResource={handleSelectResource} />
-        <TroubleshootingSection onOpenAll={() => setShowAllTroubles(true)} />
+        <TroubleshootingSection
+          onOpenAll={() => setShowAllTroubles(true)}
+          onSelectResource={handleSelectResource}
+        />
         <FashionSection onSelectFashion={handleSelectFashion} />
         <SustainabilitySection />
         <CategoriesSection onOpen={setCatOpen} />
@@ -197,26 +201,59 @@ function MainApp() {
             )}
           </div>
           <div className="mt-5 space-y-3">
-            {troublesFiltered.map((t) => (
-              <details key={t.id || t.title} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white open:border-indigo-300 open:shadow-lg">
-                <summary className="flex cursor-pointer list-none items-center gap-2.5 sm:gap-3 p-3.5 sm:p-4 [&::-webkit-details-marker]:hidden transition active:bg-slate-50">
-                  <span className="rounded-full bg-indigo-50 px-2.5 py-1 font-mono2 text-[10px] font-bold uppercase tracking-widest text-indigo-700 shrink-0">{t.tag}</span>
-                  <span className="font-display flex-1 text-[14px] sm:text-[15px] font-bold text-[#0a1633]">{t.title}</span>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-500 transition group-open:rotate-45 group-open:bg-[#0a1633] group-open:text-white">+</span>
-                </summary>
-                <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-[13.5px] leading-relaxed text-slate-600"><span className="font-bold text-rose-600">Problem: </span>{t.problem}</p>
-                  <div>
-                    <p className="text-[12px] font-bold uppercase tracking-widest text-amber-600">Causes</p>
-                    <ul className="mt-1 space-y-1">{t.causes.map((c, i) => <li key={i} className="text-[13.5px] text-slate-600">▸ {c}</li>)}</ul>
+            {troublesFiltered.map((t) => {
+              const rel = getRelatedResourceForTrouble(t, resources);
+              return (
+                <details key={t.id || t.title} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white open:border-indigo-300 open:shadow-lg">
+                  <summary className="flex cursor-pointer list-none items-center gap-2.5 sm:gap-3 p-3.5 sm:p-4 [&::-webkit-details-marker]:hidden transition active:bg-slate-50">
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-1 font-mono2 text-[10px] font-bold uppercase tracking-widest text-indigo-700 shrink-0">{t.tag}</span>
+                    <span className="font-display flex-1 text-[14px] sm:text-[15px] font-bold text-[#0a1633]">{t.title}</span>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-500 transition group-open:rotate-45 group-open:bg-[#0a1633] group-open:text-white">+</span>
+                  </summary>
+                  <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 p-4">
+                    <p className="text-[13.5px] leading-relaxed text-slate-600"><span className="font-bold text-rose-600">Problem: </span>{t.problem}</p>
+                    <div>
+                      <p className="text-[12px] font-bold uppercase tracking-widest text-amber-600">Causes</p>
+                      <ul className="mt-1 space-y-1">{t.causes.map((c, i) => <li key={i} className="text-[13.5px] text-slate-600">▸ {c}</li>)}</ul>
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-bold uppercase tracking-widest text-emerald-600">Solutions</p>
+                      <ul className="mt-1 space-y-1">{t.solutions.map((c, i) => <li key={i} className="flex gap-1.5 text-[13.5px] text-slate-600"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />{c}</li>)}</ul>
+                    </div>
+
+                    {rel && (
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50 to-orange-50/60 p-3.5 shadow-sm">
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-400/30 text-[#0a1633]">
+                            <BookOpen size={16} className="text-amber-800" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono2 text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-200/70 px-2 py-0.5 rounded">
+                                Related Technical Resource · {rel.category}
+                              </span>
+                              <span className="text-[11px] text-slate-500 font-medium">{rel.readTime || "Full SOP"}</span>
+                            </div>
+                            <p className="text-[13.5px] font-extrabold text-[#0a1633] mt-1">{rel.title}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAllTroubles(false);
+                            handleSelectResource(rel);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a1633] px-3.5 py-2 text-xs font-bold text-amber-300 transition active:scale-95 hover:bg-[#122353] shadow-sm ml-auto sm:ml-0 cursor-pointer"
+                        >
+                          <span>Learn More in Resource</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-[12px] font-bold uppercase tracking-widest text-emerald-600">Solutions</p>
-                    <ul className="mt-1 space-y-1">{t.solutions.map((c, i) => <li key={i} className="flex gap-1.5 text-[13.5px] text-slate-600"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />{c}</li>)}</ul>
-                  </div>
-                </div>
-              </details>
-            ))}
+                </details>
+              );
+            })}
             {troublesFiltered.length === 0 && (
               <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">No cases match “{tSearch}”.</p>
             )}

@@ -51,6 +51,9 @@ interface DataContextType {
   gallery: GalleryItem[];
   siteConfig: SiteConfig;
   resources: ResourceItem[];
+  selectedResourceCategory: string;
+  setSelectedResourceCategory: (cat: string) => void;
+  navigateToResourceCategory: (cat: string) => void;
   members: MemberAccount[];
 
   // Cloud status
@@ -391,6 +394,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [gallery, setGallery] = useState<GalleryItem[]>(initGallery);
   const [siteConfig, setSiteConfig] = useState<SiteConfig>(initSiteConfig);
   const [resources, setResources] = useState<ResourceItem[]>(initResources);
+  const [selectedResourceCategory, setSelectedResourceCategory] = useState<string>("All");
+
+  const navigateToResourceCategory = (cat: string) => {
+    setSelectedResourceCategory(cat);
+    if (window.location.hash.startsWith("#resources/") || window.location.hash.startsWith("#fashion/")) {
+      window.location.hash = "#resources";
+    }
+    setTimeout(() => {
+      const el = document.getElementById("resources");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.location.hash = "#resources";
+      }
+    }, 60);
+  };
   const [members, setMembers] = useState<MemberAccount[]>(initMembers);
   const [membershipSettings, setMembershipSettings] = useState<MembershipSettings>(initMembershipSettings);
 
@@ -1147,6 +1166,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         gallery,
         siteConfig,
         resources,
+        selectedResourceCategory,
+        setSelectedResourceCategory,
+        navigateToResourceCategory,
         members,
         membershipSettings,
         updateMembershipSettings,
