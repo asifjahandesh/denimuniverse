@@ -35,15 +35,9 @@ import {
 import { useData } from "../../context/DataContext";
 import { ResourceItem, MemberAccount } from "../../types/content";
 import { uploadImageToSupabase, isSupabaseConfigured } from "../../lib/supabase";
+import { RESOURCE_CATEGORIES, normalizeCategory } from "../../data/resources";
 
-const CATEGORY_PRESETS = [
-  "Finishing & Recipes",
-  "Dyeing & Chemistry",
-  "Weaving & Yarn",
-  "Garment Processing",
-  "Quality & Lab Standards",
-  "Sustainable Tech",
-];
+export const CATEGORY_PRESETS: string[] = [...RESOURCE_CATEGORIES];
 
 export default function ResourceManager() {
   const {
@@ -76,7 +70,7 @@ export default function ResourceManager() {
 
   // Resource Form State
   const [rTitle, setRTitle] = useState("");
-  const [rCategory, setRCategory] = useState("Finishing & Recipes");
+  const [rCategory, setRCategory] = useState("Finishing");
   const [rDesc, setRDesc] = useState("");
   const [rContent, setRContent] = useState("");
   const [rAuthor, setRAuthor] = useState("Engr. Asif Jahan · Senior Wet Process Specialist");
@@ -209,7 +203,7 @@ export default function ResourceManager() {
   const openAddResource = () => {
     setEditingResource(null);
     setRTitle("");
-    setRCategory("Finishing & Recipes");
+    setRCategory(CATEGORY_PRESETS[0] || "Fiber");
     setRDesc("");
     setRContent(
       `### 1. Overview & Industrial Objective\nWrite your technical introduction, background, and operational scope here.\n\n---\n\n### 2. Standard Operating Calibration\nDetail parameter tables, liquor ratios, chemical concentrations, and laser/wash settings:\n\n- Parameter 1: 40°C temperature, 1:6 liquor ratio\n- Parameter 2: Standard enzyme bath duration 20 min\n\n---\n\n### 3. Attached PDF Technical Documentation\nThe attached PDF manual contains high-resolution laboratory curves, recipe tables, and complete production SOPs for mill operators.`
@@ -234,7 +228,7 @@ export default function ResourceManager() {
   const openEditResource = (item: ResourceItem) => {
     setEditingResource(item);
     setRTitle(item.title);
-    setRCategory(item.category);
+    setRCategory(normalizeCategory(item.category));
     setRDesc(item.desc);
     setRContent(item.content);
     setRAuthor(item.author || "Engr. Asif Jahan · Senior Wet Process Specialist");
@@ -332,7 +326,7 @@ export default function ResourceManager() {
     const payload = {
       title: rTitle.trim(),
       slug: rTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      category: rCategory.trim(),
+      category: normalizeCategory(rCategory.trim()),
       desc: rDesc.trim(),
       content: rContent.trim(),
       author: rAuthor.trim(),
@@ -1606,19 +1600,23 @@ export default function ResourceManager() {
                   <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
                     Category *
                   </label>
-                  <input
+                  <select
                     required
-                    list="category-suggestions"
                     value={rCategory}
                     onChange={(e) => setRCategory(e.target.value)}
-                    placeholder="Select or enter category..."
-                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none"
-                  />
-                  <datalist id="category-suggestions">
+                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-[#0a1633] px-4 py-2.5 text-sm font-medium text-white focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none cursor-pointer"
+                  >
+                    {!CATEGORY_PRESETS.includes(rCategory) && rCategory && (
+                      <option value={rCategory} className="bg-[#0a1633] text-white">
+                        {rCategory}
+                      </option>
+                    )}
                     {CATEGORY_PRESETS.map((c) => (
-                      <option key={c} value={c} />
+                      <option key={c} value={c} className="bg-[#0a1633] text-white py-1">
+                        {c}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">

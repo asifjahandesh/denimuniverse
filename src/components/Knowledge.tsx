@@ -363,7 +363,7 @@ export function SustainabilitySection() {
               <p className="font-display text-xl font-extrabold text-white">Water footprint: 7,500L → under 25L per jean</p>
               <p className="mt-1 text-[13.5px] text-white/85">Laser + ozone + foam dyeing. Full breakdown in our sustainability guides.</p>
             </div>
-            <a href="#insights" className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-[#0a1633] px-6 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-black">
+            <a href="#resources" className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-[#0a1633] px-6 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-black">
               Read the tech guide <ArrowRight size={16} />
             </a>
           </div>

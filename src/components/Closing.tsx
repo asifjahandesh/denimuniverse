@@ -309,7 +309,7 @@ export function Footer() {
               <span className="font-display text-lg font-extrabold text-white">{siteConfig.brand.toUpperCase()}</span>
             </div>
             <p className="mt-4 max-w-sm text-[13.5px] leading-relaxed">
-              The denim knowledge hub — fabric processes, troubleshooting, fashion, sustainability and technology. Practical, free, and made for the people who make jeans.
+              Denim knowledge hub — fabric processes, troubleshooting, fashion, sustainability and technology. Practical, free, and made for the people who make jeans.
             </p>
             <div className="stitch-line mt-5 max-w-[220px] opacity-70" />
             <p className="font-mono2 mt-3 text-[11px] uppercase tracking-[0.25em] text-indigo-300/60">{siteConfig.tagline}</p>
@@ -317,7 +317,7 @@ export function Footer() {
           <nav aria-label="Learn">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Learn</p>
             <ul className="mt-4 space-y-2 text-[13.5px]">
-              {[["Fabric Process", "#process"], ["Resources", "#resources"], ["Troubleshooting", "#troubleshooting"], ["Denim Insights", "#insights"], ["Dictionary", "#dictionary"], ["Gallery", "#gallery"]].map(([l, h]) => (
+              {[["Fabric Process", "#process"], ["Resources", "#resources"], ["Troubleshooting", "#troubleshooting"]].map(([l, h]) => (
                 <li key={l}><a href={h} className="inline-block py-1 transition hover:text-amber-300 active:text-amber-400">{l}</a></li>
               ))}
             </ul>
@@ -325,7 +325,7 @@ export function Footer() {
           <nav aria-label="Explore">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-white">Explore</p>
             <ul className="mt-4 space-y-2 text-[13.5px]">
-              {[["Fashion", "#fashion"], ["Sustainability", "#sustainability"], ["Categories", "#categories"], ["About", "#about"], ["Contact", "#contact"]].map(([l, h]) => (
+              {[["Fashion", "#fashion"], ["Sustainability", "#sustainability"], ["Categories", "#categories"], ["Contact", "#contact"]].map(([l, h]) => (
                 <li key={l}><a href={h} className="inline-block py-1 transition hover:text-amber-300 active:text-amber-400">{l}</a></li>
               ))}
             </ul>

@@ -12,15 +12,11 @@ export const SITE_CONFIG = {
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
   { label: "Fabric Process", href: "#process" },
   { label: "Resources", href: "#resources" },
   { label: "Troubleshooting", href: "#troubleshooting" },
   { label: "Fashion", href: "#fashion" },
   { label: "Sustainability", href: "#sustainability" },
-  { label: "Insights", href: "#insights" },
-  { label: "Dictionary", href: "#dictionary" },
-  { label: "Gallery", href: "#gallery" },
   { label: "Contact", href: "#contact" },
 ];
 

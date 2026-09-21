@@ -21,6 +21,7 @@ import {
   DEFAULT_RESOURCES,
   DEFAULT_MEMBERS,
   DEFAULT_MEMBERSHIP_SETTINGS,
+  normalizeCategory,
 } from "../data/resources";
 import {
   isSupabaseConfigured,
@@ -281,20 +282,36 @@ function initResources(): ResourceItem[] {
     const stored = localStorage.getItem(STORAGE_KEYS.RESOURCES);
     if (stored) {
       const parsed: ResourceItem[] = JSON.parse(stored);
-      // Auto-migrate legacy USD / old BDT prices to user's specified prices: Single 49 BDT, Basic 199 BDT, Premium 499 BDT
-      return parsed.map((r) => {
+      // Auto-migrate legacy USD / old BDT prices & cleanse legacy categories
+      const migrated = parsed.map((r) => {
         let priceBadge = r.priceBadge || "";
         let singlePrice = r.singlePrice || "49 BDT";
+        const cat = normalizeCategory(r.category);
         if (priceBadge.includes("$19") || priceBadge.includes("1,990") || priceBadge.includes("1990")) priceBadge = "499 BDT · Premium SOP";
         if (priceBadge.includes("$15") || priceBadge.includes("1,490") || priceBadge.includes("1490")) priceBadge = "499 BDT · Premium SOP";
         if (priceBadge.includes("$9") || priceBadge.includes("990")) priceBadge = "199 BDT · Basic Manual";
         if (singlePrice.includes("$4") || singlePrice.includes("390") || singlePrice === "$4") singlePrice = "49 BDT";
         return {
           ...r,
+          category: cat,
           priceBadge: priceBadge || (r.accessTier === "premium" ? "499 BDT · Premium SOP" : r.accessTier === "basic" ? "199 BDT · Basic Manual" : "Free"),
           singlePrice: singlePrice || "49 BDT",
         };
       });
+
+      // Merge any new default category manuals if they don't exist in local storage yet
+      const existingIds = new Set(migrated.map((m) => m.id));
+      const missingDefaults = DEFAULT_RESOURCES.filter((d) => !existingIds.has(d.id));
+      const fullList = [...migrated, ...missingDefaults];
+
+      // Immediately persist cleansed categories to localStorage to permanently purge stale values
+      try {
+        localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(fullList));
+      } catch (e) {
+        console.warn("Failed to overwrite cleansed resources in storage", e);
+      }
+
+      return fullList;
     }
   } catch (e) {
     console.error("Error reading resources from storage", e);
@@ -435,7 +452,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (remote.dictionary && remote.dictionary.length > 0) setDictionary(remote.dictionary);
           if (remote.gallery && remote.gallery.length > 0) setGallery(remote.gallery);
           if (remote.siteConfig) setSiteConfig(remote.siteConfig);
-          if (remote.resources && remote.resources.length > 0) setResources(remote.resources);
+          if (remote.resources && remote.resources.length > 0) {
+            const sanitized = remote.resources.map((r) => ({
+              ...r,
+              category: normalizeCategory(r.category),
+            }));
+            setResources(sanitized);
+          }
           if (remote.members && remote.members.length > 0) setMembers(remote.members);
           if (remote.payments && remote.payments.length > 0) setPayments(remote.payments);
           setIsCloudConnected(true);
@@ -1006,6 +1029,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addResource = (item: Omit<ResourceItem, "id">) => {
     const newItem: ResourceItem = {
       ...item,
+      category: normalizeCategory(item.category),
       id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     };
     setResources((prev) => [newItem, ...prev]);
@@ -1013,8 +1037,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateResource = (id: string, updated: Partial<ResourceItem>) => {
+    const sanitizedUpdated: Partial<ResourceItem> = {
+      ...updated,
+      ...(updated.category ? { category: normalizeCategory(updated.category) } : {}),
+    };
     setResources((prev) => {
-      const next = prev.map((r) => (r.id === id ? { ...r, ...updated } : r));
+      const next = prev.map((r) => (r.id === id ? { ...r, ...sanitizedUpdated } : r));
       const target = next.find((r) => r.id === id);
       if (target) syncRemoteResource(target);
       return next;

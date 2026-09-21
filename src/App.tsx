@@ -3,8 +3,7 @@ import { ArrowRight, CheckCircle2, Search, Wrench, X } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import { ProcessSection, TroubleshootingSection, FashionSection, SustainabilitySection, CategoriesSection } from "./components/Knowledge";
-import { InsightsSection, DictionarySection, GallerySection } from "./components/Content";
-import { AboutSection, FacebookSection, ContactSection, Footer } from "./components/Closing";
+import { FacebookSection, ContactSection, Footer } from "./components/Closing";
 import { Modal, Reveal } from "./components/common";
 import { CATEGORIES } from "./data/content";
 import { DataProvider, useData } from "./context/DataContext";
@@ -171,10 +170,6 @@ function MainApp() {
         <FashionSection onSelectFashion={handleSelectFashion} />
         <SustainabilitySection />
         <CategoriesSection onOpen={setCatOpen} />
-        <InsightsSection />
-        <DictionarySection />
-        <GallerySection />
-        <AboutSection />
         <FacebookSection />
         <ContactSection />
       </main>
@@ -243,7 +238,7 @@ function MainApp() {
             <p className="font-display mt-6 text-[12px] sm:text-[13px] font-bold uppercase tracking-[0.18em] text-slate-400">Inside this library</p>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               {catData.topics.map((t) => (
-                <a key={t} href="#insights" onClick={() => setCatOpen(null)} className="group flex min-h-[46px] items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13.5px] sm:text-[14px] font-bold text-[#0a1633] transition active:scale-95 hover:border-indigo-300 hover:bg-indigo-50">
+                <a key={t} href="#resources" onClick={() => setCatOpen(null)} className="group flex min-h-[46px] items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13.5px] sm:text-[14px] font-bold text-[#0a1633] transition active:scale-95 hover:border-indigo-300 hover:bg-indigo-50">
                   {t}
                   <ArrowRight size={15} className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-600" />
                 </a>
@@ -251,8 +246,8 @@ function MainApp() {
             </div>
             <Reveal className="mt-6">
               <div className="rounded-2xl bg-[#0a1633] p-5 text-center">
-                <p className="text-sm font-semibold text-white">Full {catData.name} guides drop weekly in Denim Insights.</p>
-                <a href="#insights" onClick={() => setCatOpen(null)} className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-sm font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300">Browse articles <ArrowRight size={15} /></a>
+                <p className="text-sm font-semibold text-white">Full {catData.name} technical manuals and SOPs available in Resources.</p>
+                <a href="#resources" onClick={() => setCatOpen(null)} className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-sm font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300">Browse manuals <ArrowRight size={15} /></a>
               </div>
             </Reveal>
           </div>

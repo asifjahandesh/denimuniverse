@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: manual admin verification & under review flow for paid signups'): "
-if "%MSG%"=="" set MSG=feat: manual admin verification and under review flow for paid signups
+set /p MSG="Enter commit message (press Enter for 'feat: add category dropdown with all 15 resource disciplines in Admin create/edit modal'): "
+if "%MSG%"=="" set MSG=feat: add category dropdown with all 15 resource disciplines in Admin create/edit modal
 
 echo.
 echo 1. Staging changes...

@@ -53,10 +53,9 @@ export default function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2 text-[12px] text-indigo-100/80">
           <p className="flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
-            The Denim Knowledge Hub — Fabric · Dyeing · Quality · Sustainability
+            Denim Knowledge Hub — Fabric · Dyeing · Quality · Sustainability
           </p>
           <div className="flex items-center gap-5">
-            <span className="font-mono2 tracking-widest text-[11px] uppercase">EST. For denim minds</span>
             <a href={siteConfig.facebookUrl || SITE_CONFIG.facebookUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 font-semibold text-white transition hover:text-amber-300">
               <FacebookIcon size={13} /> Follow 48K+
             </a>
@@ -109,7 +108,7 @@ export default function Navbar() {
               <img
                 src={logoImg}
                 alt="Denim Universe Official Logo"
-                className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover shadow-lg ring-2 ring-white/20 transition-all duration-300 group-hover:ring-amber-400/60"
+                className="h-11 w-11 sm:h-12 sm:w-12 rounded-full object-cover shadow-lg ring-2 ring-white/20 transition-all duration-300 group-hover:ring-amber-400/60"
               />
             </span>
             <span className="leading-none truncate">

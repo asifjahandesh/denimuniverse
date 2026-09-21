@@ -23,6 +23,7 @@ import {
 import { ResourceItem } from "../types/content";
 import { useData } from "../context/DataContext";
 import { downloadDenimUniversePdf, previewAndPrintDenimUniversePdf } from "../utils/pdfGenerator";
+import { normalizeCategory } from "../data/resources";
 
 interface ResourceDetailPageProps {
   resource: ResourceItem;
@@ -208,14 +209,14 @@ export default function ResourceDetailPage({
             Resources
           </button>
           <span>/</span>
-          <span className="text-amber-300 truncate">{resource.category}</span>
+          <span className="text-amber-300 truncate">{normalizeCategory(resource.category)}</span>
         </nav>
 
         {/* Article Meta Header */}
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="rounded-lg bg-amber-400/20 px-3 py-1 font-mono2 text-xs font-bold text-amber-300 border border-amber-400/30">
-              {resource.category}
+              {normalizeCategory(resource.category)}
             </span>
             {hasAccess ? (
               <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/20 px-2.5 py-1 font-mono2 text-xs font-bold text-emerald-300 border border-emerald-500/30">

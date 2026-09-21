@@ -152,7 +152,7 @@ export default function Hero() {
                         <p className="font-display text-[15px] font-bold text-white">This week: Rope vs Slasher Dyeing</p>
                         <p className="text-xs text-indigo-200/70">7 min · with cost math & videos</p>
                       </div>
-                      <a href="#insights" className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400 text-[#0a1633] transition hover:scale-105">
+                      <a href="#process" className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400 text-[#0a1633] transition hover:scale-105">
                         <Play size={18} fill="currentColor" />
                       </a>
                     </div>

@@ -18,6 +18,7 @@ import {
 import { Reveal, SectionHeading } from "./common";
 import { useData } from "../context/DataContext";
 import { ResourceItem } from "../types/content";
+import { RESOURCE_CATEGORIES, normalizeCategory } from "../data/resources";
 
 interface ResourcesSectionProps {
   onSelectResource: (resource: ResourceItem) => void;
@@ -38,23 +39,21 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    resources.forEach((r) => {
-      if (r.category) set.add(r.category);
-    });
-    return ["All", ...Array.from(set)];
-  }, [resources]);
+  // Strictly the 15 disciplines + All - no legacy categories allowed
+  const categories = useMemo(() => ["All", ...RESOURCE_CATEGORIES], []);
 
   const filteredResources = useMemo(() => {
     return resources.filter((r) => {
-      const matchCat = activeCategory === "All" || r.category === activeCategory;
-      const q = searchQuery.toLowerCase();
+      const normCat = normalizeCategory(r.category);
+      const matchCat =
+        activeCategory === "All" ||
+        normCat.toLowerCase() === activeCategory.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
       const matchQuery =
         !q ||
         r.title.toLowerCase().includes(q) ||
         r.desc.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q) ||
+        normCat.toLowerCase().includes(q) ||
         (r.author && r.author.toLowerCase().includes(q));
       return matchCat && matchQuery;
     });
@@ -179,35 +178,62 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
           </div>
         </Reveal>
 
-        {/* Category Pills & Search */}
+        {/* Category Pills & Search Controls */}
         <Reveal delay={150}>
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="touch-scroll flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition active:scale-95 ${
-                    activeCategory === cat
-                      ? "bg-amber-400 text-[#0a1633] shadow-md shadow-amber-400/20"
-                      : "border border-white/10 bg-white/5 text-indigo-200/80 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+          <div className="mt-8 space-y-4">
+            {/* Top Row: Search Input & Category Count Indicator */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="font-mono2 text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                  Disciplines ({categories.length - 1}):
+                </span>
+                <span className="text-xs text-indigo-200/70 hidden sm:inline">
+                  Click any manufacturing process to filter manuals
+                </span>
+              </div>
+
+              <div className="relative w-full sm:w-80">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-300/50" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search technical topics, manuals, formulas…"
+                  aria-label="Search resources"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 pl-9 pr-8 py-2.5 text-xs text-white placeholder:text-indigo-200/40 focus:border-amber-400 focus:outline-none transition"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-sm font-bold cursor-pointer"
+                    title="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="relative min-w-[240px] md:w-72">
-              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-300/50" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search technical topics…"
-                aria-label="Search resources"
-                className="w-full rounded-xl border border-white/15 bg-white/5 pl-9 pr-4 py-2 text-xs text-white placeholder:text-indigo-200/40 focus:border-amber-400 focus:outline-none"
-              />
+            {/* Category Chips Container: Wrap naturally so ALL 15 options are visible at once */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4 backdrop-blur">
+              {categories.map((cat) => {
+                const isSelected = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? "bg-amber-400 text-[#0a1633] shadow-md shadow-amber-400/20 ring-2 ring-amber-400/40"
+                        : "border border-white/10 bg-white/5 text-indigo-100/90 hover:border-amber-400/40 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </Reveal>
@@ -237,7 +263,7 @@ export function ResourcesSection({ onSelectResource }: ResourcesSectionProps) {
                       {/* Badges */}
                       <div className="absolute left-3 top-3 flex flex-wrap gap-2">
                         <span className="rounded-lg bg-[#0a1633]/90 px-2.5 py-1 font-mono2 text-[10.5px] font-bold text-amber-300 border border-amber-400/30 backdrop-blur">
-                          {res.category}
+                          {normalizeCategory(res.category)}
                         </span>
                       </div>
 
