@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'fix: resolve PDF reader height clipping and format full document visibility'): "
-if "%MSG%"=="" set MSG=fix: resolve PDF reader height clipping and format full document visibility
+set /p MSG="Enter commit message (press Enter for 'feat: remove 12 Universes Categories section from homepage'): "
+if "%MSG%"=="" set MSG=feat: remove 12 Universes Categories section from homepage
 
 echo.
 echo 1. Staging changes...

@@ -4,7 +4,7 @@ import {
   Layers, Droplet, Grid3x3, Sparkles, Waves, BadgeCheck, Wrench, Shirt, Leaf,
   Cpu, TrendingUp, BookOpen, FileText,
 } from "lucide-react";
-import { PROCESS_STEPS, SUST_STATS, SUST_TOPICS, CATEGORIES } from "../data/content";
+import { PROCESS_STEPS, SUST_STATS, SUST_TOPICS } from "../data/content";
 import { TroubleItem, FashionCard, ResourceItem } from "../types/content";
 import { useData } from "../context/DataContext";
 import { Reveal, SectionHeading, Modal, Counter } from "./common";
@@ -470,48 +470,6 @@ export function SustainabilitySection() {
             </a>
           </div>
         </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ============ CATEGORIES ============ */
-export function CategoriesSection({ onOpen }: { onOpen: (name: string) => void }) {
-  return (
-    <section id="categories" className="denim-texture-light py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <Reveal>
-          <SectionHeading
-            eyebrow="Knowledge Categories"
-            title="12 Universes Inside the Universe"
-            desc="Pick your path — each category is a curated library of guides, charts, videos and troubleshooting cases."
-          />
-        </Reveal>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {CATEGORIES.map((c, i) => {
-            const Icon = iconMap[c.icon] ?? Layers;
-            return (
-              <Reveal key={c.name} delay={(i % 4) * 70}>
-                <button
-                  onClick={() => onOpen(c.name)}
-                  className="group flex h-full w-full flex-col rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1.5 hover:shadow-[0_20px_55px_rgba(10,22,51,0.14)]"
-                >
-                  <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${c.color} text-white shadow-lg transition group-hover:scale-110`}>
-                    <Icon size={21} />
-                  </span>
-                  <span className="mt-4 flex items-center justify-between">
-                    <h3 className="font-display text-[17px] font-extrabold text-[#0a1633]">{c.name}</h3>
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500">{c.count}</span>
-                  </span>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">{c.desc}</p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-bold text-indigo-700">
-                    Open library <ArrowRight size={14} className="transition group-hover:translate-x-1" />
-                  </span>
-                </button>
-              </Reveal>
-            );
-          })}
-        </div>
       </div>
     </section>
   );

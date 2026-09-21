@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BookOpen, CheckCircle2, Search, Wrench, X } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import { ProcessSection, TroubleshootingSection, FashionSection, SustainabilitySection, CategoriesSection } from "./components/Knowledge";
+import { ProcessSection, TroubleshootingSection, FashionSection, SustainabilitySection } from "./components/Knowledge";
 import { FacebookSection, ContactSection, Footer } from "./components/Closing";
 import { Modal, Reveal } from "./components/common";
-import { CATEGORIES } from "./data/content";
 import { DataProvider, useData } from "./context/DataContext";
 import AdminLoginModal from "./components/admin/AdminLoginModal";
 import AdminPanel from "./components/admin/AdminPanel";
@@ -22,7 +21,6 @@ import { getRelatedResourceForTrouble } from "./data/resources";
 
 function MainApp() {
   const [showAllTroubles, setShowAllTroubles] = useState(false);
-  const [catOpen, setCatOpen] = useState<string | null>(null);
   const [tSearch, setTSearch] = useState("");
   const [selectedFashion, setSelectedFashion] = useState<FashionCard | null>(null);
   const [selectedResource, setSelectedResource] = useState<ResourceItem | null>(null);
@@ -122,7 +120,6 @@ function MainApp() {
     }, 60);
   };
 
-  const catData = useMemo(() => CATEGORIES.find((c) => c.name === catOpen), [catOpen]);
   const troublesFiltered = useMemo(
     () => troubles.filter((t) => (t.title + t.tag + t.problem).toLowerCase().includes(tSearch.toLowerCase())),
     [troubles, tSearch]
@@ -174,7 +171,6 @@ function MainApp() {
         />
         <FashionSection onSelectFashion={handleSelectFashion} />
         <SustainabilitySection />
-        <CategoriesSection onOpen={setCatOpen} />
         <FacebookSection />
         <ContactSection />
       </main>
@@ -260,36 +256,6 @@ function MainApp() {
             )}
           </div>
         </div>
-      </Modal>
-
-      {/* Category library modal */}
-      <Modal open={!!catOpen} onClose={() => setCatOpen(null)}>
-        {catData && (
-          <div className="p-5 sm:p-9">
-            <div className={`rounded-3xl bg-gradient-to-br ${catData.color} p-5 sm:p-6 text-white`}>
-              <div>
-                <p className="font-mono2 text-[10.5px] sm:text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">{catData.count} · Denim Universe Library</p>
-                <h3 className="font-display mt-1 text-2xl sm:text-3xl font-extrabold">{catData.name}</h3>
-                <p className="mt-2 max-w-md text-[13.5px] sm:text-[14px] leading-relaxed text-white/85">{catData.desc}</p>
-              </div>
-            </div>
-            <p className="font-display mt-6 text-[12px] sm:text-[13px] font-bold uppercase tracking-[0.18em] text-slate-400">Inside this library</p>
-            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-              {catData.topics.map((t) => (
-                <a key={t} href="#resources" onClick={() => setCatOpen(null)} className="group flex min-h-[46px] items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13.5px] sm:text-[14px] font-bold text-[#0a1633] transition active:scale-95 hover:border-indigo-300 hover:bg-indigo-50">
-                  {t}
-                  <ArrowRight size={15} className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-600" />
-                </a>
-              ))}
-            </div>
-            <Reveal className="mt-6">
-              <div className="rounded-2xl bg-[#0a1633] p-5 text-center">
-                <p className="text-sm font-semibold text-white">Full {catData.name} technical manuals and SOPs available in Resources.</p>
-                <a href="#resources" onClick={() => setCatOpen(null)} className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-sm font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300">Browse manuals <ArrowRight size={15} /></a>
-              </div>
-            </Reveal>
-          </div>
-        )}
       </Modal>
     </div>
   );
