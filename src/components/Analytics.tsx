@@ -60,7 +60,7 @@ export default function Analytics() {
       });
     }
 
-    // Track hash changes (e.g. #troubleshooting, #fashion, #process)
+    // Track hash changes (e.g. #troubleshooting, #fashion, #resources)
     const handleHashChange = () => {
       if (typeof window.gtag === "function") {
         window.gtag("config", activeGaId, {

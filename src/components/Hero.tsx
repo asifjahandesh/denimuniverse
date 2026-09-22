@@ -68,7 +68,7 @@ export default function Hero() {
             <Reveal delay={300}>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
-                  href="#process"
+                  href="#resources"
                   className="group inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 px-7 py-3.5 font-display text-[15px] font-bold text-[#0a1633] shadow-[0_12px_40px_rgba(232,182,76,0.35)] transition active:scale-95 hover:-translate-y-0.5 hover:bg-amber-300 sm:w-auto"
                 >
                   <BookOpen size={18} />
@@ -149,7 +149,7 @@ export default function Hero() {
                         <p className="font-display text-[15px] font-bold text-white">This week: Rope vs Slasher Dyeing</p>
                         <p className="text-xs text-indigo-200/70">7 min · with cost math & videos</p>
                       </div>
-                      <a href="#process" className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400 text-[#0a1633] transition hover:scale-105">
+                      <a href="#resources" className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400 text-[#0a1633] transition hover:scale-105">
                         <Play size={18} fill="currentColor" />
                       </a>
                     </div>
@@ -198,7 +198,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <a href="#process" aria-label="Scroll to process" className="absolute bottom-16 left-1/2 hidden -translate-x-1/2 lg:flex h-12 w-7 items-start justify-center rounded-full border border-white/25 p-1.5">
+      <a href="#resources" aria-label="Scroll to resources" className="absolute bottom-16 left-1/2 hidden -translate-x-1/2 lg:flex h-12 w-7 items-start justify-center rounded-full border border-white/25 p-1.5">
         <span className="h-2.5 w-1 animate-bounce rounded-full bg-amber-400" />
         <ArrowDown size={0} />
       </a>

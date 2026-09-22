@@ -187,9 +187,9 @@ function getWelcomeEmailHtml(email: string): string {
         
         <p style="font-weight: 700; color: #ffffff; margin-top: 25px; margin-bottom: 14px;">Here are your quick-start guides to explore right now:</p>
 
-        <a href="${siteUrl}/#process" class="card">
-          <span class="card-title">1. Fabric Manufacturing Process →</span>
-          <p class="card-desc">The complete 9-step journey from raw cotton bale through spinning, rope indigo dyeing, shuttle weaving, to sanforization.</p>
+        <a href="${siteUrl}/#resources" class="card">
+          <span class="card-title">1. Technical Resources &amp; SOPs →</span>
+          <p class="card-desc">Production floor SOPs, machine parameters, and laboratory quality benchmarks across 15 specialized denim disciplines.</p>
         </a>
 
         <a href="${siteUrl}/#troubleshooting" class="card">

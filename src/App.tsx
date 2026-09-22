@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BookOpen, CheckCircle2, Search, Wrench, X } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import { ProcessSection, TroubleshootingSection, FashionSection, SustainabilitySection } from "./components/Knowledge";
+import { TroubleshootingSection, FashionSection, SustainabilitySection } from "./components/Knowledge";
 import { FacebookSection, ContactSection, Footer } from "./components/Closing";
 import { Modal, Reveal } from "./components/common";
 import { DataProvider, useData } from "./context/DataContext";
@@ -163,7 +163,6 @@ function MainApp() {
       <Navbar />
       <main>
         <Hero />
-        <ProcessSection />
         <ResourcesSection onSelectResource={handleSelectResource} />
         <TroubleshootingSection
           onOpenAll={() => setShowAllTroubles(true)}

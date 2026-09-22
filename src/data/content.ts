@@ -15,7 +15,6 @@ export const SITE_CONFIG = {
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
-  { label: "Denim Manufacturing Process", href: "#process" },
   { label: "Resources", href: "#resources" },
   { label: "Troubleshooting", href: "#troubleshooting" },
   { label: "Fashion", href: "#fashion" },

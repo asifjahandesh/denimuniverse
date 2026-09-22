@@ -67,8 +67,8 @@ function getInitialStats(): VisitorStats {
       },
       {
         id: "act-init-3",
-        path: "#process",
-        label: "9-Step Fabric Process",
+        path: "#resources",
+        label: "Technical Resources & SOPs",
         device: "Mobile",
         browser: "Safari",
         timestamp: Date.now() - 19 * 60 * 1000,
