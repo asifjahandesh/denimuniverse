@@ -1,10 +1,23 @@
+import { useState, useEffect } from "react";
 import { ArrowDown, ArrowRight, BookOpen, Play, Award, Users, Factory, Leaf } from "lucide-react";
 import { HERO_IMG, SITE_CONFIG } from "../data/content";
 import { useData } from "../context/DataContext";
 import { Reveal } from "./common";
 import { FacebookIcon } from "./Navbar";
 import logoImg from "../assets/logo.png";
-import cottonFieldImg from "../assets/cotton-field-harvest.jpg";
+import slide1 from "../assets/cotton-slide-1.jpg";
+import slide2 from "../assets/cotton-slide-2.jpg";
+import slide3 from "../assets/cotton-slide-3.jpg";
+import slide4 from "../assets/cotton-slide-4.jpg";
+import slide5 from "../assets/cotton-slide-5.jpg";
+
+const COTTON_SLIDES = [
+  { src: slide1, alt: "Cotton crop rows under bright open sky" },
+  { src: slide2, alt: "Sunset golden hour illumination over mature cotton fields" },
+  { src: slide3, alt: "Harvested cotton bales and round modules in field" },
+  { src: slide4, alt: "Agricultural drone monitoring sustainable cotton cultivation" },
+  { src: slide5, alt: "Premium ripe cotton bolls macro closeup in golden sunlight" },
+];
 
 const STATS = [
   { icon: BookOpen, value: "180+", label: "Technical guides" },
@@ -20,6 +33,16 @@ const TICKER = [
 
 export default function Hero() {
   const { siteConfig } = useData();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % COTTON_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isPaused]);
   return (
     <section id="home" className="denim-texture relative overflow-hidden">
       {/* BG image layer */}
@@ -126,25 +149,56 @@ export default function Hero() {
                   />
                 </div>
               </div>
-              <div className="stitch-border overflow-hidden rounded-[1.8rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur">
+              <div 
+                className="stitch-border group overflow-hidden rounded-[1.8rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur"
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+              >
                 <div className="relative h-[420px]">
-                  <img
-                    src={cottonFieldImg}
-                    alt="Cotton field harvest for denim manufacturing"
-                    className="h-full w-full object-cover"
-                    loading="eager"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#060d22] via-transparent to-transparent" />
+                  {COTTON_SLIDES.map((slide, idx) => (
+                    <img
+                      key={idx}
+                      src={slide.src}
+                      alt={slide.alt}
+                      className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out ${
+                        idx === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
+                      }`}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                    />
+                  ))}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#060d22] via-transparent to-transparent" />
+
+                  {/* Slide navigation indicators */}
+                  <div className="absolute bottom-[86px] left-4 z-10 flex items-center gap-1.5 rounded-full border border-white/20 bg-[#060d22]/80 px-3 py-1.5 shadow-lg backdrop-blur-md">
+                    {COTTON_SLIDES.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setCurrentSlide(idx)}
+                        title={`Cotton photo ${idx + 1}`}
+                        aria-label={`View slide ${idx + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          idx === currentSlide
+                            ? "w-6 bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                            : "w-2 bg-white/40 hover:bg-white/80"
+                        }`}
+                      />
+                    ))}
+                    <span className="ml-1 font-mono2 text-[10px] font-bold tracking-wider text-amber-300/90">
+                      {currentSlide + 1}/{COTTON_SLIDES.length}
+                    </span>
+                  </div>
+
                   {/* floating chips */}
-                  <div className="animate-floaty absolute left-4 top-4 rounded-2xl border border-white/20 bg-[#060d22]/80 px-4 py-3 backdrop-blur">
+                  <div className="animate-floaty absolute left-4 top-4 z-10 rounded-2xl border border-white/20 bg-[#060d22]/80 px-4 py-3 backdrop-blur">
                     <p className="font-mono2 text-[10px] uppercase tracking-[0.2em] text-amber-300">Indigo depth</p>
                     <p className="font-display text-lg font-extrabold text-white">12 dips · pH 11.5</p>
                   </div>
-                  <div className="animate-floaty absolute right-4 top-1/3 rounded-2xl border border-white/20 bg-white/95 px-4 py-3 shadow-xl" style={{ animationDelay: "1.2s" }}>
+                  <div className="animate-floaty absolute right-4 top-1/3 z-10 rounded-2xl border border-white/20 bg-white/95 px-4 py-3 shadow-xl" style={{ animationDelay: "1.2s" }}>
                     <p className="font-mono2 text-[10px] uppercase tracking-[0.2em] text-indigo-700">Shade pass</p>
                     <p className="font-display text-lg font-extrabold text-[#0a1633]">ΔE &lt; 0.8 ✓</p>
                   </div>
-                  <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/15 bg-[#060d22]/85 p-4 backdrop-blur">
+                  <div className="absolute inset-x-4 bottom-4 z-10 rounded-2xl border border-white/15 bg-[#060d22]/85 p-4 backdrop-blur">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-display text-[15px] font-bold text-white">This week: Rope vs Slasher Dyeing</p>
