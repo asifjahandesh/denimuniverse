@@ -340,7 +340,7 @@ export function FashionSection({ onSelectFashion }: { onSelectFashion?: (card: F
         <Reveal>
           <SectionHeading
             eyebrow="Denim Fashion"
-            title="From Mill Floor to Street Style"
+            title="From Denim to Street Style"
             desc="Trends, garments, washes and finishing effects — click any article to read the full story, technical specifications, and styling guides."
           />
         </Reveal>

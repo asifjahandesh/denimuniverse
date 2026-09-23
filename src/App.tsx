@@ -16,6 +16,7 @@ import MemberLoginModal from "./components/MemberLoginModal";
 import MemberProfileModal from "./components/MemberProfileModal";
 import CheckoutModal from "./components/CheckoutModal";
 import PdfReaderModal from "./components/PdfReaderModal";
+import ScrollToTop from "./components/ScrollToTop";
 import { FashionCard, ResourceItem } from "./types/content";
 import { getRelatedResourceForTrouble } from "./data/resources";
 
@@ -264,6 +265,7 @@ export default function App() {
   return (
     <DataProvider>
       <MainApp />
+      <ScrollToTop />
       <AdminLoginModal />
       <AdminPanel />
       <MemberLoginModal />

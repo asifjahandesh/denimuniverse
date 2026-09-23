@@ -144,6 +144,95 @@ export function FacebookSection() {
   );
 }
 
+/* ============ OFFICIAL LOGOS ============ */
+export function GmailOfficialLogo({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-label="Official Gmail logo">
+      <path d="M45 16.2v21.6c0 2.3-1.9 4.2-4.2 4.2H36V22.8L45 16.2z" fill="#4285F4" />
+      <path d="M3 16.2v21.6C3 40.1 4.9 42 7.2 42H12V22.8L3 16.2z" fill="#34A853" />
+      <path d="M36 10.2L24 19.2 12 10.2V6c0-2.5 2.7-4 4.8-2.6L24 8.2l7.2-4.8c2.1-1.4 4.8.1 4.8 2.6v4.2z" fill="#EA4335" />
+      <path d="M36 10.2v12.6l9-6.6V12c0-3.3-3.6-5.3-6.4-3.5L36 10.2z" fill="#FBBC05" />
+      <path d="M12 10.2v12.6L3 16.2V12c0-3.3 3.6-5.3 6.4-3.5L12 10.2z" fill="#C5221F" />
+    </svg>
+  );
+}
+
+export function FacebookOfficialLogo({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-label="Official Facebook logo">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+export function WhatsAppOfficialLogo({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-label="Official WhatsApp logo">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.63C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.44 19.65L5.27 16.61L5.07 16.3C4.24 14.98 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.68 12.04 3.68C14.24 3.68 16.31 4.54 17.87 6.1C19.42 7.66 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 14.41C16.31 14.29 15.1 13.69 14.88 13.61C14.65 13.53 14.49 13.49 14.32 13.73C14.16 13.98 13.69 14.53 13.55 14.7C13.4 14.86 13.26 14.88 13.01 14.76C12.77 14.64 11.97 14.37 11.03 13.53C10.29 12.87 9.8 12.06 9.65 11.82C9.51 11.57 9.64 11.44 9.76 11.32C9.87 11.21 10.01 11.03 10.13 10.89C10.25 10.74 10.3 10.64 10.38 10.48C10.46 10.31 10.42 10.17 10.36 10.05C10.3 9.93 9.8 8.72 9.6 8.22C9.4 7.74 9.19 7.8 9.03 7.8C8.89 7.79 8.72 7.79 8.55 7.79C8.38 7.79 8.11 7.85 7.89 8.1C7.66 8.34 7.03 8.93 7.03 10.14C7.03 11.35 7.91 12.51 8.04 12.68C8.16 12.84 9.77 15.34 12.24 16.41C12.83 16.66 13.28 16.81 13.64 16.93C14.23 17.12 14.77 17.09 15.2 17.03C15.68 16.96 16.67 16.43 16.88 15.85C17.09 15.27 17.09 14.78 17.03 14.68C16.97 14.57 16.81 14.53 16.56 14.41Z"
+      />
+    </svg>
+  );
+}
+
+export function GoogleMapsOfficialLogo({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-label="Official Google Maps logo">
+      <path
+        d="M24 4C15.16 4 8 11.16 8 20c0 11.88 14.16 23.27 14.76 23.75.36.29.87.45 1.24.45s.88-.16 1.24-.45C25.84 43.27 40 31.88 40 20c0-8.84-7.16-16-16-16z"
+        fill="#EA4335"
+      />
+      <path
+        d="M24 4C15.16 4 8 11.16 8 20c0 4.88 2.2 9.53 6.01 12.78L24 20V4z"
+        fill="#4285F4"
+      />
+      <path
+        d="M24 20l-9.99 12.78C16.85 35.32 20.31 38.64 24 42.1V20z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M24 20v22.1c3.69-3.46 7.15-6.78 9.99-9.32L24 20z"
+        fill="#34A853"
+      />
+      <circle cx="24" cy="20" r="7" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+export function InstagramOfficialLogo({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+    </svg>
+  );
+}
+
+export function YouTubeOfficialLogo({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
+export function LinkedInOfficialLogo({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+    </svg>
+  );
+}
+
+export function TikTokOfficialLogo({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.28 6.28 0 0 0 1.93-4.47V8.58a8.27 8.27 0 0 0 4.84 1.56V6.69z" />
+    </svg>
+  );
+}
+
 /* ============ CONTACT ============ */
 export function ContactSection() {
   const { siteConfig } = useData();
@@ -175,22 +264,50 @@ export function ContactSection() {
           <SectionHeading
             dark
             eyebrow="Contact"
-            title="Talk Denim With Us"
+            title="Talk About Denim With Us"
             desc="Questions, corrections, collaborations or guest articles — we reply within 24–48 hours."
           />
         </Reveal>
         <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-4">
             {[
-              { icon: Mail, label: "Email", value: siteConfig.email, href: `mailto:${siteConfig.email}`, sub: "For articles & partnerships" },
-              { icon: FacebookIcon as unknown as typeof Mail, label: "Facebook", value: "Denim Universe Page", href: siteConfig.facebookUrl, sub: "Fastest response · daily posts" },
-              { icon: MessageCircle, label: "WhatsApp", value: "Chat with the team", href: siteConfig.whatsapp, sub: "Mon–Sat · 9am–8pm GMT+6" },
-              { icon: MapPin, label: "Base", value: siteConfig.location, href: "#contact", sub: "Remote-first, mill-connected" },
+              {
+                label: "Email",
+                value: siteConfig.email,
+                href: `mailto:${siteConfig.email}`,
+                sub: "For articles & partnerships",
+                logo: <GmailOfficialLogo size={25} />,
+                badgeCls: "bg-white shadow-md shadow-black/25 ring-1 ring-black/5",
+              },
+              {
+                label: "Facebook",
+                value: "Denim Universe Page",
+                href: siteConfig.facebookUrl,
+                sub: "Fastest response · daily posts",
+                logo: <FacebookOfficialLogo size={24} />,
+                badgeCls: "bg-[#1877F2] text-white shadow-md shadow-[#1877F2]/30",
+              },
+              {
+                label: "WhatsApp",
+                value: "Chat with the team",
+                href: siteConfig.whatsapp,
+                sub: "Mon–Sat · 9am–8pm GMT+6",
+                logo: <WhatsAppOfficialLogo size={25} />,
+                badgeCls: "bg-[#25D366] text-white shadow-md shadow-[#25D366]/30",
+              },
+              {
+                label: "Base",
+                value: siteConfig.location,
+                href: "#contact",
+                sub: "Remote-first, mill-connected",
+                logo: <GoogleMapsOfficialLogo size={25} />,
+                badgeCls: "bg-white shadow-md shadow-black/25 ring-1 ring-black/5",
+              },
             ].map((c, i) => (
               <Reveal key={c.label} delay={i * 70}>
                 <a href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="group flex items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur transition hover:border-amber-400/50 hover:bg-white/[0.1]">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400 text-[#0a1633] transition group-hover:scale-110">
-                    <c.icon size={20} />
+                  <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-110 ${c.badgeCls}`}>
+                    {c.logo}
                   </span>
                   <span className="flex-1">
                     <span className="block font-mono2 text-[10.5px] font-bold uppercase tracking-[0.2em] text-amber-300">{c.label}</span>
@@ -203,9 +320,15 @@ export function ContactSection() {
             ))}
             <Reveal delay={200}>
               <div className="flex items-center gap-3 rounded-3xl bg-white/[0.04] p-5">
-                {["FB", "IG", "YT", "IN", "TT"].map((s) => (
-                  <a key={s} href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" aria-label={s} className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 font-display text-[11px] font-black text-white transition hover:bg-amber-400 hover:text-[#0a1633]">
-                    {s}
+                {[
+                  { name: "Facebook", icon: <FacebookOfficialLogo size={18} />, hoverCls: "hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2]" },
+                  { name: "Instagram", icon: <InstagramOfficialLogo size={18} />, hoverCls: "hover:bg-gradient-to-tr hover:from-[#f9ce34] hover:via-[#ee2a7b] hover:to-[#6228d7] hover:text-white hover:border-transparent" },
+                  { name: "YouTube", icon: <YouTubeOfficialLogo size={18} />, hoverCls: "hover:bg-[#FF0000] hover:text-white hover:border-[#FF0000]" },
+                  { name: "LinkedIn", icon: <LinkedInOfficialLogo size={18} />, hoverCls: "hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]" },
+                  { name: "TikTok", icon: <TikTokOfficialLogo size={18} />, hoverCls: "hover:bg-black hover:text-white hover:border-black" },
+                ].map((s) => (
+                  <a key={s.name} href={siteConfig.facebookUrl} target="_blank" rel="noreferrer" aria-label={s.name} className={`flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-white transition ${s.hoverCls}`}>
+                    {s.icon}
                   </a>
                 ))}
                 <p className="ml-1 text-xs leading-snug text-indigo-200/60">@denimuniverse<br />everywhere</p>

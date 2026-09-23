@@ -572,7 +572,7 @@ export default function ContactManager() {
                   <MessageSquare size={32} className="mx-auto mb-2 text-indigo-300/40" />
                   <p className="font-semibold text-sm text-white">No inquiries found</p>
                   <p className="text-xs mt-1">
-                    When visitors submit inquiries via the "Talk Denim With Us" form, they will appear here.
+                    When visitors submit inquiries via the "Talk About Denim With Us" form, they will appear here.
                   </p>
                 </div>
               ) : (
