@@ -11,9 +11,19 @@ import {
   FileText,
   Award,
   AlertCircle,
+  Loader2,
+  RotateCcw,
+  Layers,
 } from "lucide-react";
 import { useData } from "../context/DataContext";
+import { getPdfFromIndexedDb, base64ToUint8Array } from "../lib/pdfStorage";
 import logoImg from "../assets/logo.png";
+
+declare global {
+  interface Window {
+    pdfjsLib?: any;
+  }
+}
 
 interface ParsedBlock {
   type: "heading" | "subheading" | "divider" | "table" | "bullet_list" | "numbered_list" | "paragraph";
@@ -21,6 +31,184 @@ interface ParsedBlock {
   items?: string[];
   headers?: string[];
   rows?: string[][];
+}
+
+/**
+ * Converts a base64 data URI (data:application/pdf;base64,...) into a same-origin Blob URL.
+ */
+function base64ToBlobUrl(dataUrl: string): string {
+  try {
+    const bytes = base64ToUint8Array(dataUrl);
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    console.error("Error converting base64 to blob URL:", err);
+    return dataUrl;
+  }
+}
+
+/**
+ * Ensures PDF.js library is loaded and configured with same-origin worker.
+ */
+function loadPdfJsLibrary(): Promise<any> {
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
+    return Promise.resolve(window.pdfjsLib);
+  }
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[src*="pdf."]') as HTMLScriptElement;
+    if (existing) {
+      existing.addEventListener("load", () => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
+          resolve(window.pdfjsLib);
+        } else {
+          reject(new Error("pdfjsLib not defined after load"));
+        }
+      });
+      existing.addEventListener("error", reject);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "/pdfjs/pdf.min.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
+        resolve(window.pdfjsLib);
+      } else {
+        reject(new Error("pdfjsLib failed to initialize"));
+      }
+    };
+    script.onerror = () => {
+      // Fallback to CDN if local script fails
+      const cdnScript = document.createElement("script");
+      cdnScript.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      cdnScript.async = true;
+      cdnScript.onload = () => {
+        if (window.pdfjsLib) {
+          try {
+            const workerBlob = new Blob(
+              [`importScripts('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js');`],
+              { type: "application/javascript" }
+            );
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
+          } catch {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
+          }
+          resolve(window.pdfjsLib);
+        } else {
+          reject(new Error("PDF.js library could not be loaded"));
+        }
+      };
+      cdnScript.onerror = reject;
+      document.head.appendChild(cdnScript);
+    };
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * Single Canvas Page renderer using Mozilla PDF.js
+ */
+function PdfCanvasPage({
+  pdfDoc,
+  pageNumber,
+  zoom,
+}: {
+  pdfDoc: any;
+  pageNumber: number;
+  zoom: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    if (!pdfDoc || !canvasRef.current) return;
+
+    let renderTask: any = null;
+    let isCancelled = false;
+
+    const renderPage = async () => {
+      try {
+        setPageLoading(true);
+        const page = await pdfDoc.getPage(pageNumber);
+        if (isCancelled || !canvasRef.current) return;
+
+        // Base 1.5 scale for Retina crispness multiplied by user zoom
+        const scale = (zoom / 100) * 1.5;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = canvasRef.current;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width / 1.5}px`;
+        canvas.style.height = `${viewport.height / 1.5}px`;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        renderTask = page.render({
+          canvasContext: ctx,
+          viewport,
+        });
+
+        await renderTask.promise;
+        if (!isCancelled) {
+          setPageLoading(false);
+        }
+      } catch (err: any) {
+        if (err?.name !== "RenderingCancelledException") {
+          console.warn(`Error rendering page ${pageNumber}:`, err);
+        }
+      }
+    };
+
+    renderPage();
+
+    return () => {
+      isCancelled = true;
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
+  }, [pdfDoc, pageNumber, zoom]);
+
+  return (
+    <div className="relative mb-6 rounded-2xl bg-white shadow-2xl border border-slate-300/80 overflow-hidden flex flex-col items-center max-w-full">
+      {/* Top Header Watermark */}
+      <div className="w-full bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between text-[11px] font-mono2 text-slate-500 select-none">
+        <span className="font-bold text-[#0a1633] flex items-center gap-1.5">
+          <Shield size={12} className="text-amber-600" />
+          DENIM UNIVERSE · TECHNICAL SOP
+        </span>
+        <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-bold text-slate-700">
+          Page {pageNumber}
+        </span>
+      </div>
+
+      {pageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/85 backdrop-blur-xs z-10">
+          <div className="flex items-center gap-2 text-xs font-mono2 text-indigo-900 font-bold">
+            <Loader2 size={16} className="animate-spin text-amber-500" />
+            <span>Rendering Page {pageNumber}...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Rendered Canvas */}
+      <div className="overflow-x-auto max-w-full p-2 sm:p-4 bg-white flex justify-center">
+        <canvas ref={canvasRef} className="block select-none pointer-events-none" />
+      </div>
+
+      {/* Bottom Footer Watermark */}
+      <div className="w-full bg-slate-50 border-t border-slate-200 px-4 py-1.5 text-center text-[10px] font-mono2 text-slate-400 select-none">
+        CONFIDENTIAL TECHNICAL SPECIFICATION · UNAUTHORIZED DOWNLOADING OR DUPLICATION STRICTLY PROHIBITED
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -233,9 +421,18 @@ export default function PdfReaderModal() {
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<"pdf" | "article">("pdf");
+  const [pdfEngine, setPdfEngine] = useState<"canvas" | "native">("canvas");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const modalContainerRef = useRef<HTMLDivElement>(null);
+
+  // PDF.js State
+  const [activeBlobUrl, setActiveBlobUrl] = useState<string>("");
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [docLoading, setDocLoading] = useState<boolean>(true);
+  const [docError, setDocError] = useState<string | null>(null);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const showSecurityNotice = (
     msg: string = "Saving, downloading, and printing are disabled on this protected manual."
@@ -252,7 +449,6 @@ export default function PdfReaderModal() {
     if (!readingPdfResource) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape closes modal
       if (e.key === "Escape") {
         closePdfReader();
         return;
@@ -293,18 +489,133 @@ export default function PdfReaderModal() {
     };
   }, [readingPdfResource, closePdfReader]);
 
+  const rawPdfUrl = readingPdfResource?.pdfUrl ? readingPdfResource.pdfUrl.trim() : "";
+  const hasUploadedPdf = rawPdfUrl.length > 0;
+
+  // Load and decode PDF document via IndexedDB / Uint8Array / URL
+  useEffect(() => {
+    if (!readingPdfResource) {
+      setPdfDoc(null);
+      setNumPages(0);
+      setDocLoading(false);
+      setDocError(null);
+      setActiveBlobUrl("");
+      return;
+    }
+
+    let isMounted = true;
+    let localBlobUrlToRevoke = "";
+    setDocLoading(true);
+    setDocError(null);
+
+    const loadAndRenderPdf = async () => {
+      try {
+        let rawUrl = (readingPdfResource.pdfUrl || "").trim();
+        let binaryPayload: Uint8Array | ArrayBuffer | string | null = null;
+
+        // 1. Try to fetch from IndexedDB using resource id or indexeddb: ref
+        const localBlob = await getPdfFromIndexedDb(readingPdfResource.id);
+        if (localBlob && isMounted) {
+          const buffer = await localBlob.arrayBuffer();
+          binaryPayload = new Uint8Array(buffer);
+          localBlobUrlToRevoke = URL.createObjectURL(localBlob);
+          setActiveBlobUrl(localBlobUrlToRevoke);
+        } else if (rawUrl.startsWith("indexeddb:")) {
+          const key = rawUrl.replace(/^indexeddb:/, "");
+          const storedBlob = await getPdfFromIndexedDb(key);
+          if (storedBlob && isMounted) {
+            const buffer = await storedBlob.arrayBuffer();
+            binaryPayload = new Uint8Array(buffer);
+            localBlobUrlToRevoke = URL.createObjectURL(storedBlob);
+            setActiveBlobUrl(localBlobUrlToRevoke);
+          }
+        }
+
+        // 2. Base64 Data URL decoding directly to Uint8Array in memory
+        if (!binaryPayload && rawUrl.startsWith("data:")) {
+          try {
+            binaryPayload = base64ToUint8Array(rawUrl);
+            const b = new Blob([binaryPayload], { type: "application/pdf" });
+            localBlobUrlToRevoke = URL.createObjectURL(b);
+            setActiveBlobUrl(localBlobUrlToRevoke);
+          } catch (b64Err) {
+            console.warn("Failed to decode base64 PDF directly:", b64Err);
+          }
+        }
+
+        // 3. Fallback to /sample-sop.pdf if URL was empty or points to broken external test file
+        if (!binaryPayload) {
+          if (!rawUrl || rawUrl.includes("dummy.pdf") || rawUrl.includes("w3.org")) {
+            rawUrl = "/sample-sop.pdf";
+          }
+
+          // Fetch array buffer to prevent iframe cross-origin blocks
+          try {
+            const resp = await fetch(rawUrl);
+            if (resp.ok) {
+              const buffer = await resp.arrayBuffer();
+              binaryPayload = new Uint8Array(buffer);
+              const b = new Blob([binaryPayload], { type: "application/pdf" });
+              localBlobUrlToRevoke = URL.createObjectURL(b);
+              setActiveBlobUrl(localBlobUrlToRevoke);
+            } else {
+              binaryPayload = rawUrl;
+              setActiveBlobUrl(rawUrl);
+            }
+          } catch (fetchErr) {
+            console.warn("Fetch failed, passing URL directly to PDF.js:", fetchErr);
+            binaryPayload = rawUrl;
+            setActiveBlobUrl(rawUrl);
+          }
+        }
+
+        if (!isMounted) return;
+
+        // Ensure PDF.js engine is initialized
+        const pdfjs = await loadPdfJsLibrary();
+        if (!isMounted) return;
+
+        const loadingParams: any = typeof binaryPayload === "string"
+          ? { url: binaryPayload }
+          : { data: binaryPayload };
+
+        const loadingTask = pdfjs.getDocument(loadingParams);
+        const doc = await loadingTask.promise;
+
+        if (!isMounted) return;
+        setPdfDoc(doc);
+        setNumPages(doc.numPages);
+        setDocLoading(false);
+      } catch (err: any) {
+        console.error("PDF.js loading error:", err);
+        if (isMounted) {
+          setDocError(err?.message || "Failed to parse PDF document");
+          setDocLoading(false);
+        }
+      }
+    };
+
+    loadAndRenderPdf();
+
+    return () => {
+      isMounted = false;
+      if (localBlobUrlToRevoke && localBlobUrlToRevoke.startsWith("blob:")) {
+        URL.revokeObjectURL(localBlobUrlToRevoke);
+      }
+    };
+  }, [readingPdfResource, reloadTrigger]);
+
   // Reset zoom & view mode on document change
   useEffect(() => {
     if (readingPdfResource) {
       setZoom(100);
-      // If a PDF is attached, default to 'pdf' mode. Otherwise fallback to 'article'.
-      if (readingPdfResource.pdfUrl && readingPdfResource.pdfUrl.trim() !== "") {
+      if (hasUploadedPdf) {
         setViewMode("pdf");
       } else {
         setViewMode("article");
       }
     }
-  }, [readingPdfResource]);
+  }, [readingPdfResource, hasUploadedPdf]);
 
   const blocks = useMemo(() => {
     if (!readingPdfResource?.content) return [];
@@ -314,21 +625,8 @@ export default function PdfReaderModal() {
   if (!readingPdfResource) return null;
 
   const resource = readingPdfResource;
-  const rawPdfUrl = resource.pdfUrl ? resource.pdfUrl.trim() : "";
-  const hasUploadedPdf = rawPdfUrl.length > 0;
   const memberName = currentMember?.name || currentMember?.email || "Verified Paid Member";
   const docRef = `DU-SOP-${(resource.id || "001").toUpperCase()}`;
-
-  // Build clean embedded URL for PDF rendering
-  const embeddedPdfUrl = useMemo(() => {
-    if (!rawPdfUrl) return "";
-    // If it's a base64 Data URL, use it directly without fragment parameters
-    if (rawPdfUrl.startsWith("data:")) {
-      return rawPdfUrl;
-    }
-    // For standard HTTP/HTTPS or local paths, add toolbar=0&navpanes=0 to hide browser download/print tools
-    return `${rawPdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
-  }, [rawPdfUrl]);
 
   const toggleFullscreen = () => {
     if (!modalContainerRef.current) return;
@@ -341,9 +639,14 @@ export default function PdfReaderModal() {
     }
   };
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 140));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 10, 70));
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 150));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 10, 60));
   const handleResetZoom = () => setZoom(100);
+
+  // Native iframe fallback URL
+  const nativeIframeUrl = activeBlobUrl.startsWith("blob:")
+    ? `${activeBlobUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
+    : activeBlobUrl;
 
   return (
     <div
@@ -414,7 +717,7 @@ export default function PdfReaderModal() {
               }`}
             >
               <FileText size={13} />
-              <span>Uploaded PDF Manual</span>
+              <span>Uploaded PDF ({numPages > 0 ? `${numPages} Pages` : "Document"})</span>
             </button>
             <button
               type="button"
@@ -433,12 +736,12 @@ export default function PdfReaderModal() {
 
         {/* Right Toolbar: Zoom, Fullscreen & Close */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          {/* Zoom Controls (Active in PDF and Article view) */}
+          {/* Zoom Controls */}
           <div className="flex items-center rounded-xl border border-white/15 bg-white/5 p-0.5">
             <button
               type="button"
               onClick={handleZoomOut}
-              disabled={zoom <= 70}
+              disabled={zoom <= 60}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40 cursor-pointer"
               title="Zoom Out"
             >
@@ -455,7 +758,7 @@ export default function PdfReaderModal() {
             <button
               type="button"
               onClick={handleZoomIn}
-              disabled={zoom >= 140}
+              disabled={zoom >= 150}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40 cursor-pointer"
               title="Zoom In"
             >
@@ -496,24 +799,55 @@ export default function PdfReaderModal() {
       {/* Main Reader View Container */}
       {viewMode === "pdf" ? (
         /* ==================================================================== */
-        /* MODE A: ACTUAL UPLOADED PDF VIEWER                                  */
+        /* MODE A: PROTECTED UPLOADED PDF VIEWER (CANVAS + NATIVE HYBRID)      */
         /* ==================================================================== */
-        <div className="relative flex-1 w-full h-[calc(100vh-100px)] flex flex-col items-center bg-[#060d1f] p-2 sm:p-4 overflow-hidden">
-          {/* Top Security & Metadata Watermark Strip */}
-          <div className="w-full max-w-6xl mb-2 flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-mono2 text-indigo-200/80 shrink-0">
-            <div className="flex items-center gap-2 min-w-0 pr-2">
-              <Shield size={12} className="text-emerald-400 shrink-0" />
-              <span className="font-bold text-white uppercase tracking-wider">PROTECTED TECHNICAL MANUAL</span>
-              <span className="text-slate-500">|</span>
+        <div className="relative flex-1 w-full h-[calc(100vh-105px)] flex flex-col bg-[#070e1c] overflow-hidden">
+          {/* Top Control Subbar: Engine Switcher & Watermark Notice */}
+          <div className="w-full bg-[#0a1633] border-b border-white/10 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono2 text-indigo-200/80 shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Shield size={13} className="text-emerald-400 shrink-0" />
+              <span className="font-bold text-white uppercase tracking-wider hidden sm:inline">PROTECTED SOP:</span>
               <span className="text-amber-300 font-semibold truncate max-w-xs sm:max-w-md">
                 {resource.pdfTitle || "Industrial_SOP_Document.pdf"}
               </span>
+              {numPages > 0 && (
+                <span className="bg-white/10 text-white px-2 py-0.5 rounded font-bold">
+                  {numPages} {numPages === 1 ? "Page" : "Pages"}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="hidden sm:inline">READER: <strong className="text-white">{memberName}</strong></span>
-              <span className="text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 text-[10px] font-bold">
-                DOWNLOADING &amp; PRINTING DISABLED
+
+            <div className="flex items-center gap-3">
+              {/* Fallback Engine Switcher */}
+              {hasUploadedPdf && (
+                <div className="flex items-center rounded-lg bg-white/5 border border-white/10 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPdfEngine("canvas")}
+                    className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition cursor-pointer ${
+                      pdfEngine === "canvas" ? "bg-amber-400 text-[#0a1633]" : "text-slate-300 hover:text-white"
+                    }`}
+                    title="Protected Continuous Canvas Reader"
+                  >
+                    Canvas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPdfEngine("native")}
+                    className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition cursor-pointer ${
+                      pdfEngine === "native" ? "bg-amber-400 text-[#0a1633]" : "text-slate-300 hover:text-white"
+                    }`}
+                    title="Native Browser Frame (Safe Blob)"
+                  >
+                    Native
+                  </button>
+                </div>
+              )}
+
+              <span className="text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded border border-rose-500/25 text-[10px] font-bold hidden sm:inline">
+                DOWNLOADING DISABLED
               </span>
+
               {resource.content && (
                 <button
                   type="button"
@@ -526,52 +860,94 @@ export default function PdfReaderModal() {
             </div>
           </div>
 
-          {/* PDF Frame */}
-          {hasUploadedPdf ? (
-            <div
-              style={{
-                width: `${Math.min(Math.max(zoom, 60), 160)}%`,
-                maxWidth: zoom <= 100 ? "1180px" : `${1180 * (zoom / 100)}px`,
-                height: "100%",
-              }}
-              className="relative flex-1 w-full bg-white rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.85)] border border-white/15 overflow-hidden transition-all duration-150"
-            >
-              <object
-                data={embeddedPdfUrl}
-                type="application/pdf"
-                className="w-full h-full rounded-2xl"
-              >
-                <iframe
-                  src={embeddedPdfUrl}
-                  title={resource.title || "PDF Document"}
-                  className="w-full h-full border-0 rounded-2xl"
-                />
-              </object>
-            </div>
-          ) : (
-            /* Fallback if no PDF was uploaded for this resource */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-4">
-                <AlertCircle size={32} />
+          {/* PDF Content Area */}
+          <div className="flex-1 w-full overflow-y-auto overscroll-contain bg-[#060c18] p-3 sm:p-6 flex justify-center items-start">
+            {docLoading ? (
+              <div className="py-24 flex flex-col items-center justify-center text-center">
+                <Loader2 size={36} className="animate-spin text-amber-400 mb-3" />
+                <p className="font-display text-base font-bold text-white">Loading Protected PDF Manual...</p>
+                <p className="text-xs font-mono2 text-indigo-200/70 mt-1">Decoding pages with Canvas Engine</p>
               </div>
-              <h3 className="font-display text-xl font-bold text-white mb-2">
-                No PDF Uploaded For This Resource
-              </h3>
-              <p className="text-xs text-indigo-200/70 mb-5 leading-relaxed">
-                A PDF manual has not been attached to this resource yet. You can attach your PDF via the Admin Panel under Resources.
-              </p>
-              {resource.content && (
-                <button
-                  type="button"
-                  onClick={() => setViewMode("article")}
-                  className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-bold text-[#0a1633] transition hover:bg-amber-300 active:scale-95 cursor-pointer shadow-lg"
-                >
-                  <BookOpen size={15} />
-                  <span>Read Article Content Instead</span>
-                </button>
-              )}
-            </div>
-          )}
+            ) : docError ? (
+              <div className="my-16 flex flex-col items-center justify-center text-center max-w-lg mx-auto p-8 rounded-3xl bg-slate-900/90 border border-rose-500/30 text-white shadow-2xl">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 mb-4">
+                  <AlertCircle size={32} />
+                </div>
+                <h3 className="font-display text-lg font-bold text-white mb-2">
+                  Unable to Display Uploaded PDF
+                </h3>
+                <p className="text-xs text-rose-200/80 mb-5 leading-relaxed font-mono2">
+                  {docError}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReloadTrigger((prev) => prev + 1)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-bold text-[#0a1633] transition hover:bg-amber-300 cursor-pointer shadow-lg"
+                  >
+                    <RotateCcw size={14} />
+                    <span>Retry PDF Reader</span>
+                  </button>
+                  {resource.content && (
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("article")}
+                      className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/20 cursor-pointer"
+                    >
+                      <BookOpen size={14} />
+                      <span>Read Article Notes</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : hasUploadedPdf ? (
+              pdfEngine === "canvas" ? (
+                /* 1. PDF.js Canvas Continuous Scroll Renderer */
+                <div className="w-full flex flex-col items-center">
+                  {Array.from({ length: numPages }, (_, idx) => (
+                    <PdfCanvasPage
+                      key={idx + 1}
+                      pdfDoc={pdfDoc}
+                      pageNumber={idx + 1}
+                      zoom={zoom}
+                    />
+                  ))}
+                </div>
+              ) : (
+                /* 2. Native Safe Blob Frame Renderer */
+                <div className="w-full h-full min-h-[75vh] flex flex-col items-center justify-center">
+                  <iframe
+                    src={nativeIframeUrl}
+                    title={resource.title || "PDF Document"}
+                    className="w-full h-full min-h-[75vh] rounded-2xl border border-white/15 bg-white shadow-2xl"
+                  />
+                </div>
+              )
+            ) : (
+              /* Fallback if no PDF was attached during creation */
+              <div className="py-20 flex flex-col items-center justify-center text-center max-w-md mx-auto">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-4">
+                  <AlertCircle size={32} />
+                </div>
+                <h3 className="font-display text-xl font-bold text-white mb-2">
+                  No PDF Uploaded For This Resource
+                </h3>
+                <p className="text-xs text-indigo-200/70 mb-5 leading-relaxed">
+                  A PDF document was not attached to this resource during creation. You can upload the PDF anytime via the Admin Panel.
+                </p>
+                {resource.content && (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("article")}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-bold text-[#0a1633] transition hover:bg-amber-300 active:scale-95 cursor-pointer shadow-lg"
+                  >
+                    <BookOpen size={15} />
+                    <span>Read Article Content Instead</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         /* ==================================================================== */
@@ -658,7 +1034,6 @@ export default function PdfReaderModal() {
                 {/* Formatted Technical Document Body */}
                 <div className="space-y-4 text-[14.5px] leading-relaxed text-slate-800">
                   {blocks.map((block, bIdx) => {
-                    // Heading (### )
                     if (block.type === "heading") {
                       return (
                         <h3
@@ -673,7 +1048,6 @@ export default function PdfReaderModal() {
                       );
                     }
 
-                    // Subheading (#### )
                     if (block.type === "subheading") {
                       return (
                         <h4
@@ -685,12 +1059,10 @@ export default function PdfReaderModal() {
                       );
                     }
 
-                    // Horizontal Divider (---)
                     if (block.type === "divider") {
                       return <hr key={bIdx} className="my-7 border-t border-slate-200" />;
                     }
 
-                    // Table
                     if (block.type === "table" && block.headers && block.rows) {
                       return (
                         <div
@@ -732,7 +1104,6 @@ export default function PdfReaderModal() {
                       );
                     }
 
-                    // Bullet List (- or *)
                     if (block.type === "bullet_list" && block.items) {
                       return (
                         <ul key={bIdx} className="my-3.5 space-y-2.5 pl-1 sm:pl-2">
@@ -751,7 +1122,6 @@ export default function PdfReaderModal() {
                       );
                     }
 
-                    // Numbered List (1. , 2. )
                     if (block.type === "numbered_list" && block.items) {
                       return (
                         <ol key={bIdx} className="my-3.5 space-y-2.5 pl-1 sm:pl-2">
@@ -770,7 +1140,6 @@ export default function PdfReaderModal() {
                       );
                     }
 
-                    // Standard Paragraph
                     return (
                       <p key={bIdx} className="text-slate-700 leading-relaxed my-2.5">
                         {renderInlineMarkdown(block.text || "")}

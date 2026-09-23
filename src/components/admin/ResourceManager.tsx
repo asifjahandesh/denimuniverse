@@ -34,6 +34,7 @@ import {
 import { useData } from "../../context/DataContext";
 import { ResourceItem, MemberAccount } from "../../types/content";
 import { uploadImageToSupabase, isSupabaseConfigured } from "../../lib/supabase";
+import { savePdfToIndexedDb } from "../../lib/pdfStorage";
 import { RESOURCE_CATEGORIES, normalizeCategory } from "../../data/resources";
 
 export const CATEGORY_PRESETS: string[] = [...RESOURCE_CATEGORIES];
@@ -89,6 +90,7 @@ export default function ResourceManager() {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
   const [contentTab, setContentTab] = useState<"write" | "preview">("write");
 
   // --------------------------------------------------------------------------
@@ -217,7 +219,8 @@ export default function ResourceManager() {
     setRPriceBadge("199 BDT · Basic Plan");
     setRSinglePrice("49 BDT");
     setRPdfTitle("Denim_Technical_Standard_Manual.pdf");
-    setRPdfUrl("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
+    setRPdfUrl("/sample-sop.pdf");
+    setPendingPdfFile(null);
     setRPdfMode("upload");
     setRPdfSize("4.5 MB");
     setRPdfPages(28);
@@ -227,6 +230,7 @@ export default function ResourceManager() {
 
   const openEditResource = (item: ResourceItem) => {
     setEditingResource(item);
+    setPendingPdfFile(null);
     setRTitle(item.title);
     setRCategory(normalizeCategory(item.category));
     setRDesc(item.desc);
@@ -241,7 +245,7 @@ export default function ResourceManager() {
     setRPriceBadge(item.priceBadge || (tier === "premium" ? "499 BDT · Premium VIP" : tier === "basic" ? "199 BDT · Basic Plan" : "Free Access"));
     setRSinglePrice(item.singlePrice || "49 BDT");
     setRPdfTitle(item.pdfTitle);
-    setRPdfUrl(item.pdfUrl);
+    setRPdfUrl(item.pdfUrl || "/sample-sop.pdf");
     setRPdfMode("url");
     setRPdfSize(item.pdfSize || "4.5 MB");
     setRPdfPages(item.pdfPages || 25);
@@ -294,52 +298,63 @@ export default function ResourceManager() {
       setRPdfTitle(file.name);
     }
 
-    if (file.size > 30 * 1024 * 1024) {
-      alert("Please select a PDF file smaller than 30MB.");
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Please select a PDF file smaller than 50MB.");
       return;
     }
 
     setUploadingPdf(true);
+    setPendingPdfFile(file);
+
     if (isSupabaseConfigured()) {
       try {
         const publicUrl = await uploadImageToSupabase(file);
         setRPdfUrl(publicUrl);
         showFeedback(`PDF file "${file.name}" uploaded to cloud storage!`);
       } catch (err) {
-        console.warn("Supabase PDF upload failed, converting to local data URL:", err);
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (typeof ev.target?.result === "string") {
-            setRPdfUrl(ev.target.result);
-            showFeedback(`PDF file "${file.name}" loaded successfully!`);
-          }
-        };
-        reader.readAsDataURL(file);
+        console.warn("Supabase PDF upload failed, saving to local database:", err);
+        const tempKey = editingResource ? editingResource.id : `temp_${Date.now()}`;
+        const ref = await savePdfToIndexedDb(tempKey, file);
+        setRPdfUrl(ref);
+        showFeedback(`PDF file "${file.name}" stored in local database!`);
       } finally {
         setUploadingPdf(false);
       }
     } else {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (typeof ev.target?.result === "string") {
-          setRPdfUrl(ev.target.result);
-          showFeedback(`PDF file "${file.name}" loaded successfully!`);
-        }
+      try {
+        const tempKey = editingResource ? editingResource.id : `temp_${Date.now()}`;
+        const ref = await savePdfToIndexedDb(tempKey, file);
+        setRPdfUrl(ref);
+        showFeedback(`PDF file "${file.name}" stored in local database!`);
+      } catch (err) {
+        console.error("Failed to store PDF in IndexedDB:", err);
+        showFeedback(`PDF file "${file.name}" loaded for saving!`);
+      } finally {
         setUploadingPdf(false);
-      };
-      reader.onerror = () => {
-        alert("Failed to read PDF file.");
-        setUploadingPdf(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
-  const handleSaveResource = (e: React.FormEvent) => {
+  const handleSaveResource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rTitle.trim()) {
       alert("Please provide an article title.");
       return;
+    }
+
+    const targetId = editingResource
+      ? editingResource.id
+      : `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+    let finalPdfUrl = rPdfUrl.trim() || "/sample-sop.pdf";
+
+    if (pendingPdfFile) {
+      try {
+        await savePdfToIndexedDb(targetId, pendingPdfFile);
+        finalPdfUrl = `indexeddb:${targetId}`;
+      } catch (err) {
+        console.error("Failed to save PDF to IndexedDB on save:", err);
+      }
     }
 
     const payload = {
@@ -357,7 +372,7 @@ export default function ResourceManager() {
       priceBadge: rPriceBadge.trim() || (rAccessTier === "premium" ? "499 BDT · Premium VIP" : rAccessTier === "basic" ? "199 BDT · Basic Plan" : "Free"),
       singlePrice: rSinglePrice.trim() || "49 BDT",
       pdfTitle: rPdfTitle.trim() || "Technical_Documentation.pdf",
-      pdfUrl: rPdfUrl.trim(),
+      pdfUrl: finalPdfUrl,
       pdfSize: rPdfSize.trim() || "3.5 MB",
       pdfPages: Number(rPdfPages) || 20,
     };
@@ -366,10 +381,11 @@ export default function ResourceManager() {
       updateResource(editingResource.id, payload);
       showFeedback(`Resource "${payload.title}" updated successfully.`);
     } else {
-      addResource(payload);
+      addResource({ ...payload, id: targetId });
       showFeedback(`New resource "${payload.title}" published!`);
     }
 
+    setPendingPdfFile(null);
     setResourceModalOpen(false);
   };
 
@@ -1933,7 +1949,11 @@ export default function ResourceManager() {
                           </span>
                         </div>
                         <span className="shrink-0 text-[10px] font-mono2 uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
-                          {rPdfUrl.startsWith("data:") ? "Local File Ready" : "Cloud Storage"}
+                          {rPdfUrl.startsWith("indexeddb:") || rPdfUrl.startsWith("data:") || pendingPdfFile
+                            ? "Local Database Ready"
+                            : rPdfUrl.startsWith("http")
+                            ? "Cloud Storage"
+                            : "Built-in SOP"}
                         </span>
                       </div>
                     )}

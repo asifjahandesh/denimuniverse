@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'fix: show uploaded PDF in protected reader popup instead of article text'): "
-if "%MSG%"=="" set MSG=fix: show uploaded PDF in protected reader popup instead of article text
+set /p MSG="Enter commit message (press Enter for 'fix: resolve blank page in view pdf sop with indexeddb storage and local canvas reader'): "
+if "%MSG%"=="" set MSG=fix: resolve blank page in view pdf sop with indexeddb storage and local canvas reader
 
 echo.
 echo 1. Staging changes...

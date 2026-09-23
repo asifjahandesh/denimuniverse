@@ -123,7 +123,7 @@ export const DEFAULT_RESOURCES: ResourceItem[] = [
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Finishing_and_Laser_Recipes_Standard.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "5.4 MB",
     pdfPages: 36,
     content: `### 1. Introduction: The Modern Denim Laundry Revolution
@@ -182,7 +182,7 @@ The complete PDF manual includes:
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Indigo_Rope_Dyeing_Chemical_Parameters.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.1 MB",
     pdfPages: 28,
     content: `### 1. Fundamentals of Leuco-Indigo Chemistry
@@ -231,7 +231,7 @@ The skying passage between dye boxes must allow complete oxidation before re-imm
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Shuttle_Loom_Weaving_Master_Standard.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "3.8 MB",
     pdfPages: 22,
     content: `### 1. The Heritage Charm of Shuttle Looms
@@ -275,7 +275,7 @@ The classic red-and-white selvedge ID requires dedicated edge beams or bobbin cr
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Ozone_and_Nanobubble_Waterless_Handbook.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.9 MB",
     pdfPages: 30,
     content: `### 1. The Zero-Water Denim Washing Paradigm
@@ -321,7 +321,7 @@ Instead of filling the wash drum with 300 liters of water to soften 50 pairs of 
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Cotton_Fiber_Selection_and_Micronaire_Control.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "3.9 MB",
     pdfPages: 24,
     content: `### 1. Raw Cotton Sourcing Benchmarks for Indigo Denim
@@ -363,7 +363,7 @@ Every incoming cotton bale lot must undergo 100% testing on calibrated Uster HVI
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Yarn_Spinning_and_Slub_Design_Manual.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.3 MB",
     pdfPages: 26,
     content: `### 1. Vintage Ring Spun vs Open-End (OE) Dynamics
@@ -402,7 +402,7 @@ When programming slub repeat files:
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Dual_Core_Elastane_Yarn_Dynamics_Standards.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "5.1 MB",
     pdfPages: 32,
     content: `### 1. Overcoming Stretch Bagging & Knee Growth
@@ -440,7 +440,7 @@ Traditional single-core elastane (Spandex/Lycra) denims offer high stretch (35�
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Warping_Tension_Uniformity_and_Creel_SOP.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "3.6 MB",
     pdfPages: 20,
     content: `### 1. Ball Warping for Continuous Indigo Rope Ranges
@@ -478,7 +478,7 @@ For slasher (sheet) dyeing lines, yarns are wound directly onto wide flanged bea
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Warp_Sizing_and_Add_On_Standard.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "5.2 MB",
     pdfPages: 34,
     content: `### 1. Sizing Chemistry for Coarse Indigo Warp Yarns
@@ -519,7 +519,7 @@ For a 1,000-liter cooking kettle (10s Ne 100% cotton warp):
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Fabric_Construction_and_Formulas.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.0 MB",
     pdfPages: 26,
     content: `### 1. Classical Denim Twill Geometry
@@ -557,7 +557,7 @@ Where EPI = Ends Per Inch, PPI = Picks Per Inch, and multipliers account for war
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Mill_QA_4_Point_Inspection_Standard.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "5.6 MB",
     pdfPages: 38,
     content: `### 1. The ASTM D5430 4-Point Inspection System
@@ -599,7 +599,7 @@ Maximum allowable points for First Quality export denim is **28 points per 100 s
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Physical_Testing_Procedures_ASTM_ISO.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.8 MB",
     pdfPages: 30,
     content: `### 1. Essential Physical Test Standards for Denim
@@ -645,7 +645,7 @@ All physical testing must occur in an accredited atmosphere:
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Denim_Chemical_Laboratory_Analysis_Handbook.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.7 MB",
     pdfPages: 28,
     content: `### 1. Chemical Safety & MRSL Compliance in Denim Mills
@@ -683,7 +683,7 @@ Continuous titration of chemical stock feeds:
     priceBadge: "499 BDT · Premium SOP",
     singlePrice: "49 BDT",
     pdfTitle: "Circular_Denim_RD_and_Material_Innovations.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "5.4 MB",
     pdfPages: 34,
     content: `### 1. Circular Economy & Fiber-to-Fiber Recycling
@@ -719,7 +719,7 @@ Mechanical tearing of post-consumer denim garments degrades staple length to und
     priceBadge: "199 BDT · Basic Manual",
     singlePrice: "49 BDT",
     pdfTitle: "Global_Denim_Runway_and_Wash_Forecast_2026.pdf",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    pdfUrl: "/sample-sop.pdf",
     pdfSize: "4.4 MB",
     pdfPages: 24,
     content: `### 1. Global Denim Macro Trend Shifts

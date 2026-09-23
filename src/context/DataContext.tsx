@@ -43,6 +43,7 @@ import {
   deleteRemotePayment,
   getSupabaseHost,
 } from "../lib/supabase";
+import { deletePdfFromIndexedDb } from "../lib/pdfStorage";
 
 interface DataContextType {
   troubles: TroubleItem[];
@@ -163,7 +164,7 @@ interface DataContextType {
   deleteGalleryItem: (id: string) => void;
 
   // Resource CRUD
-  addResource: (item: Omit<ResourceItem, "id">) => void;
+  addResource: (item: Omit<ResourceItem, "id"> & { id?: string }) => void;
   updateResource: (id: string, item: Partial<ResourceItem>) => void;
   deleteResource: (id: string) => void;
 
@@ -297,10 +298,14 @@ function initResources(): ResourceItem[] {
         if (priceBadge.includes("$19") || priceBadge.includes("1,990") || priceBadge.includes("1990")) priceBadge = "499 BDT · Premium SOP";
         if (priceBadge.includes("$15") || priceBadge.includes("1,490") || priceBadge.includes("1490")) priceBadge = "499 BDT · Premium SOP";
         if (priceBadge.includes("$9") || priceBadge.includes("990")) priceBadge = "199 BDT · Basic Manual";
-        if (singlePrice.includes("$4") || singlePrice.includes("390") || singlePrice === "$4") singlePrice = "49 BDT";
+        let pdfUrl = r.pdfUrl || "";
+        if (!pdfUrl || pdfUrl.includes("dummy.pdf") || pdfUrl.includes("w3.org")) {
+          pdfUrl = "/sample-sop.pdf";
+        }
         return {
           ...r,
           category: cat,
+          pdfUrl,
           priceBadge: priceBadge || (r.accessTier === "premium" ? "499 BDT · Premium SOP" : r.accessTier === "basic" ? "199 BDT · Basic Manual" : "Free"),
           singlePrice: singlePrice || "49 BDT",
         };
@@ -1056,11 +1061,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Resource CRUD
-  const addResource = (item: Omit<ResourceItem, "id">) => {
+  const addResource = (item: Omit<ResourceItem, "id"> & { id?: string }) => {
     const newItem: ResourceItem = {
       ...item,
       category: normalizeCategory(item.category),
-      id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: item.id || `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     };
     setResources((prev) => [newItem, ...prev]);
     syncRemoteResource(newItem);
@@ -1082,6 +1087,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteResource = (id: string) => {
     setResources((prev) => prev.filter((r) => r.id !== id));
     deleteRemoteResource(id);
+    deletePdfFromIndexedDb(id);
   };
 
   // Member CRUD
