@@ -30,10 +30,12 @@ import {
   Clock,
   XCircle,
   Copy,
+  Cloud,
+  UploadCloud,
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
 import { ResourceItem, MemberAccount } from "../../types/content";
-import { uploadImageToSupabase, isSupabaseConfigured } from "../../lib/supabase";
+import { uploadImageToSupabase, isSupabaseConfigured, syncAllResourcesToSupabase } from "../../lib/supabase";
 import { savePdfToIndexedDb } from "../../lib/pdfStorage";
 import { RESOURCE_CATEGORIES, normalizeCategory } from "../../data/resources";
 
@@ -183,6 +185,28 @@ export default function ResourceManager() {
   const showFeedback = (message: string, type: "success" | "error" = "success") => {
     setFeedback({ message, type });
     setTimeout(() => setFeedback(null), 3500);
+  };
+
+  const [syncingCloud, setSyncingCloud] = useState(false);
+  const handleSyncAllToCloud = async () => {
+    if (!isSupabaseConfigured()) {
+      showFeedback("Supabase is not configured yet. Configure keys in Overview tab to enable cloud sync.", "error");
+      return;
+    }
+    setSyncingCloud(true);
+    try {
+      const res = await syncAllResourcesToSupabase(resources);
+      if (res.success) {
+        showFeedback(`✅ Successfully pushed ${res.count} resources to Supabase Cloud! Visible on all devices.`, "success");
+      } else {
+        showFeedback(`❌ Cloud sync failed: ${res.error}. Make sure table 'resources' exists in Supabase.`, "error");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showFeedback(`Sync error: ${msg}`, "error");
+    } finally {
+      setSyncingCloud(false);
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -657,15 +681,39 @@ export default function ResourceManager() {
               </select>
             </div>
 
-            <button
-              type="button"
-              onClick={openAddResource}
-              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-amber-400 px-4 py-2 font-display text-xs font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300 shadow-md shadow-amber-400/20 shrink-0"
-            >
-              <Plus size={15} />
-              <span>Create Resource Article</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleSyncAllToCloud}
+                disabled={syncingCloud}
+                title="Push all resources on this device into Supabase so other PCs and devices see them"
+                className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3.5 py-2 font-display text-xs font-bold text-sky-300 transition active:scale-95 hover:bg-sky-500/20 disabled:opacity-50"
+              >
+                <UploadCloud size={14} className={syncingCloud ? "animate-bounce" : ""} />
+                <span>{syncingCloud ? "Syncing..." : "Sync All to Cloud"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={openAddResource}
+                className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-amber-400 px-4 py-2 font-display text-xs font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300 shadow-md shadow-amber-400/20 shrink-0"
+              >
+                <Plus size={15} />
+                <span>Create Resource Article</span>
+              </button>
+            </div>
           </div>
+
+          {!isSupabaseConfigured() && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} className="text-amber-400 shrink-0" />
+                <span>
+                  <strong>Local Storage Mode:</strong> Changes made here stay only on this computer. To share articles across all computers and phones, configure Supabase in the Overview tab.
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Resources Grid */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

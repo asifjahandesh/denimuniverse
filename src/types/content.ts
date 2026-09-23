@@ -109,6 +109,7 @@ export interface MemberAccount {
   plan: "free" | "basic" | "premium";
   accessAll: boolean;
   allowedResourceIds: string[];
+  emailVerified?: boolean;
   notes?: string;
   createdAt: string;
 }

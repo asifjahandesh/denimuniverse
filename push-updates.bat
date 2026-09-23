@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: remove one-click demo testing buttons from member login modal'): "
-if "%MSG%"=="" set MSG=feat: remove one-click demo testing buttons from member login modal
+set /p MSG="Enter commit message (press Enter for 'feat: cloud database sync for resources, multi-device sync, and supabase tables'): "
+if "%MSG%"=="" set MSG=feat: cloud database sync for resources, multi-device sync, and supabase tables
 
 echo.
 echo 1. Staging changes...

@@ -79,6 +79,7 @@ interface DataContextType {
   membershipSettings: MembershipSettings;
   updateMembershipSettings: (settings: Partial<MembershipSettings>) => void;
   currentMember: MemberAccount | null;
+  members: MemberAccount[];
   isMemberLoginModalOpen: boolean;
   setIsMemberLoginModalOpen: (open: boolean) => void;
   memberAuthMode: "signin" | "signup" | "packages";
@@ -735,6 +736,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         plan: "free", // Kept as free until admin approval
         accessAll: false,
         allowedResourceIds: [],
+        emailVerified: true,
         notes: `Registered with ${chosenPlan.toUpperCase()} request (${planPrice}). Payment submitted (TrxID: ${cleanTrx}). Pending admin verification.`,
         createdAt: new Date().toISOString(),
       };
@@ -783,6 +785,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       plan: "free",
       accessAll: false,
       allowedResourceIds: [],
+      emailVerified: true,
       notes: "Self-registered free account",
       createdAt: new Date().toISOString(),
     };
@@ -1276,6 +1279,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         closeAdmin,
         currentMember,
+        members,
         isMemberLoginModalOpen,
         setIsMemberLoginModalOpen,
         memberAuthMode,

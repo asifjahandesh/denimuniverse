@@ -18,9 +18,24 @@ import {
   Users,
   TrendingUp,
   FileText,
+  Key,
+  Save,
+  Trash2,
+  UploadCloud,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useData } from "../../context/DataContext";
-import { testSupabaseConnection } from "../../lib/supabase";
+import {
+  testSupabaseConnection,
+  getSavedSupabaseUrl,
+  getSavedSupabaseAnonKey,
+  getSupabaseCredentialSource,
+  saveSupabaseCredentials,
+  clearSavedSupabaseCredentials,
+  syncAllResourcesToSupabase,
+  isSupabaseConfigured,
+} from "../../lib/supabase";
 import { getVisitorStats } from "../../lib/analyticsTracker";
 import { VisitorStats } from "../../types/analytics";
 
@@ -31,8 +46,20 @@ interface AdminOverviewProps {
 export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
   const { troubles, fashionCards, dictionary, gallery, siteConfig, isCloudConnected, cloudHost, resources, members } = useData();
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+    tables?: { troubles: boolean; resources: boolean; members: boolean; payments: boolean };
+  } | null>(null);
   const [stats, setStats] = useState<VisitorStats>(getVisitorStats());
+
+  // Supabase Credentials & Bulk Sync State
+  const [urlInput, setUrlInput] = useState(getSavedSupabaseUrl());
+  const [keyInput, setKeyInput] = useState(getSavedSupabaseAnonKey());
+  const [showCredForm, setShowCredForm] = useState(!isSupabaseConfigured());
+  const [credSource, setCredSource] = useState(getSupabaseCredentialSource());
+  const [syncingCloud, setSyncingCloud] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     const handleUpdate = (e: Event) => {
@@ -55,6 +82,61 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
       setTestResult({ success: false, message: `Unexpected error: ${msg}` });
     } finally {
       setTesting(false);
+    }
+  };
+
+  const handleSaveCredentials = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim() || !keyInput.trim()) {
+      alert("Please provide both Supabase Project URL and Anon Key.");
+      return;
+    }
+    saveSupabaseCredentials(urlInput.trim(), keyInput.trim());
+    setCredSource(getSupabaseCredentialSource());
+    handleTestConnection();
+    if (window.confirm("Credentials saved! Would you like to reload the app to fetch remote cloud data immediately?")) {
+      window.location.reload();
+    }
+  };
+
+  const handleClearCredentials = () => {
+    if (window.confirm("Remove saved Supabase credentials from this browser?")) {
+      clearSavedSupabaseCredentials();
+      setUrlInput("");
+      setKeyInput("");
+      setCredSource(getSupabaseCredentialSource());
+      setTestResult(null);
+    }
+  };
+
+  const handleSyncAllResources = async () => {
+    if (!isSupabaseConfigured()) {
+      setSyncResult({
+        success: false,
+        message: "Supabase credentials are not configured yet. Configure them below first.",
+      });
+      return;
+    }
+    setSyncingCloud(true);
+    setSyncResult(null);
+    try {
+      const res = await syncAllResourcesToSupabase(resources);
+      if (res.success) {
+        setSyncResult({
+          success: true,
+          message: `✅ Successfully pushed ${res.count} resources to Supabase Cloud! Any other PC visiting Denim Universe will now see these articles.`,
+        });
+      } else {
+        setSyncResult({
+          success: false,
+          message: `❌ Failed to sync resources: ${res.error}. If the table does not exist, run 'supabase-resources-and-members.sql' in Supabase SQL editor.`,
+        });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSyncResult({ success: false, message: `Sync error: ${msg}` });
+    } finally {
+      setSyncingCloud(false);
     }
   };
 
@@ -245,22 +327,22 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
             </h3>
             {isCloudConnected ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connected
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connected & Active
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Local Mode
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Local Storage Mode
               </span>
             )}
           </div>
 
           <p className="mt-3 text-xs leading-relaxed text-indigo-200/75">
             {isCloudConnected
-              ? `Connected to Supabase project at ${cloudHost}. All changes are synced to PostgreSQL and images are saved to the denim-media bucket.`
-              : "Running in offline-safe Local Storage mode. Add your Supabase project keys to .env (for local) or Vercel environment variables (for online) to sync data to the cloud."}
+              ? `Connected to Supabase at ${cloudHost}. All articles, defect cases, and member accounts sync across all computers and phones in real-time.`
+              : "Running in offline-safe Local Storage mode. Any changes made here are saved ONLY in this browser. To show updated resources on other devices, connect your Supabase project below."}
           </p>
 
-          {/* Diagnostic Test Button */}
+          {/* Action Buttons */}
           <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:gap-3">
             <button
               onClick={handleTestConnection}
@@ -268,23 +350,64 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
               className="inline-flex min-h-[38px] items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-bold text-[#0a1633] transition active:scale-95 hover:bg-amber-300 disabled:opacity-50"
             >
               <RefreshCw size={13} className={testing ? "animate-spin" : ""} />
-              {testing ? "Testing Connection..." : "Test Supabase Connection"}
+              {testing ? "Testing..." : "Test Connection"}
             </button>
+
+            <button
+              onClick={handleSyncAllResources}
+              disabled={syncingCloud}
+              title="Push all resources currently on this PC into Supabase so all devices see them"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3.5 py-2 text-xs font-bold text-sky-300 transition active:scale-95 hover:bg-sky-500/20 disabled:opacity-50"
+            >
+              <UploadCloud size={14} className={syncingCloud ? "animate-bounce" : ""} />
+              <span>{syncingCloud ? "Syncing..." : `Sync All Resources (${resources.length})`}</span>
+            </button>
+
+            <button
+              onClick={() => setShowCredForm((v) => !v)}
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition active:scale-95 hover:bg-white/10"
+            >
+              <Key size={13} className="text-amber-400" />
+              <span>{showCredForm ? "Hide Credentials" : "Configure Keys"}</span>
+              {showCredForm ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
+
             <a
               href="https://supabase.com/dashboard"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition active:scale-95 hover:bg-white/10"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs font-medium text-indigo-200/80 transition active:scale-95 hover:text-white"
             >
-              <span>Supabase Dashboard</span>
+              <span>Dashboard</span>
               <ExternalLink size={12} />
             </a>
           </div>
 
+          {/* Sync Result Banner */}
+          {syncResult && (
+            <div
+              className={`mt-4 flex items-start gap-2.5 rounded-2xl p-3 text-xs ${
+                syncResult.success
+                  ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                  : "border border-rose-500/30 bg-rose-500/10 text-rose-200"
+              }`}
+            >
+              {syncResult.success ? (
+                <CheckCircle2 size={16} className="shrink-0 text-emerald-400 mt-0.5" />
+              ) : (
+                <AlertCircle size={16} className="shrink-0 text-rose-400 mt-0.5" />
+              )}
+              <div>
+                <p className="font-bold">{syncResult.success ? "Sync Successful" : "Sync Notice"}</p>
+                <p className="mt-0.5 leading-relaxed">{syncResult.message}</p>
+              </div>
+            </div>
+          )}
+
           {/* Test feedback */}
           {testResult && (
             <div
-              className={`mt-4 flex items-start gap-2.5 rounded-2xl p-3 text-xs ${
+              className={`mt-4 flex items-start gap-2.5 rounded-2xl p-3.5 text-xs ${
                 testResult.success
                   ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
                   : "border border-rose-500/30 bg-rose-500/10 text-rose-200"
@@ -295,11 +418,88 @@ export default function AdminOverview({ onSelectTab }: AdminOverviewProps) {
               ) : (
                 <AlertCircle size={16} className="shrink-0 text-rose-400 mt-0.5" />
               )}
-              <div>
-                <p className="font-bold">{testResult.success ? "Connection Verified" : "Connection Notice"}</p>
-                <p className="mt-0.5 leading-relaxed">{testResult.message}</p>
+              <div className="space-y-1">
+                <p className="font-bold">{testResult.success ? "Connection Verified" : "Action Required"}</p>
+                <p className="leading-relaxed">{testResult.message}</p>
+                {testResult.tables && !testResult.tables.resources && (
+                  <div className="mt-2 rounded-xl bg-black/40 p-2.5 border border-rose-400/20 text-[11px] text-rose-100">
+                    <p className="font-semibold text-amber-300">💡 How to fix missing table:</p>
+                    <p className="mt-0.5">
+                      1. Open your Supabase Dashboard &rarr; <strong>SQL Editor</strong>.
+                    </p>
+                    <p>
+                      2. Open the file <code>supabase-resources-and-members.sql</code> from this project, paste its contents, and click <strong>Run</strong>.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
+          )}
+
+          {/* Expandable Credentials Configuration Form */}
+          {showCredForm && (
+            <form onSubmit={handleSaveCredentials} className="mt-5 rounded-2xl border border-white/10 bg-[#071126]/80 p-4 space-y-3.5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Key size={14} className="text-amber-400" />
+                  <span className="text-xs font-bold text-white">Supabase API Keys</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-indigo-300">
+                  Active Source: {credSource === "env" ? "Vercel / .env" : credSource === "storage" ? "Browser Storage" : "Unset"}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-indigo-200/80 mb-1">
+                  Project URL
+                </label>
+                <input
+                  type="text"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  placeholder="https://xyzcompany.supabase.co"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-indigo-200/80 mb-1">
+                  Anon / Public Key
+                </label>
+                <input
+                  type="password"
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-3.5 py-1.5 text-xs font-bold text-[#0a1633] transition hover:bg-amber-300"
+                  >
+                    <Save size={13} />
+                    <span>Save & Connect</span>
+                  </button>
+                  {credSource === "storage" && (
+                    <button
+                      type="button"
+                      onClick={handleClearCredentials}
+                      className="inline-flex items-center gap-1 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-rose-300 transition hover:bg-white/10"
+                    >
+                      <Trash2 size={12} />
+                      <span>Clear Keys</span>
+                    </button>
+                  )}
+                </div>
+                <p className="text-[10px] text-indigo-300/60">
+                  Find these in Supabase Dashboard &rarr; Project Settings &rarr; API.
+                </p>
+              </div>
+            </form>
           )}
         </div>
       </div>

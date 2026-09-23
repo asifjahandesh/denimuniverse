@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Lock,
   Mail,
@@ -6,6 +6,7 @@ import {
   X,
   ShieldCheck,
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   CheckCircle2,
   ExternalLink,
@@ -23,9 +24,16 @@ import {
   Upload,
   Phone,
   Clock,
+  RefreshCw,
+  Send,
 } from "lucide-react";
 import { Modal } from "./common";
 import { useData } from "../context/DataContext";
+import {
+  sendSupabaseOtp,
+  verifySupabaseOtp,
+  resendSupabaseOtp,
+} from "../lib/supabase";
 
 export default function MemberLoginModal() {
   const {
@@ -36,6 +44,7 @@ export default function MemberLoginModal() {
     memberLogin,
     memberSignUp,
     currentMember,
+    members,
     membershipSettings,
     siteConfig,
     openCheckout,
@@ -70,10 +79,29 @@ export default function MemberLoginModal() {
     screenshotAttached: boolean;
   } | null>(null);
 
+  // OTP Verification states
+  const [signUpStep, setSignUpStep] = useState<"form" | "otp">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+  const [isMockOtp, setIsMockOtp] = useState(false);
+
+  // Countdown timer for OTP resend cooldown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
   if (!isMemberLoginModalOpen) return null;
 
   const handleClose = () => {
     setUnderReviewState(null);
+    setSignUpStep("form");
+    setOtpCode("");
+    setResendCooldown(0);
     setErrorMsg(null);
     setSuccessMsg(null);
     setIsMemberLoginModalOpen(false);
@@ -130,10 +158,29 @@ export default function MemberLoginModal() {
     }
   };
 
-  const handleSignUpSubmit = (e: React.FormEvent) => {
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = password.trim();
+    const cleanName = name.trim();
+
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setErrorMsg("Please provide a valid email address.");
+      return;
+    }
+    if (!cleanPass || cleanPass.length < 6) {
+      setErrorMsg("Password must be at least 6 characters long.");
+      return;
+    }
+
+    const exists = members?.some((m) => m.email.toLowerCase() === cleanEmail);
+    if (exists) {
+      setErrorMsg("An account with this email already exists. Please sign in instead.");
+      return;
+    }
 
     // If Basic or Premium is selected, Transaction ID is strictly required
     if (selectedPlan !== "free") {
@@ -151,6 +198,47 @@ export default function MemberLoginModal() {
     setSubmitting(true);
 
     try {
+      const otpRes = await sendSupabaseOtp(cleanEmail, cleanPass, cleanName);
+      if (!otpRes.success) {
+        setErrorMsg(otpRes.message);
+      } else {
+        setIsMockOtp(!!otpRes.isMock);
+        setSignUpStep("otp");
+        setOtpCode("");
+        setResendCooldown(60);
+        setSuccessMsg(otpRes.message);
+      }
+    } catch {
+      setErrorMsg("An error occurred while sending the verification code. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanToken = otpCode.trim();
+
+    if (cleanToken.length < 6) {
+      setErrorMsg("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const verifyRes = await verifySupabaseOtp(cleanEmail, cleanToken);
+      if (!verifyRes.success) {
+        setErrorMsg(verifyRes.message);
+        setSubmitting(false);
+        return;
+      }
+
+      // Verification succeeded! Now finalize registration in DataContext
       const result = memberSignUp({
         name,
         email,
@@ -188,15 +276,19 @@ export default function MemberLoginModal() {
           setTrxId("");
           setSenderNumber("");
           setScreenshotDataUrl("");
+          setSignUpStep("form");
+          setOtpCode("");
           setErrorMsg(null);
           setSuccessMsg(null);
         } else {
-          setSuccessMsg(result.message);
+          setSuccessMsg("Email verified! Your account has been created.");
           setTimeout(() => {
             setIsMemberLoginModalOpen(false);
             setName("");
             setEmail("");
             setPassword("");
+            setSignUpStep("form");
+            setOtpCode("");
             setSuccessMsg(null);
           }, 900);
         }
@@ -204,9 +296,30 @@ export default function MemberLoginModal() {
         setErrorMsg(result.message);
       }
     } catch {
-      setErrorMsg("An error occurred during registration. Please try again.");
+      setErrorMsg("An error occurred during verification. Please try again.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0 || isResending) return;
+    setIsResending(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const res = await resendSupabaseOtp(email.trim().toLowerCase());
+      if (res.success) {
+        setSuccessMsg(res.message);
+        setResendCooldown(60);
+      } else {
+        setErrorMsg(res.message);
+      }
+    } catch {
+      setErrorMsg("Could not resend verification code. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -446,12 +559,15 @@ export default function MemberLoginModal() {
             <div>
               <h3 className="font-display text-base font-bold text-white sm:text-lg">
                 {memberAuthMode === "signin" && "Member Access & Sign In"}
-                {memberAuthMode === "signup" && "Create Member Account"}
+                {memberAuthMode === "signup" &&
+                  (signUpStep === "otp" ? "Verify Email (6-Digit OTP)" : "Create Member Account")}
                 {memberAuthMode === "packages" && "Technical Resource Packages"}
               </h3>
               <p className="text-xs text-indigo-200/70">
                 {memberAuthMode === "packages"
                   ? "Select a plan to access and read industrial denim SOPs and laboratory manuals."
+                  : signUpStep === "otp"
+                  ? "Enter the confirmation code sent to your email to activate access."
                   : "Access protected technical PDF SOPs & factory manuals."}
               </p>
             </div>
@@ -472,6 +588,8 @@ export default function MemberLoginModal() {
             onClick={() => {
               setErrorMsg(null);
               setSuccessMsg(null);
+              setSignUpStep("form");
+              setOtpCode("");
               setMemberAuthMode("signin");
             }}
             className={`border-b-2 py-3 px-4 text-xs font-bold transition ${
@@ -495,13 +613,15 @@ export default function MemberLoginModal() {
                 : "border-transparent text-indigo-200/70 hover:text-white"
             }`}
           >
-            Create Account (Sign Up)
+            {signUpStep === "otp" ? "Verify OTP" : "Create Account (Sign Up)"}
           </button>
           <button
             type="button"
             onClick={() => {
               setErrorMsg(null);
               setSuccessMsg(null);
+              setSignUpStep("form");
+              setOtpCode("");
               setMemberAuthMode("packages");
             }}
             className={`border-b-2 py-3 px-4 text-xs font-bold transition flex items-center gap-1.5 ${
@@ -608,9 +728,9 @@ export default function MemberLoginModal() {
         )}
 
         {/* ================================================================= */}
-        {/* 2. SIGN UP (SELF REGISTRATION) FORM                               */}
+        {/* 2. SIGN UP (SELF REGISTRATION) FORM - STEP 1                      */}
         {/* ================================================================= */}
-        {memberAuthMode === "signup" && (
+        {memberAuthMode === "signup" && signUpStep === "form" && (
           <form onSubmit={handleSignUpSubmit} className="p-5 sm:p-7 space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-indigo-200/70">
@@ -896,19 +1016,30 @@ export default function MemberLoginModal() {
               disabled={submitting}
               className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 py-3 text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              <User size={16} />
-              <span>
-                {submitting
-                  ? "Processing Registration..."
-                  : selectedPlan === "free"
-                  ? "Create Free Account"
-                  : `Pay ${
-                      selectedPlan === "basic"
-                        ? membershipSettings.basicPlan?.price || "199 BDT"
-                        : membershipSettings.premiumPlan?.price || "499 BDT"
-                    } & Complete Registration`}
-              </span>
+              {submitting ? (
+                <>
+                  <RefreshCw size={16} className="animate-spin" />
+                  <span>Sending Verification Code...</span>
+                </>
+              ) : (
+                <>
+                  <Send size={16} />
+                  <span>
+                    {selectedPlan === "free"
+                      ? "Send Verification Code (Free Sign Up)"
+                      : `Send Verification Code (${
+                          selectedPlan === "basic"
+                            ? membershipSettings.basicPlan?.price || "199 BDT"
+                            : membershipSettings.premiumPlan?.price || "499 BDT"
+                        })`}
+                  </span>
+                </>
+              )}
             </button>
+            <p className="text-center text-[11px] text-indigo-200/60 flex items-center justify-center gap-1.5">
+              <ShieldCheck size={13} className="text-amber-400 shrink-0" />
+              <span>A 6-digit confirmation code will be sent to your email to verify account ownership</span>
+            </p>
 
             {/* Switch to Sign In */}
             <div className="pt-2 text-center text-xs text-indigo-200/70">
@@ -918,6 +1049,7 @@ export default function MemberLoginModal() {
                 onClick={() => {
                   setErrorMsg(null);
                   setSuccessMsg(null);
+                  setSignUpStep("form");
                   setMemberAuthMode("signin");
                 }}
                 className="font-bold text-amber-300 underline hover:text-amber-200 ml-1"
@@ -926,6 +1058,125 @@ export default function MemberLoginModal() {
               </button>
             </div>
           </form>
+        )}
+
+        {/* ================================================================= */}
+        {/* 2B. SIGN UP STEP 2: EMAIL OTP VERIFICATION SCREEN                */}
+        {/* ================================================================= */}
+        {memberAuthMode === "signup" && signUpStep === "otp" && (
+          <div className="p-5 sm:p-7 space-y-5 animate-fade-in">
+            {/* Top Navigation Row */}
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                  setSignUpStep("form");
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-300 hover:text-white transition cursor-pointer"
+              >
+                <ArrowLeft size={14} />
+                <span>Back to edit details</span>
+              </button>
+
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
+                <ShieldCheck size={12} />
+                <span>Step 2 of 2: OTP Verification</span>
+              </span>
+            </div>
+
+            {/* Email Icon & Callout */}
+            <div className="text-center pt-1">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-400/10">
+                <Mail size={26} />
+              </div>
+              <h4 className="mt-3.5 font-display text-lg font-bold text-white">
+                Enter 6-Digit Email Code
+              </h4>
+              <p className="mt-1 text-xs text-indigo-200/80 max-w-sm mx-auto leading-relaxed">
+                We sent a 6-digit confirmation code to:
+                <br />
+                <span className="font-semibold text-amber-300 font-mono text-sm">{email}</span>
+              </p>
+            </div>
+
+            {isMockOtp && (
+              <div className="rounded-2xl border border-sky-400/30 bg-sky-500/10 p-3 text-center text-xs text-sky-200">
+                <p className="font-bold text-sky-300">💡 Local / Offline Test Mode</p>
+                <p className="mt-0.5 text-[11px] text-sky-200/80">
+                  Supabase is in offline mode. Enter demo code <strong className="text-white font-mono font-bold">123456</strong> to proceed.
+                </p>
+              </div>
+            )}
+
+            {/* OTP Input Form */}
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="block text-center text-xs font-bold uppercase tracking-wider text-indigo-200/70">
+                  6-Digit Confirmation Code
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    required
+                    autoFocus
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      setOtpCode(val);
+                      setErrorMsg(null);
+                    }}
+                    placeholder="123456"
+                    className="w-full text-center font-mono text-2xl sm:text-3xl font-extrabold tracking-[0.4em] rounded-2xl border border-white/20 bg-white/5 py-3.5 px-4 text-amber-300 placeholder:text-white/20 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+                  />
+                </div>
+                <p className="mt-2 text-center text-[11px] text-indigo-200/60">
+                  Please check your inbox or Spam/Junk folder. Code expires in 5 minutes.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting || otpCode.trim().length < 6}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 py-3 text-sm font-bold text-[#0a1633] shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 active:scale-95 disabled:opacity-50 cursor-pointer"
+              >
+                {submitting ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>Verifying Code...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={16} />
+                    <span>Verify & Complete Registration</span>
+                  </>
+                )}
+              </button>
+
+              {/* Resend Code Action */}
+              <div className="pt-2 text-center text-xs text-indigo-200/70">
+                Didn't receive the email?{" "}
+                {resendCooldown > 0 ? (
+                  <span className="font-semibold text-indigo-300/80">
+                    Resend code in <span className="font-mono text-amber-300">{resendCooldown}s</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={isResending}
+                    onClick={handleResendOtp}
+                    className="font-bold text-amber-300 underline hover:text-amber-200 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isResending ? "Resending code..." : "Resend Code"}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
         )}
 
         {/* ================================================================= */}
