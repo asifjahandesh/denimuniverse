@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowDown, ArrowRight, BookOpen, Play, Award, Users, Factory, Leaf } from "lucide-react";
+import { ArrowDown, ArrowRight, BookOpen, Play, Award, Users, Leaf } from "lucide-react";
 import { HERO_IMG, SITE_CONFIG } from "../data/content";
 import { useData } from "../context/DataContext";
 import { Reveal } from "./common";
@@ -21,7 +21,6 @@ const COTTON_SLIDES = [
 
 const STATS = [
   { icon: BookOpen, value: "180+", label: "Technical guides" },
-  { icon: Factory, value: "9-Step", label: "Mill process maps" },
   { icon: Users, value: "48K+", label: "Community readers" },
   { icon: Leaf, value: "92%", label: "Water saved tech" },
 ];
@@ -83,13 +82,6 @@ export default function Hero() {
             </Reveal>
 
             <Reveal delay={200}>
-              <p className="mt-5 max-w-xl text-[14.5px] leading-relaxed text-indigo-100/85 sm:text-base">
-                Discover denim fabric processes, solve production problems, explore fashion and learn about
-                the future of sustainable denim — practical knowledge for students, professionals & manufacturers.
-              </p>
-            </Reveal>
-
-            <Reveal delay={300}>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="#resources"
@@ -113,7 +105,7 @@ export default function Hero() {
               </div>
             </Reveal>
 
-            <Reveal delay={400}>
+            <Reveal delay={300}>
               <div className="mt-8 flex flex-wrap items-center gap-3.5 sm:flex-nowrap sm:gap-4">
                 <div className="flex -space-x-3 shrink-0">
                   {[
@@ -224,7 +216,7 @@ export default function Hero() {
 
         {/* Stats */}
         <Reveal delay={150}>
-          <div className="mt-12 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             {STATS.map((s) => (
               <div key={s.label} className="flex items-center gap-2.5 sm:gap-3 rounded-2xl border border-white/12 bg-white/[0.06] p-3.5 sm:px-5 sm:py-4 backdrop-blur transition hover:bg-white/[0.1]">
                 <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300">

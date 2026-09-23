@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: implement auto-sliding cotton harvest gallery in hero card'): "
-if "%MSG%"=="" set MSG=feat: implement auto-sliding cotton harvest gallery in hero card
+set /p MSG="Enter commit message (press Enter for 'feat: hero - remove 9-step mill process maps stat'): "
+if "%MSG%"=="" set MSG=feat: hero - remove 9-step mill process maps stat
 
 echo.
 echo 1. Staging changes...
