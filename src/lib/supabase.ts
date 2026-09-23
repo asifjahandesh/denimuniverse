@@ -88,15 +88,17 @@ export async function uploadImageToSupabase(file: File): Promise<string> {
     throw new Error("Supabase is not configured.");
   }
 
-  const fileExt = file.name.split(".").pop() || "jpg";
+  const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30);
   const filePath = `uploads/${Date.now()}_${cleanName}.${fileExt}`;
+  const contentType = file.type || (fileExt === "pdf" ? "application/pdf" : `image/${fileExt === "png" ? "png" : fileExt === "webp" ? "webp" : "jpeg"}`);
 
   const { error: uploadError } = await supabase.storage
     .from("denim-media")
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType,
     });
 
   if (uploadError) {
@@ -106,6 +108,8 @@ export async function uploadImageToSupabase(file: File): Promise<string> {
   const { data } = supabase.storage.from("denim-media").getPublicUrl(filePath);
   return data.publicUrl;
 }
+
+export const uploadFileToSupabase = uploadImageToSupabase;
 
 /**
  * Fetch all remote data from Supabase.

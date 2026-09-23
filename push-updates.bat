@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: remove Denim Manufacturing Process navigation option and section'): "
-if "%MSG%"=="" set MSG=feat: remove Denim Manufacturing Process navigation option and section
+set /p MSG="Enter commit message (press Enter for 'fix: show uploaded PDF in protected reader popup instead of article text'): "
+if "%MSG%"=="" set MSG=fix: show uploaded PDF in protected reader popup instead of article text
 
 echo.
 echo 1. Staging changes...

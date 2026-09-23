@@ -299,20 +299,39 @@ export default function ResourceManager() {
       return;
     }
 
+    setUploadingPdf(true);
     if (isSupabaseConfigured()) {
-      setUploadingPdf(true);
       try {
         const publicUrl = await uploadImageToSupabase(file);
         setRPdfUrl(publicUrl);
-        showFeedback(`PDF file "${file.name}" uploaded successfully!`);
+        showFeedback(`PDF file "${file.name}" uploaded to cloud storage!`);
       } catch (err) {
-        console.warn("Supabase PDF upload failed", err);
-        alert("Upload failed. You can also paste a direct PDF URL below.");
+        console.warn("Supabase PDF upload failed, converting to local data URL:", err);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === "string") {
+            setRPdfUrl(ev.target.result);
+            showFeedback(`PDF file "${file.name}" loaded successfully!`);
+          }
+        };
+        reader.readAsDataURL(file);
       } finally {
         setUploadingPdf(false);
       }
     } else {
-      alert("Supabase storage is in offline/demo mode. Please provide a direct public PDF URL or connect Supabase.");
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (typeof ev.target?.result === "string") {
+          setRPdfUrl(ev.target.result);
+          showFeedback(`PDF file "${file.name}" loaded successfully!`);
+        }
+        setUploadingPdf(false);
+      };
+      reader.onerror = () => {
+        alert("Failed to read PDF file.");
+        setUploadingPdf(false);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -1900,16 +1919,23 @@ export default function ResourceManager() {
 
                 {rPdfMode === "upload" ? (
                   <div>
-                    <label className="flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-dashed border-rose-400/30 bg-rose-500/5 px-4 py-3 text-xs font-semibold text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/10">
+                    <label className="flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-dashed border-rose-400/30 bg-rose-500/5 px-4 py-3 text-xs font-semibold text-rose-200 transition hover:border-rose-400 hover:bg-rose-500/10 cursor-pointer">
                       {uploadingPdf ? <Loader2 size={16} className="animate-spin text-rose-400" /> : <Upload size={16} />}
-                      <span>{uploadingPdf ? "Uploading PDF to Storage..." : "Select & Upload PDF Document (.pdf)"}</span>
-                      <input type="file" accept=".pdf" onChange={handlePdfUpload} className="hidden" />
+                      <span>{uploadingPdf ? "Processing PDF Document..." : "Select & Upload PDF Document (.pdf)"}</span>
+                      <input type="file" accept=".pdf,application/pdf" onChange={handlePdfUpload} className="hidden" />
                     </label>
                     {rPdfUrl && (
-                      <p className="mt-1.5 text-[11px] text-emerald-400 flex items-center gap-1">
-                        <Check size={12} />
-                        <span className="truncate">URL: {rPdfUrl}</span>
-                      </p>
+                      <div className="mt-2 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+                        <div className="flex items-center gap-2 min-w-0 pr-2">
+                          <Check size={14} className="text-emerald-400 shrink-0" />
+                          <span className="font-semibold truncate">
+                            {rPdfTitle || "Attached PDF Manual"} ({rPdfSize})
+                          </span>
+                        </div>
+                        <span className="shrink-0 text-[10px] font-mono2 uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+                          {rPdfUrl.startsWith("data:") ? "Local File Ready" : "Cloud Storage"}
+                        </span>
+                      </div>
                     )}
                   </div>
                 ) : (
