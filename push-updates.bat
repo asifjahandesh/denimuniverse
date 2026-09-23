@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'fix: fix resource deletion persistence and prevent deleted items resurrection'): "
-if "%MSG%"=="" set MSG=fix: fix resource deletion persistence and prevent deleted items resurrection
+set /p MSG="Enter commit message (press Enter for 'feat: remove one-click demo testing buttons from member login modal'): "
+if "%MSG%"=="" set MSG=feat: remove one-click demo testing buttons from member login modal
 
 echo.
 echo 1. Staging changes...

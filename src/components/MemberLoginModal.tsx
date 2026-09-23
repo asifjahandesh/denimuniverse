@@ -210,19 +210,6 @@ export default function MemberLoginModal() {
     }
   };
 
-  const fillDemoCredentials = (type: "basic" | "premium") => {
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setMemberAuthMode("signin");
-    if (type === "basic") {
-      setEmail("basic@denimuniverse.com");
-      setPassword("denim2026");
-    } else {
-      setEmail("demo@denimuniverse.com");
-      setPassword("denim2026");
-    }
-  };
-
   const bkashNumber = membershipSettings?.paymentMethods?.bkash || "01700000000 (Personal)";
   const nagadNumber = membershipSettings?.paymentMethods?.nagad || "01800000000 (Personal)";
 
@@ -601,27 +588,6 @@ export default function MemberLoginModal() {
               <Lock size={16} />
               <span>{submitting ? "Authenticating..." : "Sign In & Unlock PDFs"}</span>
             </button>
-
-            {/* Quick Demo Logins Bar */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 text-center">
-              <p className="text-[11px] font-semibold text-indigo-200/70">Instant One-Click Demo Testing:</p>
-              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fillDemoCredentials("basic")}
-                  className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-400/20 transition active:scale-95"
-                >
-                  Demo Basic Member
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fillDemoCredentials("premium")}
-                  className="rounded-xl border border-indigo-400/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-bold text-indigo-200 hover:bg-indigo-500/20 transition active:scale-95"
-                >
-                  Demo Premium VIP Member
-                </button>
-              </div>
-            </div>
 
             {/* Switch to Sign Up */}
             <div className="pt-2 text-center text-xs text-indigo-200/70">
