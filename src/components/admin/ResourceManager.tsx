@@ -392,6 +392,10 @@ export default function ResourceManager() {
   const handleDeleteResource = (id: string, title: string) => {
     if (window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
       deleteResource(id);
+      if (editingResource && editingResource.id === id) {
+        setEditingResource(null);
+        setResourceModalOpen(false);
+      }
       showFeedback(`Resource "${title}" deleted.`);
     }
   };

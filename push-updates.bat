@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'feat: add official brand logos for email, facebook, whatsapp and maps in contact section'): "
-if "%MSG%"=="" set MSG=feat: add official brand logos for email, facebook, whatsapp and maps in contact section
+set /p MSG="Enter commit message (press Enter for 'fix: fix resource deletion persistence and prevent deleted items resurrection'): "
+if "%MSG%"=="" set MSG=fix: fix resource deletion persistence and prevent deleted items resurrection
 
 echo.
 echo 1. Staging changes...

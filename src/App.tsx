@@ -70,6 +70,8 @@ function MainApp() {
         if (found) {
           setSelectedResource(found);
           window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          setSelectedResource(null);
         }
       } else if (selectedResource && !hash.startsWith("#resources/")) {
         setSelectedResource(null);
@@ -83,6 +85,21 @@ function MainApp() {
       window.removeEventListener("hashchange", syncFromHash);
       window.removeEventListener("popstate", syncFromHash);
     };
+  }, [resources, selectedResource]);
+
+  // Clear active view if currently viewed resource was deleted in Admin Panel
+  useEffect(() => {
+    if (selectedResource) {
+      const stillExists = resources.some(
+        (r) => String(r.id).toLowerCase() === String(selectedResource.id).toLowerCase()
+      );
+      if (!stillExists) {
+        setSelectedResource(null);
+        if (window.location.hash.startsWith("#resources/")) {
+          window.location.hash = "#resources";
+        }
+      }
+    }
   }, [resources, selectedResource]);
 
   const handleSelectFashion = (card: FashionCard) => {

@@ -190,11 +190,45 @@ const STORAGE_KEYS = {
   GALLERY: "du_gallery_v1",
   CONFIG: "du_config_v1",
   RESOURCES: "du_resources_v1",
+  DELETED_RESOURCES: "du_deleted_resources_v1",
   MEMBERS: "du_members_v1",
   MEMBER_SESSION: "du_member_session_v1",
   PLANS: "du_plan_settings_v1",
   PAYMENTS: "du_payments_v1",
 };
+
+export function getDeletedResourceIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DELETED_RESOURCES);
+    if (raw) {
+      const arr: string[] = JSON.parse(raw);
+      return new Set(arr.map((id) => String(id).trim().toLowerCase()));
+    }
+  } catch (e) {
+    console.warn("Could not read deleted resources list", e);
+  }
+  return new Set();
+}
+
+export function recordDeletedResourceId(id: string) {
+  try {
+    const deletedSet = getDeletedResourceIds();
+    deletedSet.add(String(id).trim().toLowerCase());
+    localStorage.setItem(STORAGE_KEYS.DELETED_RESOURCES, JSON.stringify([...deletedSet]));
+  } catch (e) {
+    console.warn("Could not save deleted resource ID", e);
+  }
+}
+
+export function unrecordDeletedResourceId(id: string) {
+  try {
+    const deletedSet = getDeletedResourceIds();
+    deletedSet.delete(String(id).trim().toLowerCase());
+    localStorage.setItem(STORAGE_KEYS.DELETED_RESOURCES, JSON.stringify([...deletedSet]));
+  } catch (e) {
+    console.warn("Could not update deleted resource ID", e);
+  }
+}
 
 function initMembershipSettings(): MembershipSettings {
   try {
@@ -286,12 +320,18 @@ function initSiteConfig(): SiteConfig {
 }
 
 function initResources(): ResourceItem[] {
+  const deletedIds = getDeletedResourceIds();
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.RESOURCES);
     if (stored) {
       const parsed: ResourceItem[] = JSON.parse(stored);
+      // Filter out any resources marked as deleted
+      const activeParsed = parsed.filter(
+        (r) => !deletedIds.has(String(r.id).trim().toLowerCase())
+      );
+
       // Auto-migrate legacy USD / old BDT prices & cleanse legacy categories
-      const migrated = parsed.map((r) => {
+      const migrated = activeParsed.map((r) => {
         let priceBadge = r.priceBadge || "";
         let singlePrice = r.singlePrice || "49 BDT";
         const cat = normalizeCategory(r.category);
@@ -311,9 +351,13 @@ function initResources(): ResourceItem[] {
         };
       });
 
-      // Merge any new default category manuals if they don't exist in local storage yet
-      const existingIds = new Set(migrated.map((m) => m.id));
-      const missingDefaults = DEFAULT_RESOURCES.filter((d) => !existingIds.has(d.id));
+      // Never restore default resources that the admin has explicitly deleted
+      const existingIds = new Set(migrated.map((m) => String(m.id).trim().toLowerCase()));
+      const missingDefaults = DEFAULT_RESOURCES.filter(
+        (d) =>
+          !existingIds.has(String(d.id).trim().toLowerCase()) &&
+          !deletedIds.has(String(d.id).trim().toLowerCase())
+      );
       const fullList = [...migrated, ...missingDefaults];
 
       // Immediately persist cleansed categories to localStorage to permanently purge stale values
@@ -328,7 +372,9 @@ function initResources(): ResourceItem[] {
   } catch (e) {
     console.error("Error reading resources from storage", e);
   }
-  return DEFAULT_RESOURCES;
+  return DEFAULT_RESOURCES.filter(
+    (d) => !deletedIds.has(String(d.id).trim().toLowerCase())
+  );
 }
 
 function initMembers(): MemberAccount[] {
@@ -1062,12 +1108,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Resource CRUD
   const addResource = (item: Omit<ResourceItem, "id"> & { id?: string }) => {
+    const targetId = item.id || `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    unrecordDeletedResourceId(targetId);
     const newItem: ResourceItem = {
       ...item,
       category: normalizeCategory(item.category),
-      id: item.id || `res-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: targetId,
     };
-    setResources((prev) => [newItem, ...prev]);
+    setResources((prev) => {
+      const next = [newItem, ...prev.filter((r) => String(r.id).trim().toLowerCase() !== targetId.toLowerCase())];
+      try {
+        localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to sync resources to storage after adding", e);
+      }
+      return next;
+    });
     syncRemoteResource(newItem);
   };
 
@@ -1080,12 +1136,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const next = prev.map((r) => (r.id === id ? { ...r, ...sanitizedUpdated } : r));
       const target = next.find((r) => r.id === id);
       if (target) syncRemoteResource(target);
+      try {
+        localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to sync resources to storage after update", e);
+      }
       return next;
     });
   };
 
   const deleteResource = (id: string) => {
-    setResources((prev) => prev.filter((r) => r.id !== id));
+    const cleanId = String(id).trim().toLowerCase();
+    recordDeletedResourceId(cleanId);
+
+    setResources((prev) => {
+      const next = prev.filter((r) => String(r.id).trim().toLowerCase() !== cleanId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to sync resources to storage after delete", e);
+      }
+      return next;
+    });
     deleteRemoteResource(id);
     deletePdfFromIndexedDb(id);
   };
@@ -1168,6 +1240,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(STORAGE_KEYS.GALLERY);
     localStorage.removeItem(STORAGE_KEYS.CONFIG);
     localStorage.removeItem(STORAGE_KEYS.RESOURCES);
+    localStorage.removeItem(STORAGE_KEYS.DELETED_RESOURCES);
     localStorage.removeItem(STORAGE_KEYS.MEMBERS);
     localStorage.removeItem(STORAGE_KEYS.MEMBER_SESSION);
     localStorage.removeItem(STORAGE_KEYS.PLANS);
