@@ -8,8 +8,8 @@ echo.
 echo Checking changed files:
 git status -s
 echo.
-set /p MSG="Enter commit message (press Enter for 'fix: resolve blank page in view pdf sop with indexeddb storage and local canvas reader'): "
-if "%MSG%"=="" set MSG=fix: resolve blank page in view pdf sop with indexeddb storage and local canvas reader
+set /p MSG="Enter commit message (press Enter for 'feat: update hero card image with cotton field harvest'): "
+if "%MSG%"=="" set MSG=feat: update hero card image with cotton field harvest
 
 echo.
 echo 1. Staging changes...

@@ -4,6 +4,7 @@ import { useData } from "../context/DataContext";
 import { Reveal } from "./common";
 import { FacebookIcon } from "./Navbar";
 import logoImg from "../assets/logo.png";
+import cottonFieldImg from "../assets/cotton-field-harvest.jpg";
 
 const STATS = [
   { icon: BookOpen, value: "180+", label: "Technical guides" },
@@ -128,8 +129,8 @@ export default function Hero() {
               <div className="stitch-border overflow-hidden rounded-[1.8rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur">
                 <div className="relative h-[420px]">
                   <img
-                    src="https://images.pexels.com/photos/4109759/pexels-photo-4109759.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-                    alt="Folded premium denim jeans"
+                    src={cottonFieldImg}
+                    alt="Cotton field harvest for denim manufacturing"
                     className="h-full w-full object-cover"
                     loading="eager"
                   />
